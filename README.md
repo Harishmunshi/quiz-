@@ -87,6 +87,20 @@ in **Round 1 (Knowledge)**, then race through a drag-and-drop ordering challenge
 
 ---
 
+## 🚀 Publish to GitHub (one click)
+
+The repo ships with a **one-click publish script**. After you create an empty repo on <https://github.com/new>:
+
+1. **Double-click `publish-to-github.bat`** in the project folder
+2. Paste your repo URL when prompted
+3. Done ✅
+
+If push fails on auth, see `QUICK-UPLOAD.md` for Personal Access Token / GitHub Desktop / SSH setup.
+
+> Don't want to touch the terminal? Install [GitHub Desktop](https://desktop.github.com) → Add local repo → click **Publish repository**. Truly one click.
+
+---
+
 ## 🚀 Local setup
 
 ### 1. Install dependencies
