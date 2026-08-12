@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// COMPETITION SETTINGS
+// ============================================================
+model CompetitionSettings {
+  id                  String   @id @default(cuid())
+  name                String   @default("Islamic Quiz Competition")
+  schoolName          String   @default("M.E.S. English Medium School")
+  description         String?
+  currentRound        Int      @default(0)
+  competitionStatus   String   @default("draft") // draft, test, live, paused, completed
+  round1Status        String   @default("locked") // locked, open, paused, closed
+  round2Status        String   @default("locked")
+  round1StartAt       DateTime?
+  round1EndAt         DateTime?
+  round2StartAt       DateTime?
+  round2EndAt         DateTime?
+  round1TotalQuestions Int     @default(10)
+  round1TimeLimit     Int      @default(0) // 0 = no limit, in seconds
+  round2TimeLimit     Int      @default(60) // in seconds
+  allowRound2Retry    Boolean  @default(true)
+  round2PenaltySeconds Int     @default(5)
+  isTestMode          Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// ============================================================
+// ADMIN USERS
+// ============================================================
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String // hashed password
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================================
+// PARTICIPANTS
+// ============================================================
+model Participant {
+  id              String   @id @default(cuid())
+  participantCode String   @unique
+  name            String
+  className       String
+  division        String
+  language        String   @default("english") // english, gujarati
+  isTest          Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  round1Attempts  Round1Attempt[]
+  round2Attempts  Round2Attempt[]
+}
+
+// ============================================================
+// QUESTIONS
+// ============================================================
+model Question {
+  id              String   @id @default(cuid())
+  questionNumber  Int
+  englishQuestion String
+  gujaratiQuestion String
+  optionAEnglish  String
+  optionBEnglish  String
+  optionCEnglish  String
+  optionDEnglish  String
+  optionAGujarati String
+  optionBGujarati String
+  optionCGujarati String
+  optionDGujarati String
+  correctOption   String   // A, B, C, D
+  marks           Int      @default(1)
+  round           Int      @default(1)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  round1Answers   Round1Answer[]
+}
+
+// ============================================================
+// ROUND 1 ATTEMPTS
+// ============================================================
+model Round1Attempt {
+  id                String   @id @default(cuid())
+  participantId     String
+  startedAt         DateTime @default(now())
+  submittedAt       DateTime?
+  completionTimeMs  Int?
+  score             Int?
+  totalQuestions    Int?
+  correctAnswers    Int?
+  incorrectAnswers  Int?
+  status            String   @default("in_progress") // in_progress, submitted, invalidated
+  isTest            Boolean  @default(false)
+  createdAt         DateTime @default(now())
+
+  participant       Participant @relation(fields: [participantId], references: [id])
+  answers           Round1Answer[]
+
+  @@index([participantId])
+  @@index([score])
+  @@index([completionTimeMs])
+  @@index([submittedAt])
+  @@index([status])
+  @@index([isTest])
+}
+
+// ============================================================
+// ROUND 1 ANSWERS
+// ============================================================
+model Round1Answer {
+  id              String @id @default(cuid())
+  attemptId       String
+  questionId      String
+  selectedOption  String
+  isCorrect       Boolean?
+  answeredAt      DateTime @default(now())
+
+  attempt         Round1Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question        Question      @relation(fields: [questionId], references: [id])
+
+  @@index([attemptId])
+  @@index([questionId])
+}
+
+// ============================================================
+// ROUND 2 CHALLENGES
+// ============================================================
+model Round2Challenge {
+  id             String   @id @default(cuid())
+  challengeNumber Int
+  prompt         String
+  items          String   // JSON array: ["Y","Z","X","V","U","W"]
+  correctOrder   String   // JSON array: ["U","V","W","X","Y","Z"]
+  timeLimitMs    Int      @default(60000)
+  isActive       Boolean  @default(true)
+  maxAttempts    Int      @default(3)
+  createdAt      DateTime @default(now())
+
+  attempts       Round2Attempt[]
+}
+
+// ============================================================
+// ROUND 2 ATTEMPTS
+// ============================================================
+model Round2Attempt {
+  id              String   @id @default(cuid())
+  participantId   String
+  challengeId     String
+  startedAt       DateTime @default(now())
+  submittedAt     DateTime?
+  clientElapsedMs Int?
+  serverElapsedMs Int?
+  attemptNumber   Int      @default(1)
+  isCorrect       Boolean?
+  penaltyMs       Int      @default(0)
+  finalTimeMs     Int?
+  status          String   @default("started") // started, correct, incorrect, expired, invalidated
+  isTest          Boolean  @default(false)
+  submittedOrder  String?  // JSON array of submitted order
+  createdAt       DateTime @default(now())
+
+  participant     Participant    @relation(fields: [participantId], references: [id])
+  challenge       Round2Challenge @relation(fields: [challengeId], references: [id])
+
+  @@index([participantId])
+  @@index([challengeId])
+  @@index([finalTimeMs])
+  @@index([submittedAt])
+  @@index([status])
+  @@index([isTest])
+}
