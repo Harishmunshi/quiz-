@@ -17,7 +17,17 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useAppStore } from '@/lib/store';
-import { formatTimerDisplay } from '@/lib/timer/formatter';
+import { formatTimerMicroseconds } from '@/lib/timer/formatter';
+import {
+  playCountdownBeep,
+  playGo,
+  playCorrect,
+  playIncorrect,
+  playFanfare,
+} from '@/lib/sound/effects';
+import {
+  fireConfetti,
+} from '@/lib/confetti';
 import {
   Loader2,
   AlertCircle,
@@ -163,20 +173,22 @@ export default function Round2Challenge() {
 
   // ── Countdown sequence ──────────────────────────────────────
   const runCountdown = useCallback(() => {
-    const steps: Array<{ phase: Phase; delay: number }> = [
+    const steps: Array<{ phase: Phase; delay: number; sound?: 'beep' | 'go' | 'fanfare' }> = [
       { phase: 'countdown-round', delay: 1200 },
       { phase: 'countdown-title', delay: 1200 },
       { phase: 'countdown-ready', delay: 1000 },
-      { phase: 'countdown-3', delay: 800 },
-      { phase: 'countdown-2', delay: 800 },
-      { phase: 'countdown-1', delay: 800 },
-      { phase: 'countdown-go', delay: 600 },
+      { phase: 'countdown-3', delay: 800, sound: 'beep' },
+      { phase: 'countdown-2', delay: 800, sound: 'beep' },
+      { phase: 'countdown-1', delay: 800, sound: 'beep' },
+      { phase: 'countdown-go', delay: 600, sound: 'go' },
     ];
 
     let cumulativeDelay = 0;
-    steps.forEach(({ phase: p, delay }) => {
+    steps.forEach(({ phase: p, delay, sound }) => {
       countdownTimerRef.current = setTimeout(() => {
         setPhase(p);
+        if (sound === 'beep') playCountdownBeep();
+        else if (sound === 'go') playGo();
       }, cumulativeDelay);
       cumulativeDelay += delay;
     });
@@ -375,6 +387,9 @@ export default function Round2Challenge() {
 
       if (data.isCorrect) {
         setPhase('correct');
+        // Celebratory feedback
+        playCorrect();
+        fireConfetti();
         // Navigate after 2 seconds
         setTimeout(() => {
           navigate('round2-result');
@@ -383,6 +398,7 @@ export default function Round2Challenge() {
         setCanRetry(data.canRetry);
         setRemainingAttempts(data.remainingAttempts);
         setPhase('incorrect');
+        playIncorrect();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Submission failed');
@@ -639,7 +655,7 @@ export default function Round2Challenge() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            {formatTimerDisplay(elapsedMs)}
+            {formatTimerMicroseconds(elapsedMs)}
           </motion.p>
           <motion.p
             className="text-sm"
@@ -757,7 +773,7 @@ export default function Round2Challenge() {
                 color: isTimeLow ? '#ef4444' : '#F7F2E7',
               }}
             >
-              {formatTimerDisplay(elapsedMs)}
+              {formatTimerMicroseconds(elapsedMs)}
             </p>
             {timeLimitMs > 0 && (
               <p
@@ -768,7 +784,7 @@ export default function Round2Challenge() {
                     : 'rgba(247, 242, 231, 0.5)',
                 }}
               >
-                Limit: {formatTimerDisplay(timeLimitMs)}
+                Limit: {formatTimerMicroseconds(timeLimitMs)}
               </p>
             )}
           </motion.div>

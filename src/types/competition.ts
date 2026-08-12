@@ -5,8 +5,7 @@ import type { Language, OptionKey, Round1AttemptStatus, Round2AttemptStatus, Com
 // ============================================================
 export type AppView =
   | 'landing'
-  | 'quiz-english'
-  | 'quiz-gujarati'
+  | 'round2-landing'
   | 'register'
   | 'round1-quiz'
   | 'round1-result'

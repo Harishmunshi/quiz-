@@ -2,7 +2,14 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Loader2, UserCircle, AlertCircle, CheckCircle2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Loader2,
+  UserCircle,
+  AlertCircle,
+  CheckCircle2,
+  Languages,
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +55,7 @@ interface FieldError {
 export default function RegistrationForm() {
   const navigate = useAppStore((s) => s.navigate);
   const selectedLanguage = useAppStore((s) => s.selectedLanguage);
+  const setSelectedLanguage = useAppStore((s) => s.setSelectedLanguage);
   const setParticipant = useAppStore((s) => s.setParticipant);
   const competitionSettings = useAppStore((s) => s.competitionSettings);
 
@@ -329,7 +337,7 @@ export default function RegistrationForm() {
                 )}
               </motion.div>
 
-              {/* Language Badge (read-only) */}
+              {/* Language Toggle */}
               <motion.div
                 custom={3}
                 variants={fieldVariants}
@@ -337,18 +345,44 @@ export default function RegistrationForm() {
                 animate="visible"
                 className="space-y-2"
               >
-                <Label className="text-navy-deep font-semibold text-sm">Language</Label>
-                <Badge
-                  variant="secondary"
-                  className={`px-3 py-1.5 text-sm font-semibold ${
-                    isGujarati
-                      ? 'bg-navy-deep/10 text-navy-deep border-navy-deep/20'
-                      : 'bg-emerald-deep/10 text-emerald-deep border-emerald-deep/20'
-                  }`}
+                <Label className="text-navy-deep font-semibold text-sm flex items-center gap-1.5">
+                  <Languages className="size-4 text-emerald-deep" />
+                  Choose your language
+                </Label>
+                <div
+                  className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted/60 border border-border"
+                  role="radiogroup"
+                  aria-label="Quiz language"
                 >
-                  <CheckCircle2 className="size-3.5 mr-1" />
-                  {isGujarati ? 'ગુજરાતી' : 'English'}
-                </Badge>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={!isGujarati}
+                    onClick={() => setSelectedLanguage('english')}
+                    disabled={submitting || !isRound1Available}
+                    className={`h-11 rounded-lg font-bold text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      !isGujarati
+                        ? 'bg-emerald-deep text-gold-accent shadow-md'
+                        : 'bg-transparent text-navy-deep/70 hover:bg-white/60'
+                    }`}
+                  >
+                    English
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={isGujarati}
+                    onClick={() => setSelectedLanguage('gujarati')}
+                    disabled={submitting || !isRound1Available}
+                    className={`h-11 rounded-lg font-bold text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      isGujarati
+                        ? 'bg-navy-deep text-gold-accent shadow-md'
+                        : 'bg-transparent text-navy-deep/70 hover:bg-white/60'
+                    }`}
+                  >
+                    ગુજરાતી
+                  </button>
+                </div>
               </motion.div>
 
               {/* ── General Error ── */}

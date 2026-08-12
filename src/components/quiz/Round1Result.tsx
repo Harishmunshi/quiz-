@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAppStore } from '@/lib/store';
 import { Trophy, CheckCircle2, XCircle, Timer, Home, BarChart3, Star } from 'lucide-react';
+import { playCorrect, playFanfare } from '@/lib/sound/effects';
+import { fireConfetti, fireConfettiBig } from '@/lib/confetti';
 
 export default function Round1Result() {
   const {
@@ -14,10 +16,27 @@ export default function Round1Result() {
     resetQuiz,
   } = useAppStore();
 
+  // Fire sound + confetti exactly once
+  const celebratedRef = useRef(false);
+
   // If somehow navigated here without a result, redirect
   useEffect(() => {
     if (!round1Result) {
       navigate('landing');
+      return;
+    }
+    if (celebratedRef.current) return;
+    celebratedRef.current = true;
+
+    const { correctAnswers, totalQuestions } = round1Result;
+    if (correctAnswers === totalQuestions && totalQuestions > 0) {
+      // Perfect score — big celebration
+      playFanfare();
+      fireConfettiBig();
+    } else if (correctAnswers / Math.max(totalQuestions, 1) >= 0.7) {
+      // Solid pass — modest celebration
+      playCorrect();
+      fireConfetti();
     }
   }, [round1Result, navigate]);
 

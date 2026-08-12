@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { AppView, Round1LeaderboardEntry, Round2LeaderboardEntry, QuizQuestion, CompetitionSettings } from '@/types/competition';
-import type { Participant } from '@/types/database';
+import type { AppView, Round1LeaderboardEntry, Round2LeaderboardEntry, QuizQuestion } from '@/types/competition';
+import type { CompetitionSettings, Participant } from '@/types/database';
 
 interface AppState {
   // Navigation

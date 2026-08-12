@@ -8,6 +8,7 @@ import RegistrationForm from '@/components/quiz/RegistrationForm';
 import Round1Quiz from '@/components/quiz/Round1Quiz';
 import Round1Result from '@/components/quiz/Round1Result';
 import LeaderboardView from '@/components/leaderboard/LeaderboardView';
+import Round2Landing from '@/components/round2/Round2Landing';
 import Round2Challenge from '@/components/round2/Round2Challenge';
 import Round2Result from '@/components/round2/Round2Result';
 import AdminLogin from '@/components/admin/AdminLogin';
@@ -72,6 +73,8 @@ export default function HomePage() {
     switch (currentView) {
       case 'landing':
         return <LandingPage />;
+      case 'round2-landing':
+        return <Round2Landing />;
       case 'register':
         return <RegistrationForm />;
       case 'round1-quiz':

@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAppStore } from '@/lib/store';
-import { formatTimerDisplay } from '@/lib/timer/formatter';
+import { formatTimerMicroseconds } from '@/lib/timer/formatter';
+import { playFanfare } from '@/lib/sound/effects';
+import { fireConfettiBig } from '@/lib/confetti';
 import {
   CheckCircle2,
   XCircle,
@@ -24,10 +26,19 @@ export default function Round2Result() {
     resetRound2,
   } = useAppStore();
 
+  const celebratedRef = useRef(false);
+
   // If somehow navigated here without a result, redirect
   useEffect(() => {
     if (!round2Result) {
       navigate('landing');
+      return;
+    }
+    if (celebratedRef.current) return;
+    celebratedRef.current = true;
+    if (round2Result.isCorrect) {
+      playFanfare();
+      fireConfettiBig();
     }
   }, [round2Result, navigate]);
 
@@ -164,7 +175,7 @@ export default function Round2Result() {
                       color: isCorrect ? '#C8A951' : 'rgba(247, 242, 231, 0.7)',
                     }}
                   >
-                    {formatTimerDisplay(isCorrect ? finalTimeMs : serverElapsedMs)}
+                    {formatTimerMicroseconds(isCorrect ? finalTimeMs : serverElapsedMs)}
                   </p>
                 </motion.div>
               </div>

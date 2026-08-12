@@ -78,3 +78,6 @@ _git_old_to_discard
 _env_old_to_discard/
 _env_old_to_discard
 _backup-noise-to-remove/
+
+# npm lockfile — this project uses bun (see bun.lock)
+package-lock.json

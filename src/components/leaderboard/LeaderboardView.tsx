@@ -1,8 +1,20 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Trophy, Clock, Star, BookOpen, Zap, WifiOff, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Trophy,
+  Clock,
+  Star,
+  BookOpen,
+  Zap,
+  WifiOff,
+  Loader2,
+  RefreshCw,
+  Users,
+  Filter,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +28,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAppStore } from '@/lib/store';
-import { formatCompletionTime, formatTimerDisplay } from '@/lib/timer/formatter';
+import { formatCompletionTime, formatTimerMicroseconds } from '@/lib/timer/formatter';
 import type { Round1LeaderboardEntry, Round2LeaderboardEntry } from '@/types/competition';
 
 // ── Animation Variants ──────────────────────────────────────────
@@ -82,43 +94,63 @@ function RankBadge({ rank }: { rank: number }) {
 }
 
 // ── Realtime Status Indicator ───────────────────────────────────
-function RealtimeIndicator() {
-  const realtimeStatus = useAppStore((s) => s.realtimeStatus);
-
-  if (realtimeStatus === 'connected') {
+function RealtimeIndicator({
+  status,
+  lastUpdated,
+  onRefresh,
+}: {
+  status: 'connected' | 'disconnected' | 'reconnecting';
+  lastUpdated: Date | null;
+  onRefresh: () => void;
+}) {
+  if (status === 'connected') {
     return (
-      <motion.div
-        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-      >
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
-        </span>
-        <span className="text-xs font-semibold text-emerald-700 tracking-wide">LIVE</span>
-      </motion.div>
+      <div className="flex items-center gap-2">
+        <motion.div
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
+          </span>
+          <span className="text-[10px] sm:text-xs font-bold text-emerald-700 tracking-wider">LIVE</span>
+        </motion.div>
+        {lastUpdated && (
+          <span className="text-[10px] text-muted-foreground hidden sm:inline">
+            {lastUpdated.toLocaleTimeString()}
+          </span>
+        )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onRefresh}
+          className="size-7 text-muted-foreground hover:text-emerald-deep"
+          title="Refresh now"
+        >
+          <RefreshCw className="size-3.5" />
+        </Button>
+      </div>
     );
   }
 
-  if (realtimeStatus === 'reconnecting') {
+  if (status === 'reconnecting') {
     return (
-      <motion.div
-        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200">
         <Loader2 className="w-3 h-3 text-amber-600 animate-spin" />
-        <span className="text-xs font-semibold text-amber-700 tracking-wide">RECONNECTING...</span>
-      </motion.div>
+        <span className="text-[10px] sm:text-xs font-bold text-amber-700 tracking-wider">
+          RECONNECTING…
+        </span>
+      </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 border border-gray-200">
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 border border-gray-200">
       <WifiOff className="w-3 h-3 text-gray-500" />
-      <span className="text-xs font-medium text-gray-500 tracking-wide">OFFLINE</span>
+      <span className="text-[10px] sm:text-xs font-bold text-gray-500 tracking-wider">OFFLINE</span>
     </div>
   );
 }
@@ -141,8 +173,104 @@ function EmptyState({ title, message }: { title: string; message: string }) {
   );
 }
 
+// ── Live Progress Strip ─────────────────────────────────────────
+function LiveProgressStrip({
+  total,
+  submitted,
+  round,
+}: {
+  total: number;
+  submitted: number;
+  round: 1 | 2;
+}) {
+  const pct = total > 0 ? Math.min(100, Math.round((submitted / total) * 100)) : 0;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-emerald-deep/5 border border-emerald-deep/15"
+    >
+      <div className="flex items-center gap-1.5 text-emerald-deep">
+        <Users className="size-4" />
+        <span className="text-xs sm:text-sm font-bold">
+          {submitted}
+          <span className="text-muted-foreground font-medium"> / {total || '—'}</span>
+        </span>
+        <span className="text-xs text-muted-foreground hidden sm:inline">
+          submitted Round {round}
+        </span>
+      </div>
+      <div className="flex-1 h-2 rounded-full bg-emerald-deep/10 overflow-hidden">
+        <motion.div
+          className="h-full bg-emerald-deep"
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+        />
+      </div>
+      <span className="text-xs font-bold text-emerald-deep tabular-nums w-10 text-right">
+        {pct}%
+      </span>
+    </motion.div>
+  );
+}
+
+// ── Class Filter Component ──────────────────────────────────────
+function ClassFilter<T extends { className: string; division: string }>({
+  entries,
+  onFilterChange,
+}: {
+  entries: T[];
+  onFilterChange: (filtered: T[]) => void;
+}) {
+  const classOptions = useMemo(() => {
+    const set = new Set<string>();
+    entries.forEach((e) => set.add(`${e.className} - ${e.division}`));
+    return Array.from(set).sort();
+  }, [entries]);
+
+  const [selected, setSelected] = useState<string>('all');
+
+  useEffect(() => {
+    if (selected === 'all') {
+      onFilterChange(entries);
+    } else {
+      const [cls, div] = selected.split(' - ');
+      onFilterChange(entries.filter((e) => e.className === cls && e.division === div));
+    }
+  }, [selected, entries, onFilterChange]);
+
+  if (classOptions.length <= 1) return null;
+
+  return (
+    <div className="flex items-center gap-2">
+      <Filter className="size-3.5 text-muted-foreground" />
+      <select
+        value={selected}
+        onChange={(e) => setSelected(e.target.value)}
+        className="text-xs sm:text-sm h-8 px-2 rounded-md border border-border bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-deep/30"
+        aria-label="Filter by class and division"
+      >
+        <option value="all">All classes</option>
+        {classOptions.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 // ── Round 1 Table ───────────────────────────────────────────────
 function Round1Table({ entries }: { entries: Round1LeaderboardEntry[] }) {
+  const [filtered, setFiltered] = useState(entries);
+
+  // Sync when upstream entries change
+  useEffect(() => {
+    setFiltered(entries);
+  }, [entries]);
+
   if (entries.length === 0) {
     return (
       <EmptyState
@@ -153,77 +281,100 @@ function Round1Table({ entries }: { entries: Round1LeaderboardEntry[] }) {
   }
 
   return (
-    <div className="max-h-[480px] overflow-y-auto custom-scrollbar rounded-lg border border-border">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-emerald-deep hover:bg-emerald-deep">
-            <TableHead className="text-ivory-warm font-semibold text-center w-16">Rank</TableHead>
-            <TableHead className="text-ivory-warm font-semibold">Name</TableHead>
-            <TableHead className="text-ivory-warm font-semibold text-center hidden sm:table-cell">Class</TableHead>
-            <TableHead className="text-ivory-warm font-semibold text-center">Score</TableHead>
-            <TableHead className="text-ivory-warm font-semibold text-right hidden md:table-cell">Time</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <AnimatePresence mode="popLayout">
-            {entries.map((entry) => (
-              <motion.tr
-                key={entry.participantId}
-                variants={rowVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                layout
-                className={`rank-enter border-b transition-colors ${
-                  entry.rank === 1
-                    ? 'bg-gradient-to-r from-gold-accent/20 via-gold-accent/10 to-transparent'
-                    : 'hover:bg-muted/50'
-                }`}
-              >
-                <TableCell className="text-center py-3">
-                  <RankBadge rank={entry.rank} />
-                </TableCell>
-                <TableCell className="font-semibold text-foreground py-3">
-                  <div className="flex flex-col">
-                    <span className={entry.rank === 1 ? 'text-gold-accent' : ''}>
-                      {entry.participantName}
-                    </span>
-                    <span className="text-xs text-muted-foreground sm:hidden">
-                      {entry.className} · {entry.division}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-center text-muted-foreground hidden sm:table-cell py-3">
-                  {entry.className}
-                </TableCell>
-                <TableCell className="text-center font-bold py-3">
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-sm ${
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <ClassFilter entries={entries} onFilterChange={setFiltered} />
+        {filtered.length !== entries.length && (
+          <Badge variant="secondary" className="text-xs">
+            Showing {filtered.length} of {entries.length}
+          </Badge>
+        )}
+      </div>
+      {filtered.length === 0 ? (
+        <EmptyState
+          title="NO MATCHES"
+          message="No results in the selected class yet."
+        />
+      ) : (
+        <div className="max-h-[480px] overflow-y-auto custom-scrollbar rounded-lg border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-emerald-deep hover:bg-emerald-deep">
+                <TableHead className="text-ivory-warm font-semibold text-center w-16">Rank</TableHead>
+                <TableHead className="text-ivory-warm font-semibold">Name</TableHead>
+                <TableHead className="text-ivory-warm font-semibold text-center hidden sm:table-cell">Class</TableHead>
+                <TableHead className="text-ivory-warm font-semibold text-center">Score</TableHead>
+                <TableHead className="text-ivory-warm font-semibold text-right hidden md:table-cell">Time</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <AnimatePresence mode="popLayout">
+                {filtered.map((entry) => (
+                  <motion.tr
+                    key={entry.participantId}
+                    variants={rowVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    layout
+                    className={`rank-enter border-b transition-colors ${
                       entry.rank === 1
-                        ? 'bg-gold-accent text-emerald-deep'
-                        : 'bg-emerald-deep/10 text-emerald-deep'
+                        ? 'bg-gradient-to-r from-gold-accent/20 via-gold-accent/10 to-transparent'
+                        : 'hover:bg-muted/50'
                     }`}
                   >
-                    {entry.correctAnswers}/{entry.totalQuestions}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right text-sm text-muted-foreground hidden md:table-cell py-3">
-                  <div className="flex items-center justify-end gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    {formatCompletionTime(entry.completionTimeMs)}
-                  </div>
-                </TableCell>
-              </motion.tr>
-            ))}
-          </AnimatePresence>
-        </TableBody>
-      </Table>
+                    <TableCell className="text-center py-3">
+                      <RankBadge rank={entry.rank} />
+                    </TableCell>
+                    <TableCell className="font-semibold text-foreground py-3">
+                      <div className="flex flex-col">
+                        <span className={entry.rank === 1 ? 'text-gold-accent' : ''}>
+                          {entry.participantName}
+                        </span>
+                        <span className="text-xs text-muted-foreground sm:hidden">
+                          {entry.className} · {entry.division}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center text-muted-foreground hidden sm:table-cell py-3">
+                      {entry.className}
+                    </TableCell>
+                    <TableCell className="text-center font-bold py-3">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-sm ${
+                          entry.rank === 1
+                            ? 'bg-gold-accent text-emerald-deep'
+                            : 'bg-emerald-deep/10 text-emerald-deep'
+                        }`}
+                      >
+                        {entry.correctAnswers}/{entry.totalQuestions}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right text-sm text-muted-foreground hidden md:table-cell py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {formatCompletionTime(entry.completionTimeMs)}
+                      </div>
+                    </TableCell>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }
 
 // ── Round 2 Table ───────────────────────────────────────────────
 function Round2Table({ entries }: { entries: Round2LeaderboardEntry[] }) {
+  const [filtered, setFiltered] = useState(entries);
+
+  useEffect(() => {
+    setFiltered(entries);
+  }, [entries]);
+
   if (entries.length === 0) {
     return (
       <EmptyState
@@ -234,65 +385,82 @@ function Round2Table({ entries }: { entries: Round2LeaderboardEntry[] }) {
   }
 
   return (
-    <div className="max-h-[480px] overflow-y-auto custom-scrollbar rounded-lg border border-border">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-navy-deep hover:bg-navy-deep">
-            <TableHead className="text-gold-light font-semibold text-center w-16">Rank</TableHead>
-            <TableHead className="text-gold-light font-semibold">Name</TableHead>
-            <TableHead className="text-gold-light font-semibold text-center hidden sm:table-cell">Class</TableHead>
-            <TableHead className="text-gold-light font-semibold text-right">Time</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <AnimatePresence mode="popLayout">
-            {entries.map((entry) => (
-              <motion.tr
-                key={entry.participantId}
-                variants={rowVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                layout
-                className={`rank-enter border-b transition-colors ${
-                  entry.rank === 1
-                    ? 'bg-gradient-to-r from-gold-accent/20 via-gold-accent/10 to-transparent'
-                    : 'hover:bg-muted/50'
-                }`}
-              >
-                <TableCell className="text-center py-3">
-                  <RankBadge rank={entry.rank} />
-                </TableCell>
-                <TableCell className="font-semibold text-foreground py-3">
-                  <div className="flex flex-col">
-                    <span className={entry.rank === 1 ? 'text-gold-accent' : ''}>
-                      {entry.participantName}
-                    </span>
-                    <span className="text-xs text-muted-foreground sm:hidden">
-                      {entry.className} · {entry.division}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-center text-muted-foreground hidden sm:table-cell py-3">
-                  {entry.className}
-                </TableCell>
-                <TableCell className="text-right font-mono font-bold py-3">
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm ${
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <ClassFilter entries={entries} onFilterChange={setFiltered} />
+        {filtered.length !== entries.length && (
+          <Badge variant="secondary" className="text-xs">
+            Showing {filtered.length} of {entries.length}
+          </Badge>
+        )}
+      </div>
+      {filtered.length === 0 ? (
+        <EmptyState
+          title="NO MATCHES"
+          message="No results in the selected class yet."
+        />
+      ) : (
+        <div className="max-h-[480px] overflow-y-auto custom-scrollbar rounded-lg border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-navy-deep hover:bg-navy-deep">
+                <TableHead className="text-gold-light font-semibold text-center w-16">Rank</TableHead>
+                <TableHead className="text-gold-light font-semibold">Name</TableHead>
+                <TableHead className="text-gold-light font-semibold text-center hidden sm:table-cell">Class</TableHead>
+                <TableHead className="text-gold-light font-semibold text-right">Time (μs)</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <AnimatePresence mode="popLayout">
+                {filtered.map((entry) => (
+                  <motion.tr
+                    key={entry.participantId}
+                    variants={rowVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    layout
+                    className={`rank-enter border-b transition-colors ${
                       entry.rank === 1
-                        ? 'bg-gold-accent text-emerald-deep'
-                        : 'bg-navy-deep/10 text-navy-deep'
+                        ? 'bg-gradient-to-r from-gold-accent/20 via-gold-accent/10 to-transparent'
+                        : 'hover:bg-muted/50'
                     }`}
                   >
-                    <Clock className="w-3.5 h-3.5" />
-                    {formatTimerDisplay(entry.finalTimeMs)}
-                  </span>
-                </TableCell>
-              </motion.tr>
-            ))}
-          </AnimatePresence>
-        </TableBody>
-      </Table>
+                    <TableCell className="text-center py-3">
+                      <RankBadge rank={entry.rank} />
+                    </TableCell>
+                    <TableCell className="font-semibold text-foreground py-3">
+                      <div className="flex flex-col">
+                        <span className={entry.rank === 1 ? 'text-gold-accent' : ''}>
+                          {entry.participantName}
+                        </span>
+                        <span className="text-xs text-muted-foreground sm:hidden">
+                          {entry.className} · {entry.division}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center text-muted-foreground hidden sm:table-cell py-3">
+                      {entry.className}
+                    </TableCell>
+                    <TableCell className="text-right font-mono font-bold py-3">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm tabular-nums ${
+                          entry.rank === 1
+                            ? 'bg-gold-accent text-emerald-deep'
+                            : 'bg-navy-deep/10 text-navy-deep'
+                        }`}
+                      >
+                        <Clock className="w-3.5 h-3.5" />
+                        {formatTimerMicroseconds(entry.finalTimeMs)}
+                      </span>
+                    </TableCell>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }
@@ -302,23 +470,41 @@ interface LeaderboardViewProps {
   round: 1 | 2;
 }
 
+interface Stats {
+  totalParticipants: number;
+  round1Submitted: number;
+  round2Submitted: number;
+}
+
+const BASE_POLL_MS = 4000;
+const MAX_POLL_MS = 30000;
+
 export default function LeaderboardView({ round: initialRound }: LeaderboardViewProps) {
   const [activeTab, setActiveTab] = useState<string>(`round${initialRound}`);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [stats, setStats] = useState<Stats>({
+    totalParticipants: 0,
+    round1Submitted: 0,
+    round2Submitted: 0,
+  });
 
   const round1Leaderboard = useAppStore((s) => s.round1Leaderboard);
   const round2Leaderboard = useAppStore((s) => s.round2Leaderboard);
   const setRound1Leaderboard = useAppStore((s) => s.setRound1Leaderboard);
   const setRound2Leaderboard = useAppStore((s) => s.setRound2Leaderboard);
+  const setRealtimeStatus = useAppStore((s) => s.setRealtimeStatus);
+  const realtimeStatus = useAppStore((s) => s.realtimeStatus);
   const navigate = useAppStore((s) => s.navigate);
 
-  // Fetch leaderboard data
+  // ── Fetch both leaderboards + stats in one go ─────────────────
   const fetchData = useCallback(async () => {
     try {
-      const [r1Res, r2Res] = await Promise.all([
+      const [r1Res, r2Res, statsRes] = await Promise.all([
         fetch('/api/leaderboard/round1'),
         fetch('/api/leaderboard/round2'),
+        fetch('/api/competition/stats'),
       ]);
 
       if (r1Res.ok) {
@@ -335,34 +521,66 @@ export default function LeaderboardView({ round: initialRound }: LeaderboardView
         }
       }
 
+      if (statsRes.ok) {
+        const sJson = await statsRes.json();
+        if (sJson.success && sJson.data) {
+          setStats(sJson.data as Stats);
+        }
+      }
+
       setError(null);
+      setLastUpdated(new Date());
+      setRealtimeStatus('connected');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch leaderboard data');
+      setRealtimeStatus('reconnecting');
     } finally {
       setLoading(false);
     }
-  }, [setRound1Leaderboard, setRound2Leaderboard]);
+  }, [setRound1Leaderboard, setRound2Leaderboard, setRealtimeStatus]);
 
-  // Fetch on mount and every 5 seconds
+  // ── Polling loop with exponential backoff on error ─────────────
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
+    let cancelled = false;
+    let pollDelay = BASE_POLL_MS;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const loop = async () => {
+      if (cancelled) return;
+      await fetchData();
+      if (cancelled) return;
+      // Reset delay on success, grow on error
+      pollDelay = error ? Math.min(MAX_POLL_MS, pollDelay * 1.5) : BASE_POLL_MS;
+      timer = setTimeout(loop, pollDelay);
+    };
+
+    loop();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [fetchData, error]);
 
   const handleBack = () => {
     navigate('landing');
   };
+
+  const handleManualRefresh = () => {
+    void fetchData();
+  };
+
+  const submittedCount = activeTab === 'round1' ? stats.round1Submitted : stats.round2Submitted;
+  const currentRound = activeTab === 'round1' ? 1 : 2;
 
   return (
     <div className="min-h-screen islamic-pattern">
       <div className="max-w-4xl mx-auto px-4 py-6 sm:py-10">
         {/* Header */}
         <motion.div
-          className="flex items-center justify-between mb-6"
+          className="flex items-center justify-between mb-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 24 }}
         >
           <Button
             variant="outline"
@@ -374,21 +592,39 @@ export default function LeaderboardView({ round: initialRound }: LeaderboardView
             <span className="hidden sm:inline">Back</span>
           </Button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
               Leaderboard
             </h1>
-            <RealtimeIndicator />
+            <RealtimeIndicator
+              status={realtimeStatus}
+              lastUpdated={lastUpdated}
+              onRefresh={handleManualRefresh}
+            />
           </div>
 
-          <div className="w-20" /> {/* Spacer for centering */}
+          <div className="w-7 sm:w-9" /> {/* Spacer for centering */}
+        </motion.div>
+
+        {/* Live progress strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-4"
+        >
+          <LiveProgressStrip
+            total={stats.totalParticipants}
+            submitted={submittedCount}
+            round={currentRound as 1 | 2}
+          />
         </motion.div>
 
         {/* Leaderboard Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }}
+          transition={{ delay: 0.15 }}
         >
           <Card className="border-border/60 shadow-lg overflow-hidden">
             <CardHeader className="pb-3 px-4 sm:px-6 pt-5 sm:pt-6">
@@ -397,24 +633,20 @@ export default function LeaderboardView({ round: initialRound }: LeaderboardView
                   <Trophy className="w-5 h-5 text-gold-accent" />
                   Competition Rankings
                 </CardTitle>
-                <Badge variant="outline" className="text-xs border-gold-accent/40 text-gold-accent bg-gold-accent/5">
-                  {round1Leaderboard.length + round2Leaderboard.length > 0
-                    ? `R1: ${round1Leaderboard.length} · R2: ${round2Leaderboard.length}`
-                    : 'No entries'}
+                <Badge
+                  variant="outline"
+                  className="text-xs border-gold-accent/40 text-gold-accent bg-gold-accent/5"
+                >
+                  R1: {round1Leaderboard.length} · R2: {round2Leaderboard.length}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="px-4 sm:px-6 pb-5 sm:pb-6">
-              {error ? (
+              {error && round1Leaderboard.length === 0 && round2Leaderboard.length === 0 ? (
                 <div className="flex flex-col items-center py-10 text-destructive">
                   <p className="font-medium">Failed to load leaderboard</p>
                   <p className="text-sm mt-1 text-muted-foreground">{error}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={fetchData}
-                    className="mt-4"
-                  >
+                  <Button variant="outline" size="sm" onClick={handleManualRefresh} className="mt-4">
                     Retry
                   </Button>
                 </div>
@@ -423,11 +655,7 @@ export default function LeaderboardView({ round: initialRound }: LeaderboardView
                   <Loader2 className="w-8 h-8 text-gold-accent animate-spin" />
                 </div>
               ) : (
-                <Tabs
-                  value={activeTab}
-                  onValueChange={setActiveTab}
-                  className="w-full"
-                >
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="w-full grid grid-cols-2 mb-4 bg-muted/50">
                     <TabsTrigger
                       value="round1"
@@ -470,14 +698,14 @@ export default function LeaderboardView({ round: initialRound }: LeaderboardView
           </Card>
         </motion.div>
 
-        {/* Auto-refresh indicator */}
+        {/* Footer hint */}
         <motion.p
           className="text-center text-xs text-muted-foreground mt-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
         >
-          Auto-refreshes every 5 seconds
+          Auto-refreshes every {BASE_POLL_MS / 1000}s · ranking is computed server-side
         </motion.p>
       </div>
     </div>
