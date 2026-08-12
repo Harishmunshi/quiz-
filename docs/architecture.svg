@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 720" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="gEmerald" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A8A66"/>
+      <stop offset="100%" stop-color="#063B2D"/>
+    </linearGradient>
+    <linearGradient id="gNavy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1A3050"/>
+      <stop offset="100%" stop-color="#071A2B"/>
+    </linearGradient>
+    <linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8C76A"/>
+      <stop offset="100%" stop-color="#C8A951"/>
+    </linearGradient>
+    <linearGradient id="gCard" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F7F2E7"/>
+    </linearGradient>
+
+    <!-- Arrow markers -->
+    <marker id="arrowEmerald" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#063B2D"/>
+    </marker>
+    <marker id="arrowGold" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#C8A951"/>
+    </marker>
+    <marker id="arrowNavy" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#1A3050"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="720" fill="#F7F2E7"/>
+
+  <!-- Title -->
+  <text x="550" y="40" text-anchor="middle" font-size="26" font-weight="800" fill="#063B2D">Islamic Quiz Competition — Architecture</text>
+  <text x="550" y="62" text-anchor="middle" font-size="13" fill="#1A3050" opacity="0.7">Where your code lives, where your data lives, and how the leaderboard actually works</text>
+
+  <!-- ============================== -->
+  <!-- ROW 1: USER DEVICES             -->
+  <!-- ============================== -->
+
+  <!-- Student phone -->
+  <g>
+    <rect x="60" y="110" width="200" height="120" rx="16" fill="url(#gCard)" stroke="#063B2D" stroke-width="2"/>
+    <rect x="80" y="130" width="160" height="22" rx="6" fill="url(#gEmerald)"/>
+    <text x="160" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#F7F2E7">📱 STUDENT PHONE</text>
+    <text x="160" y="172" text-anchor="middle" font-size="11" fill="#063B2D">Scans QR</text>
+    <text x="160" y="188" text-anchor="middle" font-size="11" fill="#063B2D">Registers (name, class, div)</text>
+    <text x="160" y="204" text-anchor="middle" font-size="11" fill="#063B2D">Answers 10 questions</text>
+    <text x="160" y="220" text-anchor="middle" font-size="11" font-weight="700" fill="#C8A951">→ POST /api/round1/submit</text>
+  </g>
+
+  <!-- Projector -->
+  <g>
+    <rect x="840" y="110" width="200" height="120" rx="16" fill="url(#gCard)" stroke="#C8A951" stroke-width="2"/>
+    <rect x="860" y="130" width="160" height="22" rx="6" fill="url(#gGold)"/>
+    <text x="940" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#071A2B">📺 PROJECTOR / TV</text>
+    <text x="940" y="172" text-anchor="middle" font-size="11" fill="#063B2D">Shows /display/leaderboard</text>
+    <text x="940" y="188" text-anchor="middle" font-size="11" fill="#063B2D">Polls every 4 seconds</text>
+    <text x="940" y="204" text-anchor="middle" font-size="11" fill="#063B2D">No refresh needed</text>
+    <text x="940" y="220" text-anchor="middle" font-size="11" font-weight="700" fill="#C8A951">→ GET /api/leaderboard/r1</text>
+  </g>
+
+  <!-- Admin -->
+  <g>
+    <rect x="450" y="110" width="200" height="120" rx="16" fill="url(#gCard)" stroke="#1A3050" stroke-width="2"/>
+    <rect x="470" y="130" width="160" height="22" rx="6" fill="url(#gNavy)"/>
+    <text x="550" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#C8A951">🛠 ADMIN LAPTOP</text>
+    <text x="550" y="172" text-anchor="middle" font-size="11" fill="#063B2D">Adds questions</text>
+    <text x="550" y="188" text-anchor="middle" font-size="11" fill="#063B2D">Opens / closes rounds</text>
+    <text x="550" y="204" text-anchor="middle" font-size="11" fill="#063B2D">Exports CSV</text>
+    <text x="550" y="220" text-anchor="middle" font-size="11" font-weight="700" fill="#C8A951">→ POST /api/admin/*</text>
+  </g>
+
+  <!-- ============================== -->
+  <!-- ROW 2: VERCEL (your code)       -->
+  <!-- ============================== -->
+
+  <g>
+    <rect x="60" y="290" width="980" height="220" rx="20" fill="white" stroke="#000" stroke-width="1.5" stroke-dasharray="0"/>
+    <rect x="60" y="290" width="980" height="40" rx="20" fill="url(#gEmerald)"/>
+    <text x="100" y="316" font-size="16" font-weight="800" fill="#F7F2E7">▲ VERCEL</text>
+    <text x="220" y="316" font-size="13" fill="#F7F2E7" opacity="0.85">— hosts your Next.js code (free tier)</text>
+
+    <!-- Boxes inside Vercel -->
+    <rect x="100" y="360" width="180" height="120" rx="12" fill="#F7F2E7" stroke="#063B2D" stroke-width="1.5"/>
+    <text x="190" y="385" text-anchor="middle" font-size="13" font-weight="700" fill="#063B2D">Next.js UI</text>
+    <text x="190" y="406" text-anchor="middle" font-size="10" fill="#1A3050">Landing, Registration,</text>
+    <text x="190" y="420" text-anchor="middle" font-size="10" fill="#1A3050">Round 1 quiz, Round 2</text>
+    <text x="190" y="434" text-anchor="middle" font-size="10" fill="#1A3050">drag-drop, Leaderboard</text>
+    <text x="190" y="456" text-anchor="middle" font-size="9" fill="#666">(runs in the browser)</text>
+
+    <rect x="320" y="360" width="180" height="120" rx="12" fill="#F7F2E7" stroke="#063B2D" stroke-width="1.5"/>
+    <text x="410" y="385" text-anchor="middle" font-size="13" font-weight="700" fill="#063B2D">API Routes</text>
+    <text x="410" y="406" text-anchor="middle" font-size="10" fill="#1A3050">/api/participant</text>
+    <text x="410" y="420" text-anchor="middle" font-size="10" fill="#1A3050">/api/round1/*</text>
+    <text x="410" y="434" text-anchor="middle" font-size="10" fill="#1A3050">/api/round2/*</text>
+    <text x="410" y="456" text-anchor="middle" font-size="9" fill="#666">(server functions)</text>
+
+    <rect x="540" y="360" width="180" height="120" rx="12" fill="#F7F2E7" stroke="#063B2D" stroke-width="1.5"/>
+    <text x="630" y="385" text-anchor="middle" font-size="13" font-weight="700" fill="#063B2D">Server logic</text>
+    <text x="630" y="406" text-anchor="middle" font-size="10" fill="#1A3050">SCORE: server-side,</text>
+    <text x="630" y="420" text-anchor="middle" font-size="10" fill="#1A3050">answer key never</text>
+    <text x="630" y="434" text-anchor="middle" font-size="10" fill="#1A3050">leaves server</text>
+    <text x="630" y="456" text-anchor="middle" font-size="10" fill="#1A3050">TIME: server-authoritative</text>
+
+    <rect x="760" y="360" width="240" height="120" rx="12" fill="#F7F2E7" stroke="#063B2D" stroke-width="1.5"/>
+    <text x="880" y="385" text-anchor="middle" font-size="13" font-weight="700" fill="#063B2D">Leaderboard engine</text>
+    <text x="880" y="406" text-anchor="middle" font-size="10" fill="#1A3050">SELECT * FROM round1_attempts</text>
+    <text x="880" y="420" text-anchor="middle" font-size="10" fill="#1A3050">ORDER BY score DESC,</text>
+    <text x="880" y="434" text-anchor="middle" font-size="10" fill="#1A3050">completion_time ASC,</text>
+    <text x="880" y="448" text-anchor="middle" font-size="10" fill="#1A3050">submitted_at ASC</text>
+  </g>
+
+  <!-- ============================== -->
+  <!-- ROW 3: SUPABASE (database)      -->
+  <!-- ============================== -->
+
+  <g>
+    <rect x="60" y="560" width="980" height="140" rx="20" fill="white" stroke="#000" stroke-width="1.5"/>
+    <rect x="60" y="560" width="980" height="40" rx="20" fill="url(#gNavy)"/>
+    <text x="100" y="586" font-size="16" font-weight="800" fill="#C8A951">⚡ SUPABASE</text>
+    <text x="240" y="586" font-size="13" fill="#C8A951" opacity="0.85">— Postgres database + Auth + Storage + Realtime (free tier)</text>
+
+    <!-- DB tables -->
+    <g font-size="10" font-weight="600" fill="#F7F2E7">
+      <rect x="100" y="620" width="120" height="30" rx="6" fill="#1A3050" stroke="#C8A951" stroke-width="1"/>
+      <text x="160" y="640" text-anchor="middle">participants</text>
+
+      <rect x="240" y="620" width="130" height="30" rx="6" fill="#1A3050" stroke="#C8A951" stroke-width="1"/>
+      <text x="305" y="640" text-anchor="middle">round1_attempts</text>
+
+      <rect x="390" y="620" width="130" height="30" rx="6" fill="#1A3050" stroke="#C8A951" stroke-width="1"/>
+      <text x="455" y="640" text-anchor="middle">round1_answers</text>
+
+      <rect x="540" y="620" width="130" height="30" rx="6" fill="#1A3050" stroke="#C8A951" stroke-width="1"/>
+      <text x="605" y="640" text-anchor="middle">round2_attempts</text>
+
+      <rect x="690" y="620" width="130" height="30" rx="6" fill="#1A3050" stroke="#C8A951" stroke-width="1"/>
+      <text x="755" y="640" text-anchor="middle">questions</text>
+
+      <rect x="840" y="620" width="160" height="30" rx="6" fill="#1A3050" stroke="#C8A951" stroke-width="1"/>
+      <text x="920" y="640" text-anchor="middle">round2_challenges</text>
+    </g>
+    <text x="160" y="675" text-anchor="middle" font-size="9" fill="#1A3050" opacity="0.7">+ admin_users, competition_settings</text>
+  </g>
+
+  <!-- ============================== -->
+  <!-- ARROWS                          -->
+  <!-- ============================== -->
+
+  <!-- Student → Vercel (POST submit) -->
+  <path d="M 160 230 L 160 360" fill="none" stroke="#063B2D" stroke-width="2.5" marker-end="url(#arrowEmerald)" stroke-dasharray="0"/>
+  <text x="60" y="298" font-size="10" font-weight="700" fill="#063B2D">HTTPS POST</text>
+
+  <!-- Projector → Vercel (GET leaderboard every 4s) -->
+  <path d="M 940 230 L 940 360" fill="none" stroke="#C8A951" stroke-width="2.5" marker-end="url(#arrowGold)" stroke-dasharray="6 4"/>
+  <text x="950" y="298" font-size="10" font-weight="700" fill="#C8A951">poll 4s</text>
+
+  <!-- Admin → Vercel (POST /api/admin/*) -->
+  <path d="M 550 230 L 550 358" fill="none" stroke="#1A3050" stroke-width="2.5" marker-end="url(#arrowNavy)" stroke-dasharray="3 3"/>
+  <text x="565" y="298" font-size="10" font-weight="700" fill="#1A3050">auth + POST</text>
+
+  <!-- Vercel → Supabase (queries) -->
+  <path d="M 880 480 L 880 620" fill="none" stroke="#063B2D" stroke-width="2.5" marker-end="url(#arrowEmerald)"/>
+  <text x="890" y="555" font-size="10" font-weight="700" fill="#063B2D">SQL via Prisma</text>
+
+  <!-- Vercel → Supabase (writes from student/admin) -->
+  <path d="M 320 480 L 320 620" fill="none" stroke="#063B2D" stroke-width="2.5" marker-end="url(#arrowEmerald)"/>
+  <text x="170" y="555" font-size="10" font-weight="700" fill="#063B2D">INSERT</text>
+
+  <!-- ============================== -->
+  <!-- LEGEND                          -->
+  <!-- ============================== -->
+
+  <g transform="translate(60, 715)">
+    <text x="0" y="0" font-size="10" fill="#666">
+      Legend: solid arrow = request  ·  dashed = poll  ·  green = student path  ·  gold = leaderboard  ·  navy = admin
+    </text>
+  </g>
+</svg>
