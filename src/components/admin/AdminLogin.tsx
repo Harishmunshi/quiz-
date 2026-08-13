@@ -65,6 +65,13 @@ export default function AdminLogin() {
 
       if (json.token && json.adminName) {
         setAdmin(json.token, json.adminName);
+        // Persist so the standalone /admin/round2 control panel — a separate
+        // page with its own React tree — can authenticate without a second login.
+        try {
+          window.localStorage.setItem('mes-admin-token', json.token);
+        } catch {
+          /* private browsing: the in-memory store still covers this tab */
+        }
         navigate('admin-dashboard');
       } else {
         setError('Invalid response from server.');

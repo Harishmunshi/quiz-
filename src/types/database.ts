@@ -28,6 +28,14 @@ export interface CompetitionSettings {
   allowRound2Retry: boolean;
   round2PenaltySeconds: number;
   isTestMode: boolean;
+  // Round 2 live mode (admin-gated, one question at a time)
+  round2Mode: 'live' | 'free';
+  round2CurrentQuestion: number;
+  round2QuestionState: 'idle' | 'open' | 'locked' | 'revealed';
+  round2QuestionOpenedAt: string | null;
+  round2QuestionLockedAt: string | null;
+  round2QuestionSeconds: number;
+  round2ShowAnswer: boolean;
   createdAt: string;
   updatedAt: string;
 }

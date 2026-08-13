@@ -71,8 +71,36 @@ export default function Round2Landing() {
 
   function handleStart() {
     if (!isOpen) return;
+
+    // Round 2 now runs in "live" mode by default: the admin releases one
+    // question at a time from /admin/round2, and students answer on the
+    // standalone /round2 page. That page carries its own identity in
+    // localStorage, so an unregistered student can join there directly
+    // instead of being bounced back to the Round 1 landing screen.
+    if (competitionSettings?.round2Mode !== 'free') {
+      if (participant) {
+        try {
+          window.localStorage.setItem(
+            'mes-quiz-participant',
+            JSON.stringify({
+              id: participant.id,
+              participantCode: participant.participantCode,
+              name: participant.name,
+              className: participant.className,
+              division: participant.division,
+              language: participant.language,
+            })
+          );
+        } catch {
+          /* the /round2 page will ask them to join again */
+        }
+      }
+      window.location.href = '/round2';
+      return;
+    }
+
+    // Legacy self-paced drag-and-drop challenge.
     if (needsRegistration) {
-      // Bounce to landing so they register first
       navigate('landing');
       return;
     }

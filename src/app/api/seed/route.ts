@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+// Always run on request: these endpoints read live competition state and
+// must never be statically rendered or cached by Next.js.
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
@@ -168,6 +173,9 @@ export async function POST() {
     for (const c of challenges) {
       await db.round2Challenge.create({ data: c });
     }
+
+    // Round 2 questions are ordering challenges and live in their own table.
+    // Seed them from POST /api/seed/round2.
 
     return NextResponse.json({ success: true, message: 'Database seeded successfully' });
   } catch (error) {

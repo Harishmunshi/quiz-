@@ -654,6 +654,13 @@ export default function AdminDashboard() {
                     />
                     <Separator className="my-2" />
                     <NavLink
+                      icon={Trophy}
+                      label="Round 2 Live Control"
+                      onClick={() => {
+                        window.location.href = '/admin/round2';
+                      }}
+                    />
+                    <NavLink
                       icon={QrCode}
                       label="QR Display"
                       onClick={() => navigate('display-qr')}

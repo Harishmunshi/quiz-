@@ -3,13 +3,18 @@ import { db } from '@/lib/db';
 import { submitRound1Schema } from '@/lib/validation/schemas';
 import { calculateRound1Score } from '@/lib/scoring/round1';
 
+// Always run on request: these endpoints read live competition state and
+// must never be statically rendered or cached by Next.js.
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const parsed = submitRound1Schema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: parsed.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ success: false, error: parsed.error.issues[0].message }, { status: 400 });
     }
 
     const { attemptId, answers } = parsed.data;
