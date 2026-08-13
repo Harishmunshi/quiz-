@@ -5,8 +5,7 @@ import { z } from 'zod';
 // ============================================================
 export const registerParticipantSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
-  className: z.string().min(1, 'Class is required').max(20, 'Invalid class'),
-  division: z.string().min(1, 'Division is required').max(10, 'Invalid division'),
+  schoolName: z.string().min(2, 'School name is required').max(150, 'School name is too long'),
   language: z.enum(['english', 'gujarati']),
 });
 

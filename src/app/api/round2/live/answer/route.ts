@@ -90,6 +90,28 @@ export async function POST(request: Request) {
       );
     }
 
+    // Gate checks live here too, not just at join: a student who joined and was
+    // then disqualified must stop scoring immediately, and a hand-crafted POST
+    // must never bypass the door.
+    if (participant.disqualified) {
+      return NextResponse.json(
+        { success: false, error: 'You have been removed from this round', code: 'DISQUALIFIED' },
+        { status: 403 }
+      );
+    }
+    if (settings.round2RequireQualify && !participant.round2Eligible) {
+      return NextResponse.json(
+        { success: false, error: 'You did not qualify for Round 2', code: 'NOT_QUALIFIED' },
+        { status: 403 }
+      );
+    }
+    if (settings.round2RequirePin && !participant.round2JoinedAt) {
+      return NextResponse.json(
+        { success: false, error: 'Enter the PIN shown on screen to join', code: 'NOT_JOINED' },
+        { status: 403 }
+      );
+    }
+
     const items = parseItems(question.items);
     const check = validateSubmission(submittedOrder, items);
     if (!check.ok) {

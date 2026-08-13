@@ -38,8 +38,7 @@ export async function POST(request: Request) {
       data: {
         participantCode: code,
         name: parsed.data.name,
-        className: parsed.data.className,
-        division: parsed.data.division,
+        schoolName: parsed.data.schoolName,
         language: parsed.data.language,
         isTest: settings.isTestMode,
       },
@@ -51,6 +50,7 @@ export async function POST(request: Request) {
         id: participant.id,
         participantCode: participant.participantCode,
         name: participant.name,
+        schoolName: participant.schoolName,
         language: participant.language,
       },
     });

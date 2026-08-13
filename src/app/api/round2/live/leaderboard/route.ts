@@ -57,8 +57,7 @@ export async function GET(request: Request) {
             id: true,
             participantCode: true,
             name: true,
-            className: true,
-            division: true,
+            schoolName: true,
           },
         },
       },
@@ -66,14 +65,18 @@ export async function GET(request: Request) {
 
     // Everyone who has joined appears on the board, even at zero — a student
     // who missed Q1 should still see themselves rather than vanish.
+    // Only qualified, non-disqualified students belong on the Round 2 board.
     const participants = await db.participant.findMany({
-      where: { isTest },
+      where: {
+        isTest,
+        disqualified: false,
+        ...(settings.round2RequireQualify ? { round2Eligible: true } : {}),
+      },
       select: {
         id: true,
         participantCode: true,
         name: true,
-        className: true,
-        division: true,
+        schoolName: true,
       },
     });
 
@@ -84,8 +87,7 @@ export async function GET(request: Request) {
         participantId: p.id,
         participantCode: p.participantCode,
         participantName: p.name,
-        className: p.className,
-        division: p.division,
+        schoolName: p.schoolName,
         score: 0,
         correctAnswers: 0,
         answeredCount: 0,
@@ -104,8 +106,7 @@ export async function GET(request: Request) {
           participantId: a.participantId,
           participantCode: a.participant.participantCode,
           participantName: a.participant.name,
-          className: a.participant.className,
-          division: a.participant.division,
+          schoolName: a.participant.schoolName,
           score: 0,
           correctAnswers: 0,
           answeredCount: 0,

@@ -16,8 +16,8 @@ export interface StoredParticipant {
   id: string;
   participantCode: string;
   name: string;
-  className: string;
-  division: string;
+  schoolName: string;
+  /** Historic key for the second language; the content and label are Hindi. */
   language: 'english' | 'gujarati';
 }
 

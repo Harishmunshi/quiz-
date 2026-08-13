@@ -63,7 +63,7 @@ export async function GET(request: Request) {
     const answers = await db.round2LiveAnswer.findMany({
       where: { questionId: question.id, isTest },
       include: {
-        participant: { select: { id: true, name: true, className: true, division: true } },
+        participant: { select: { id: true, name: true, schoolName: true } },
       },
       orderBy: { responseTimeMs: 'asc' },
     });
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
     const pending = (
       await db.participant.findMany({
         where: { isTest },
-        select: { id: true, name: true, className: true, division: true },
+        select: { id: true, name: true, schoolName: true },
         orderBy: { name: 'asc' },
       })
     ).filter((p) => !submittedIds.has(p.id));
@@ -112,6 +112,10 @@ export async function GET(request: Request) {
         state: settings.round2QuestionState,
         currentQuestionNumber: settings.round2CurrentQuestion,
         questionTitle: question.titleEnglish,
+        joinPin: settings.round2JoinPin,
+        qualifiedCount: await db.participant.count({
+          where: { isTest, round2Eligible: true, disqualified: false },
+        }),
       },
     });
   } catch (error) {

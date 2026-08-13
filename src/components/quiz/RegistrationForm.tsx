@@ -47,8 +47,7 @@ const fieldVariants = {
 // ── Types ──────────────────────────────────────────────────────
 interface FieldError {
   name?: string;
-  className?: string;
-  division?: string;
+  schoolName?: string;
 }
 
 // ── Main Component ─────────────────────────────────────────────
@@ -61,8 +60,7 @@ export default function RegistrationForm() {
 
   // Form state
   const [name, setName] = useState('');
-  const [className, setClassName] = useState('');
-  const [division, setDivision] = useState('');
+  const [schoolName, setSchoolName] = useState('M.E.S. English Medium School');
   const [fieldErrors, setFieldErrors] = useState<FieldError>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -72,14 +70,13 @@ export default function RegistrationForm() {
   const isRound1Available = round1Status === 'open';
 
   const isGujarati = selectedLanguage === 'gujarati';
-  const title = isGujarati ? 'Register — ગુજરાતી ક્વિઝ' : 'Register — English Quiz';
+  const title = isGujarati ? 'Register — हिंदी ક્વિઝ' : 'Register — English Quiz';
 
   // Validate fields with Zod
   function validateFields(): boolean {
     const result = registerParticipantSchema.safeParse({
       name,
-      className,
-      division,
+      schoolName,
       language: selectedLanguage,
     });
 
@@ -117,8 +114,7 @@ export default function RegistrationForm() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name,
-            className,
-            division,
+            schoolName,
             language: selectedLanguage,
           }),
         });
@@ -140,7 +136,7 @@ export default function RegistrationForm() {
         setSubmitting(false);
       }
     },
-    [name, className, division, selectedLanguage, isRound1Available, setParticipant, navigate]
+    [name, schoolName, selectedLanguage, isRound1Available, setParticipant, navigate]
   );
 
   return (
@@ -175,7 +171,7 @@ export default function RegistrationForm() {
                     : 'bg-emerald-deep text-ivory-warm'
                 }`}
               >
-                {isGujarati ? 'ગુજરાતી ક્વિઝ' : 'English Quiz'}
+                {isGujarati ? 'हिंदी ક્વિઝ' : 'English Quiz'}
               </Badge>
             </div>
 
@@ -259,7 +255,7 @@ export default function RegistrationForm() {
                 )}
               </motion.div>
 
-              {/* Class Field */}
+              {/* School Field */}
               <motion.div
                 custom={1}
                 variants={fieldVariants}
@@ -267,72 +263,33 @@ export default function RegistrationForm() {
                 animate="visible"
                 className="space-y-2"
               >
-                <Label htmlFor="reg-class" className="text-navy-deep font-semibold text-sm">
-                  Class
+                <Label htmlFor="reg-school" className="text-navy-deep font-semibold text-sm">
+                  School Name
                 </Label>
                 <Input
-                  id="reg-class"
+                  id="reg-school"
                   type="text"
-                  placeholder="e.g., 10"
-                  value={className}
+                  placeholder="e.g., M.E.S. English Medium School"
+                  value={schoolName}
                   onChange={(e) => {
-                    setClassName(e.target.value);
-                    if (fieldErrors.className) setFieldErrors((prev) => ({ ...prev, className: undefined }));
+                    setSchoolName(e.target.value);
+                    if (fieldErrors.schoolName) setFieldErrors((prev) => ({ ...prev, schoolName: undefined }));
                   }}
                   disabled={submitting || !isRound1Available}
                   className={`bg-white ${
-                    fieldErrors.className
+                    fieldErrors.schoolName
                       ? 'border-destructive focus-visible:ring-destructive/20'
                       : 'focus-visible:border-emerald-deep'
                   }`}
-                  autoComplete="off"
+                  autoComplete="organization"
                 />
-                {fieldErrors.className && (
+                {fieldErrors.schoolName && (
                   <motion.p
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="text-xs text-destructive font-medium"
                   >
-                    {fieldErrors.className}
-                  </motion.p>
-                )}
-              </motion.div>
-
-              {/* Division Field */}
-              <motion.div
-                custom={2}
-                variants={fieldVariants}
-                initial="hidden"
-                animate="visible"
-                className="space-y-2"
-              >
-                <Label htmlFor="reg-division" className="text-navy-deep font-semibold text-sm">
-                  Division
-                </Label>
-                <Input
-                  id="reg-division"
-                  type="text"
-                  placeholder="e.g., A"
-                  value={division}
-                  onChange={(e) => {
-                    setDivision(e.target.value);
-                    if (fieldErrors.division) setFieldErrors((prev) => ({ ...prev, division: undefined }));
-                  }}
-                  disabled={submitting || !isRound1Available}
-                  className={`bg-white ${
-                    fieldErrors.division
-                      ? 'border-destructive focus-visible:ring-destructive/20'
-                      : 'focus-visible:border-emerald-deep'
-                  }`}
-                  autoComplete="off"
-                />
-                {fieldErrors.division && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-xs text-destructive font-medium"
-                  >
-                    {fieldErrors.division}
+                    {fieldErrors.schoolName}
                   </motion.p>
                 )}
               </motion.div>
@@ -380,7 +337,7 @@ export default function RegistrationForm() {
                         : 'bg-transparent text-navy-deep/70 hover:bg-white/60'
                     }`}
                   >
-                    ગુજરાતી
+                    हिंदी
                   </button>
                 </div>
               </motion.div>

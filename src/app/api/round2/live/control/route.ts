@@ -15,7 +15,14 @@ const controlSchema = z.object({
     'previous',  // step back a question (recovery from a mis-click)
     'reset',     // clear all Round 2 live answers and go back to idle
     'settings',  // change per-question seconds / show-answer / mode
+    'qualify',   // apply the Round 1 cut: mark the top N eligible for Round 2
+    'generate-pin', // new join PIN, shown only on the projector
+    'clear-pin',
+    'disqualify',   // remove a participant mid-round
+    'reinstate',
   ]),
+  participantId: z.string().optional(),
+  qualifyTopN: z.number().int().min(1).max(500).optional(),
   questionNumber: z.number().int().positive().optional(),
   questionSeconds: z.number().int().min(0).max(600).optional(),
   showAnswer: z.boolean().optional(),
@@ -48,7 +55,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const { action, questionNumber, questionSeconds, showAnswer, mode } = parsed.data;
+    const { action, questionNumber, questionSeconds, showAnswer, mode,
+            participantId, qualifyTopN } = parsed.data;
 
     const settings = await db.competitionSettings.findFirst();
     if (!settings) {
@@ -64,7 +72,8 @@ export async function POST(request: Request) {
       select: { questionNumber: true },
     });
 
-    if (questions.length === 0 && action !== 'reset' && action !== 'settings') {
+    const gateActions = ['reset','settings','qualify','generate-pin','clear-pin','disqualify','reinstate'];
+    if (questions.length === 0 && !gateActions.includes(action)) {
       return NextResponse.json(
         { success: false, error: 'No active Round 2 questions. Add questions first.' },
         { status: 400 }
@@ -78,10 +87,78 @@ export async function POST(request: Request) {
     const update: Record<string, unknown> = { updatedAt: new Date() };
 
     switch (action) {
+      case 'qualify': {
+        // Rank Round 1 the same way the leaderboard does — score desc, then
+        // fastest completion — and mark the top N eligible. Re-runnable: it
+        // clears the previous cut first, so a re-run never leaves stale
+        // qualifiers from an earlier ranking.
+        const topN = qualifyTopN ?? settings.round2QualifyTopN ?? 20;
+        const attempts = await db.round1Attempt.findMany({
+          where: { status: 'submitted', isTest: settings.isTestMode },
+          orderBy: [{ score: 'desc' }, { completionTimeMs: 'asc' }, { submittedAt: 'asc' }],
+          select: { participantId: true },
+          take: topN,
+        });
+        const ids = [...new Set(attempts.map((a) => a.participantId))];
+
+        await db.participant.updateMany({
+          where: { isTest: settings.isTestMode },
+          data: { round2Eligible: false },
+        });
+        if (ids.length > 0) {
+          await db.participant.updateMany({
+            where: { id: { in: ids } },
+            data: { round2Eligible: true },
+          });
+        }
+        update.round2QualifyTopN = topN;
+        const qualified = await db.competitionSettings.update({
+          where: { id: settings.id }, data: update,
+        });
+        return NextResponse.json({
+          success: true, data: qualified,
+          message: `${ids.length} participant${ids.length === 1 ? '' : 's'} qualified for Round 2`,
+        });
+      }
+
+      case 'generate-pin': {
+        // 4 digits is enough: it only has to survive the length of one round,
+        // and it is never transmitted to a client that has not already joined.
+        const pin = String(Math.floor(1000 + (Date.now() % 9000)));
+        update.round2JoinPin = pin;
+        update.round2RequirePin = true;
+        break;
+      }
+
+      case 'clear-pin': {
+        update.round2JoinPin = null;
+        update.round2RequirePin = false;
+        break;
+      }
+
+      case 'disqualify':
+      case 'reinstate': {
+        if (!participantId) {
+          return NextResponse.json(
+            { success: false, error: 'participantId required' }, { status: 400 }
+          );
+        }
+        await db.participant.update({
+          where: { id: participantId },
+          data: { disqualified: action === 'disqualify' },
+        });
+        const after = await db.competitionSettings.findFirst();
+        return NextResponse.json({
+          success: true, data: after,
+          message: action === 'disqualify' ? 'Participant removed' : 'Participant reinstated',
+        });
+      }
+
       case 'settings': {
         if (questionSeconds !== undefined) update.round2QuestionSeconds = questionSeconds;
         if (showAnswer !== undefined) update.round2ShowAnswer = showAnswer;
         if (mode !== undefined) update.round2Mode = mode;
+        if (qualifyTopN !== undefined) update.round2QualifyTopN = qualifyTopN;
         break;
       }
 

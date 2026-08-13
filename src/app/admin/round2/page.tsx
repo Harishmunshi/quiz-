@@ -41,7 +41,7 @@ interface Stats {
   itemCount: number;
   fastestCorrect: { name: string; responseTimeMs: number } | null;
   correctSequence: string[];
-  pending: Array<{ id: string; name: string; className: string; division: string }>;
+  pending: Array<{ id: string; name: string; schoolName: string }>;
   state: Round2State;
   currentQuestionNumber: number;
   questionTitle: string | null;
@@ -51,8 +51,7 @@ interface Entry {
   rank: number;
   participantId: string;
   participantName: string;
-  className: string;
-  division: string;
+  schoolName: string;
   score: number;
   correctAnswers: number;
   totalTimeMs: number;
@@ -177,7 +176,7 @@ export default function AdminRound2Page() {
     return (
       <Shell>
         <div className="flex min-h-screen items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#C8A951]" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#8A6A1C]" />
         </div>
       </Shell>
     );
@@ -189,12 +188,12 @@ export default function AdminRound2Page() {
         <div className="flex min-h-screen items-center justify-center px-4">
           <form
             onSubmit={login}
-            className="w-full max-w-sm rounded-2xl border border-[#C8A951]/25 bg-white/5 p-6"
+            className="w-full max-w-sm rounded-2xl border border-[#C8A951]/25 bg-white/60 p-6"
           >
-            <h1 className="mb-1 text-2xl font-black text-[#F7F2E7]">Quiz Master Login</h1>
-            <p className="mb-6 text-sm text-[#F7F2E7]/60">Round 2 live control</p>
+            <h1 className="mb-1 text-2xl font-black text-[#063B2D]">Quiz Master Login</h1>
+            <p className="mb-6 text-sm text-[#5A6B5E]">Round 2 live control</p>
             {err && (
-              <p className="mb-4 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              <p className="mb-4 rounded-lg border border-[#B3261E]/40 bg-[#B3261E]/08 px-3 py-2 text-sm text-[#B3261E]">
                 {err}
               </p>
             )}
@@ -204,7 +203,7 @@ export default function AdminRound2Page() {
               value={loginEmail}
               onChange={(e) => setLoginEmail(e.target.value)}
               placeholder="admin@mes.edu"
-              className="mb-3 w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2.5 text-[#F7F2E7] outline-none placeholder:text-[#F7F2E7]/30 focus:border-[#C8A951]"
+              className="mb-3 w-full rounded-lg border border-[#D4C5A9] bg-white/70 px-3 py-2.5 text-[#063B2D] outline-none placeholder:text-[#5A6B5E]/60 focus:border-[#C8A951]"
             />
             <input
               type="password"
@@ -212,7 +211,7 @@ export default function AdminRound2Page() {
               value={loginPassword}
               onChange={(e) => setLoginPassword(e.target.value)}
               placeholder="Password"
-              className="mb-5 w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2.5 text-[#F7F2E7] outline-none placeholder:text-[#F7F2E7]/30 focus:border-[#C8A951]"
+              className="mb-5 w-full rounded-lg border border-[#D4C5A9] bg-white/70 px-3 py-2.5 text-[#063B2D] outline-none placeholder:text-[#5A6B5E]/60 focus:border-[#C8A951]"
             />
             <Button
               type="submit"
@@ -237,18 +236,18 @@ export default function AdminRound2Page() {
         {/* Header */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-bold tracking-[0.25em] text-[#C8A951]">QUIZ MASTER</p>
-            <h1 className="text-3xl font-black text-[#F7F2E7]">Round 2 Live Control</h1>
+            <p className="text-xs font-bold tracking-[0.25em] text-[#8A6A1C]">QUIZ MASTER</p>
+            <h1 className="text-3xl font-black text-[#063B2D]">Round 2 Live Control</h1>
           </div>
           <div className="flex gap-2">
             <a href="/round2/display" target="_blank" rel="noreferrer">
-              <Button variant="outline" className="border-[#C8A951]/40 bg-white/5 text-[#F7F2E7] hover:bg-white/10">
+              <Button variant="outline" className="border-[#C8A951]/40 bg-white/60 text-[#063B2D] hover:bg-white/70">
                 <Monitor className="mr-2 h-4 w-4" /> Open Board
                 <ExternalLink className="ml-2 h-3 w-3" />
               </Button>
             </a>
             <a href="/round2" target="_blank" rel="noreferrer">
-              <Button variant="outline" className="border-[#C8A951]/40 bg-white/5 text-[#F7F2E7] hover:bg-white/10">
+              <Button variant="outline" className="border-[#C8A951]/40 bg-white/60 text-[#063B2D] hover:bg-white/70">
                 Student View
                 <ExternalLink className="ml-2 h-3 w-3" />
               </Button>
@@ -257,9 +256,9 @@ export default function AdminRound2Page() {
         </div>
 
         {totalQuestions === 0 && (
-          <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3">
-            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
-            <p className="text-sm text-amber-100">
+          <div className="mb-5 flex items-start gap-3 rounded-xl border border-[#C8A951]/50 bg-[#C8A951]/15 px-4 py-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[#8A6A1C]" />
+            <p className="text-sm text-[#6B5314]">
               No active Round 2 questions yet. Add them in Admin → Questions with
               round set to 2, or POST a batch to{' '}
               <code className="rounded bg-black/30 px-1">/api/admin/questions/bulk</code>.
@@ -268,12 +267,12 @@ export default function AdminRound2Page() {
         )}
 
         {err && (
-          <div className="mb-4 rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm text-red-200">
+          <div className="mb-4 rounded-lg border border-[#B3261E]/40 bg-[#B3261E]/08 px-4 py-2 text-sm text-[#B3261E]">
             {err}
           </div>
         )}
         {msg && (
-          <div className="mb-4 rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-200">
+          <div className="mb-4 rounded-lg border border-[#0A7D52]/40 bg-[#0A7D52]/10 px-4 py-2 text-sm text-[#0A7D52]">
             {msg}
           </div>
         )}
@@ -284,19 +283,19 @@ export default function AdminRound2Page() {
             <Panel>
               <div className="mb-5 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold tracking-wider text-[#F7F2E7]/50">
+                  <p className="text-xs font-bold tracking-wider text-[#5A6B5E]/80">
                     CURRENT QUESTION
                   </p>
-                  <p className="text-4xl font-black text-[#C8A951]">
+                  <p className="text-4xl font-black text-[#8A6A1C]">
                     {currentQ || '—'}
-                    <span className="text-xl text-[#F7F2E7]/40">/{totalQuestions}</span>
+                    <span className="text-xl text-[#5A6B5E]/70">/{totalQuestions}</span>
                   </p>
                 </div>
                 <StateBadge state={state} />
               </div>
 
               {stats?.questionTitle && (
-                <p className="mb-5 rounded-lg bg-white/5 px-4 py-3 text-[#F7F2E7]">
+                <p className="mb-5 rounded-lg bg-white/60 px-4 py-3 text-[#063B2D]">
                   {stats.questionTitle}
                 </p>
               )}
@@ -337,17 +336,17 @@ export default function AdminRound2Page() {
                 />
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-white/10 pt-4">
+              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[#D4C5A9] pt-4">
                 <button
                   onClick={() => control('previous')}
                   disabled={busy !== null || currentQ <= 1}
-                  className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-sm text-[#F7F2E7]/70 hover:bg-white/10 disabled:opacity-40"
+                  className="flex items-center gap-1.5 rounded-lg bg-white/60 px-3 py-2 text-sm text-[#5A6B5E] hover:bg-white/70 disabled:opacity-40"
                 >
                   <ChevronLeft className="h-4 w-4" /> Previous
                 </button>
 
                 <div className="flex items-center gap-2">
-                  <Settings2 className="h-4 w-4 text-[#F7F2E7]/50" />
+                  <Settings2 className="h-4 w-4 text-[#5A6B5E]/80" />
                   <input
                     type="number"
                     min={0}
@@ -357,13 +356,13 @@ export default function AdminRound2Page() {
                       secondsDirty.current = true;
                       setSeconds(Number(e.target.value));
                     }}
-                    className="w-20 rounded-lg border border-white/15 bg-white/10 px-2 py-1.5 text-sm text-[#F7F2E7] outline-none focus:border-[#C8A951]"
+                    className="w-20 rounded-lg border border-[#D4C5A9] bg-white/70 px-2 py-1.5 text-sm text-[#063B2D] outline-none focus:border-[#C8A951]"
                   />
-                  <span className="text-sm text-[#F7F2E7]/50">sec/question</span>
+                  <span className="text-sm text-[#5A6B5E]/80">sec/question</span>
                   <button
                     onClick={() => control('settings', { questionSeconds: seconds })}
                     disabled={busy !== null}
-                    className="rounded-lg bg-[#C8A951]/20 px-3 py-1.5 text-sm font-semibold text-[#C8A951] hover:bg-[#C8A951]/30"
+                    className="rounded-lg bg-[#C8A951]/20 px-3 py-1.5 text-sm font-semibold text-[#8A6A1C] hover:bg-[#C8A951]/30"
                   >
                     Save
                   </button>
@@ -380,7 +379,7 @@ export default function AdminRound2Page() {
                     }
                   }}
                   disabled={busy !== null}
-                  className="ml-auto flex items-center gap-1.5 rounded-lg bg-red-500/15 px-3 py-2 text-sm font-semibold text-red-300 hover:bg-red-500/25"
+                  className="ml-auto flex items-center gap-1.5 rounded-lg bg-[#B3261E]/10 px-3 py-2 text-sm font-semibold text-[#B3261E] hover:bg-[#B3261E]/15"
                 >
                   <RotateCcw className="h-4 w-4" /> Reset Round
                 </button>
@@ -390,19 +389,19 @@ export default function AdminRound2Page() {
             {/* Live response monitor */}
             <Panel>
               <div className="mb-4 flex items-center gap-2">
-                <Users className="h-5 w-5 text-[#C8A951]" />
-                <h2 className="text-lg font-bold text-[#F7F2E7]">Responses</h2>
-                <span className="ml-auto text-2xl font-black text-[#C8A951]">
+                <Users className="h-5 w-5 text-[#8A6A1C]" />
+                <h2 className="text-lg font-bold text-[#063B2D]">Responses</h2>
+                <span className="ml-auto text-2xl font-black text-[#8A6A1C]">
                   {stats?.submittedCount ?? 0}
-                  <span className="text-base text-[#F7F2E7]/40">
+                  <span className="text-base text-[#5A6B5E]/70">
                     /{stats?.totalParticipants ?? 0}
                   </span>
                 </span>
               </div>
 
-              <div className="mb-5 h-3 overflow-hidden rounded-full bg-white/10">
+              <div className="mb-5 h-3 overflow-hidden rounded-full bg-white/70">
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-[#C8A951] to-emerald-400"
+                  className="h-full rounded-full bg-gradient-to-r from-[#C8A951] to-[#0A7D52]"
                   animate={{ width: `${submittedPct}%` }}
                   transition={{ duration: 0.3 }}
                 />
@@ -430,17 +429,17 @@ export default function AdminRound2Page() {
               {/* The answer key, admin-only. Never sent to a student screen
                   until the quiz master presses Reveal. */}
               {stats?.correctSequence && stats.correctSequence.length > 0 && (
-                <details className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3">
-                  <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[#F7F2E7]/45">
+                <details className="mt-4 rounded-xl border border-[#D4C5A9] bg-black/20 p-3">
+                  <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[#5A6B5E]/80">
                     Answer key (admin only)
                   </summary>
                   <ol className="mt-3 space-y-1">
                     {stats.correctSequence.map((label, i) => (
                       <li key={label} className="flex items-baseline gap-2.5">
-                        <span className="w-5 text-right font-mono text-[11px] tabular-nums text-emerald-400/70">
+                        <span className="w-5 text-right font-mono text-[11px] tabular-nums text-[#0A7D52]/70">
                           {i + 1}
                         </span>
-                        <span className="text-sm text-[#F7F2E7]/85">{label}</span>
+                        <span className="text-sm text-[#063B2D]/85">{label}</span>
                       </li>
                     ))}
                   </ol>
@@ -448,7 +447,7 @@ export default function AdminRound2Page() {
               )}
 
               {stats?.fastestCorrect && (
-                <p className="mt-4 rounded-lg bg-emerald-400/10 px-4 py-2 text-sm text-emerald-200">
+                <p className="mt-4 rounded-lg bg-[#0A7D52]/10 px-4 py-2 text-sm text-[#0A7D52]">
                   Fastest correct: <strong>{stats.fastestCorrect.name}</strong> ·{' '}
                   {formatSeconds(stats.fastestCorrect.responseTimeMs)}
                 </p>
@@ -456,20 +455,20 @@ export default function AdminRound2Page() {
 
               {stats && stats.pendingCount > 0 && state === 'open' && (
                 <div className="mt-4">
-                  <p className="mb-2 text-xs font-bold tracking-wider text-[#F7F2E7]/50">
+                  <p className="mb-2 text-xs font-bold tracking-wider text-[#5A6B5E]/80">
                     STILL WAITING ON {stats.pendingCount}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {stats.pending.slice(0, 24).map((p) => (
                       <span
                         key={p.id}
-                        className="rounded-md bg-white/5 px-2 py-1 text-xs text-[#F7F2E7]/60"
+                        className="rounded-md bg-white/60 px-2 py-1 text-xs text-[#5A6B5E]"
                       >
                         {p.name}
                       </span>
                     ))}
                     {stats.pendingCount > 24 && (
-                      <span className="rounded-md bg-white/5 px-2 py-1 text-xs text-[#F7F2E7]/40">
+                      <span className="rounded-md bg-white/60 px-2 py-1 text-xs text-[#5A6B5E]/70">
                         +{stats.pendingCount - 24} more
                       </span>
                     )}
@@ -482,11 +481,11 @@ export default function AdminRound2Page() {
           {/* ── Leaderboard ──────────────────────────────────────────── */}
           <Panel>
             <div className="mb-4 flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-[#C8A951]" />
-              <h2 className="text-lg font-bold text-[#F7F2E7]">Standings</h2>
+              <Trophy className="h-5 w-5 text-[#8A6A1C]" />
+              <h2 className="text-lg font-bold text-[#063B2D]">Standings</h2>
             </div>
             {board.length === 0 ? (
-              <p className="py-8 text-center text-sm text-[#F7F2E7]/40">
+              <p className="py-8 text-center text-sm text-[#5A6B5E]/70">
                 Appears after the first question closes
               </p>
             ) : (
@@ -496,21 +495,21 @@ export default function AdminRound2Page() {
                     key={e.participantId}
                     className={[
                       'flex items-center gap-2.5 rounded-lg px-2.5 py-2',
-                      e.rank === 1 ? 'bg-[#C8A951]/20' : 'bg-white/5',
+                      e.rank === 1 ? 'bg-[#C8A951]/20' : 'bg-white/60',
                     ].join(' ')}
                   >
-                    <span className="w-6 shrink-0 text-center text-sm font-black text-[#C8A951]">
+                    <span className="w-6 shrink-0 text-center text-sm font-black text-[#8A6A1C]">
                       {e.rank}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[#F7F2E7]">
+                      <p className="truncate text-sm font-semibold text-[#063B2D]">
                         {e.participantName}
                       </p>
-                      <p className="text-[10px] text-[#F7F2E7]/40">
-                        {e.className}-{e.division} · {formatSeconds(e.totalTimeMs)}
+                      <p className="text-[10px] text-[#5A6B5E]/70">
+                        {e.schoolName} · {formatSeconds(e.totalTimeMs)}
                       </p>
                     </div>
-                    <span className="shrink-0 text-lg font-black text-[#C8A951]">
+                    <span className="shrink-0 text-lg font-black text-[#8A6A1C]">
                       {e.score}
                     </span>
                   </div>
@@ -530,7 +529,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main
       className="min-h-screen"
-      style={{ background: 'linear-gradient(135deg, #063B2D 0%, #0A5E3F 50%, #063B2D 100%)' }}
+      style={{ background: 'linear-gradient(180deg, #F7F2E7 0%, #EEE3CC 100%)' }}
     >
       {children}
     </main>
@@ -539,16 +538,16 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function Panel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-[#C8A951]/25 bg-white/5 p-5">{children}</div>
+    <div className="rounded-2xl border border-[#C8A951]/25 bg-white/60 p-5">{children}</div>
   );
 }
 
 function StateBadge({ state }: { state: Round2State }) {
   const map: Record<Round2State, { label: string; cls: string }> = {
-    idle: { label: 'IDLE', cls: 'bg-white/10 text-[#F7F2E7]/60' },
-    open: { label: 'ACCEPTING ANSWERS', cls: 'bg-emerald-400/20 text-emerald-300' },
-    locked: { label: 'LOCKED', cls: 'bg-amber-400/20 text-amber-300' },
-    revealed: { label: 'REVEALED', cls: 'bg-[#C8A951]/25 text-[#C8A951]' },
+    idle: { label: 'IDLE', cls: 'bg-white/70 text-[#5A6B5E]' },
+    open: { label: 'ACCEPTING ANSWERS', cls: 'bg-[#0A7D52]/15 text-[#0A7D52]' },
+    locked: { label: 'LOCKED', cls: 'bg-[#C8A951]/25 text-[#8A6A1C]' },
+    revealed: { label: 'REVEALED', cls: 'bg-[#C8A951]/25 text-[#8A6A1C]' },
   };
   const s = map[state];
   return (
@@ -581,7 +580,7 @@ function ActionButton({
         'flex flex-col items-center gap-1.5 rounded-xl px-3 py-4 text-sm font-bold transition',
         tone === 'gold'
           ? 'bg-[#C8A951] text-[#063B2D] hover:bg-[#d9bd6b]'
-          : 'bg-white/10 text-[#F7F2E7] hover:bg-white/15',
+          : 'bg-white/70 text-[#063B2D] hover:bg-white/80',
         'disabled:cursor-not-allowed disabled:opacity-35',
       ].join(' ')}
     >
@@ -606,21 +605,21 @@ function MetricTile({
     <div
       className={`rounded-xl border p-3 text-center ${
         tone === 'good'
-          ? 'border-emerald-400/40 bg-emerald-400/[0.08]'
-          : 'border-white/10 bg-white/[0.04]'
+          ? 'border-[#0A7D52]/40 bg-[#0A7D52]/[0.08]'
+          : 'border-[#D4C5A9] bg-white/60'
       }`}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#F7F2E7]/40">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#5A6B5E]/70">
         {label}
       </p>
       <p
         className={`mt-1 font-mono text-2xl font-bold tabular-nums ${
-          tone === 'good' ? 'text-emerald-400' : 'text-[#C8A951]'
+          tone === 'good' ? 'text-[#0A7D52]' : 'text-[#8A6A1C]'
         }`}
       >
         {value}
       </p>
-      <p className="text-[10px] text-[#F7F2E7]/30">{sub}</p>
+      <p className="text-[10px] text-[#5A6B5E]/60">{sub}</p>
     </div>
   );
 }

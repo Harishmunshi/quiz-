@@ -95,10 +95,10 @@ export default function SequenceBuilder({
       {/* ── Answer column ──────────────────────────────────────────── */}
       <section>
         <header className="mb-3 flex items-baseline justify-between">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#C8A951]">
+          <h3 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8A6A1C]">
             Your sequence
           </h3>
-          <span className="font-mono text-xs tabular-nums text-[#F7F2E7]/45">
+          <span className="font-mono text-xs tabular-nums text-[#5A6B5E]/80">
             {placed.length} / {items.length}
           </span>
         </header>
@@ -137,12 +137,12 @@ export default function SequenceBuilder({
           {Array.from({ length: items.length - placed.length }).map((_, i) => (
             <div
               key={`slot-${i}`}
-              className="flex h-[52px] items-center gap-3 rounded-xl border border-dashed border-white/10 px-3"
+              className="flex h-[52px] items-center gap-3 rounded-xl border border-dashed border-[#D4C5A9] px-3"
             >
-              <span className="w-7 text-center font-mono text-sm tabular-nums text-[#F7F2E7]/20">
+              <span className="w-7 text-center font-mono text-sm tabular-nums text-[#5A6B5E]/40">
                 {placed.length + i + 1}
               </span>
-              <span className="text-sm text-[#F7F2E7]/20">—</span>
+              <span className="text-sm text-[#5A6B5E]/40">—</span>
             </div>
           ))}
         </div>
@@ -152,10 +152,10 @@ export default function SequenceBuilder({
       {!disabled && (
         <section>
           <header className="mb-3 flex items-baseline justify-between">
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#F7F2E7]/45">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#5A6B5E]/80">
               Tap to place
             </h3>
-            <span className="font-mono text-xs tabular-nums text-[#F7F2E7]/30">
+            <span className="font-mono text-xs tabular-nums text-[#5A6B5E]/60">
               {pool.length} left
             </span>
           </header>
@@ -171,21 +171,21 @@ export default function SequenceBuilder({
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ type: 'spring', stiffness: 420, damping: 32 }}
                   onClick={() => place(item.key)}
-                  className="group flex items-center gap-2 rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2.5 text-left transition-colors active:scale-[0.97] hover:border-[#C8A951]/50 hover:bg-[#C8A951]/10"
+                  className="group flex items-center gap-2 rounded-xl border border-[#D4C5A9] bg-white/60 px-3 py-2.5 text-left transition-colors active:scale-[0.97] hover:border-[#C8A951]/50 hover:bg-[#C8A951]/10"
                 >
-                  <Plus className="h-3.5 w-3.5 shrink-0 text-[#C8A951]/50 transition-colors group-hover:text-[#C8A951]" />
+                  <Plus className="h-3.5 w-3.5 shrink-0 text-[#8A6A1C]/70 transition-colors group-hover:text-[#8A6A1C]" />
                   <span className="leading-tight">
-                    <span className="block text-sm font-medium text-[#F7F2E7]">
+                    <span className="block text-sm font-medium text-[#063B2D]">
                       {item.en}
                     </span>
                     {secondaryLabel(item) && (
-                      <span className="block text-[11px] text-[#F7F2E7]/45">
+                      <span className="block text-[11px] text-[#5A6B5E]/80">
                         {secondaryLabel(item)}
                       </span>
                     )}
                   </span>
                   {item.ar && (
-                    <span className="shrink-0 pl-1 text-sm text-[#C8A951]/70" dir="rtl">
+                    <span className="shrink-0 pl-1 text-sm text-[#8A6A1C]/80" dir="rtl">
                       {item.ar}
                     </span>
                   )}
@@ -229,18 +229,18 @@ function SortableRow({
 
   const border =
     verdict === 'right'
-      ? 'border-emerald-400/60 bg-emerald-400/[0.09]'
+      ? 'border-[#0A7D52]/60 bg-[#0A7D52]/10'
       : verdict === 'wrong'
-        ? 'border-red-400/45 bg-red-400/[0.07]'
+        ? 'border-[#B3261E]/40 bg-[#B3261E]/07'
         : isDragging
           ? 'border-[#C8A951] bg-[#C8A951]/15'
-          : 'border-[#C8A951]/25 bg-white/[0.06]';
+          : 'border-[#C8A951]/25 bg-white/70';
 
   const numberChip =
     verdict === 'right'
-      ? 'bg-emerald-400 text-[#063B2D]'
+      ? 'bg-[#0A7D52] text-white'
       : verdict === 'wrong'
-        ? 'bg-red-400/80 text-[#3B0606]'
+        ? 'bg-[#B3261E] text-white'
         : 'bg-[#C8A951] text-[#063B2D]';
 
   return (
@@ -263,18 +263,18 @@ function SortableRow({
       </span>
 
       <span className="min-w-0 flex-1 leading-tight">
-        <span className="block truncate text-sm font-medium text-[#F7F2E7]">
+        <span className="block truncate text-sm font-medium text-[#063B2D]">
           {item.en}
         </span>
         {secondaryLabel(item) && (
-          <span className="block truncate text-[11px] text-[#F7F2E7]/45">
+          <span className="block truncate text-[11px] text-[#5A6B5E]/80">
             {secondaryLabel(item)}
           </span>
         )}
       </span>
 
       {item.ar && (
-        <span className="shrink-0 text-sm text-[#C8A951]/70" dir="rtl">
+        <span className="shrink-0 text-sm text-[#8A6A1C]/80" dir="rtl">
           {item.ar}
         </span>
       )}
@@ -285,7 +285,7 @@ function SortableRow({
             type="button"
             onClick={onRemove}
             aria-label={`Remove ${item.en}`}
-            className="shrink-0 rounded-lg p-1.5 text-[#F7F2E7]/35 transition-colors hover:bg-white/10 hover:text-[#F7F2E7]"
+            className="shrink-0 rounded-lg p-1.5 text-[#5A6B5E]/70 transition-colors hover:bg-white/70 hover:text-[#063B2D]"
           >
             <X className="h-4 w-4" />
           </button>
@@ -294,7 +294,7 @@ function SortableRow({
             aria-label={`Reorder ${item.en}`}
             {...attributes}
             {...listeners}
-            className="shrink-0 cursor-grab touch-none rounded-lg p-1.5 text-[#F7F2E7]/30 transition-colors hover:text-[#C8A951] active:cursor-grabbing"
+            className="shrink-0 cursor-grab touch-none rounded-lg p-1.5 text-[#5A6B5E]/60 transition-colors hover:text-[#8A6A1C] active:cursor-grabbing"
           >
             <GripVertical className="h-4 w-4" />
           </button>

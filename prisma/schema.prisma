@@ -4,6 +4,14 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Supabase Postgres. Use the POOLED connection string (port 6543) with
+  // `?pgbouncer=true` — serverless functions open and drop connections
+  // constantly, and the pooler is what keeps a hall full of students from
+  // exhausting Postgres' connection limit.
+  //
+  // No `directUrl` here on purpose: it would require a second env var to be
+  // present at build time or `prisma generate` fails, and schema changes are
+  // applied through supabase/migrations/*.sql rather than `prisma migrate`.
   url      = env("DATABASE_URL")
 }
 
@@ -29,6 +37,30 @@ model CompetitionSettings {
   allowRound2Retry    Boolean  @default(true)
   round2PenaltySeconds Int     @default(5)
   isTestMode          Boolean  @default(false)
+
+  // ---------- ROUND 2 LIVE (admin-gated, one question at a time) ----------
+  // "live" = admin releases questions one by one, leaderboard between each
+  // "free" = legacy self-paced drag-and-drop speed challenge
+  round2Mode             String    @default("live")
+  // Round 2 entry gate. Qualification decides WHO may compete; the PIN decides
+  // WHERE they must be sitting to join, because it is shown only on the
+  // projector. Neither stops a phone-a-friend — only invigilation does.
+  round2QualifyTopN      Int       @default(20)
+  round2JoinPin          String?
+  round2RequirePin       Boolean   @default(true)
+  round2RequireQualify   Boolean   @default(true)
+  // 0 = nothing released yet. Otherwise the questionNumber currently on the board.
+  round2CurrentQuestion  Int       @default(0)
+  // idle -> open -> locked -> revealed -> (next) open ...
+  round2QuestionState    String    @default("idle")
+  // Server-authoritative clock reference. responseTimeMs is measured from this.
+  round2QuestionOpenedAt DateTime?
+  round2QuestionLockedAt DateTime?
+  // Per-question countdown shown to participants. 0 = no auto-close, admin locks manually.
+  round2QuestionSeconds  Int       @default(30)
+  // When true, the reveal screen shows the correct option to participants.
+  round2ShowAnswer       Boolean   @default(true)
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }
@@ -52,14 +84,28 @@ model Participant {
   id              String   @id @default(cuid())
   participantCode String   @unique
   name            String
-  className       String
-  division        String
-  language        String   @default("english") // english, gujarati
+  // The school the student represents. Replaces class/division, which are no
+  // longer collected at registration.
+  schoolName      String   @default("M.E.S. English Medium School")
+  className       String?
+  division        String?
+  // "gujarati" is the historic key for the second language; the content and the
+  // UI label are now Hindi (Devanagari).
+  language        String   @default("english")
+  // Set by the admin when the Round 1 cut is applied.
+  round2Eligible  Boolean  @default(false)
+  round2JoinedAt  DateTime?
+  // Lets the quiz master remove someone mid-round without deleting their data.
+  disqualified    Boolean  @default(false)
   isTest          Boolean  @default(false)
   createdAt       DateTime @default(now())
 
   round1Attempts  Round1Attempt[]
   round2Attempts  Round2Attempt[]
+  round2LiveAnswers Round2LiveAnswer[]
+
+  @@index([round2Eligible])
+  @@index([disqualified])
 }
 
 // ============================================================
@@ -86,7 +132,11 @@ model Question {
   updatedAt       DateTime @updatedAt
 
   round1Answers   Round1Answer[]
+
+  @@unique([round, questionNumber])
+  @@index([round, isActive])
 }
+
 
 // ============================================================
 // ROUND 1 ATTEMPTS
@@ -180,4 +230,74 @@ model Round2Attempt {
   @@index([submittedAt])
   @@index([status])
   @@index([isTest])
+}
+
+// ============================================================
+// ROUND 2 LIVE QUESTIONS
+// Round 2 is an ORDERING round: students arrange a set of items
+// into the correct sequence. Scoring is all-or-nothing.
+// ============================================================
+model Round2LiveQuestion {
+  id             String   @id @default(cuid())
+  questionNumber Int      @unique
+  // "order" = arrange items into a sequence.
+  // "mcq" is supported by the same engine so a multiple-choice question can be
+  // dropped into the live flow later without a migration.
+  type           String   @default("order")
+  titleEnglish   String
+  titleSecondary String?
+  promptEnglish  String
+  promptSecondary String?
+  // JSON array, in display order:
+  // [{"key":"al-balad","en":"Al-Balad","ar":"البلد","hi":"अल-बलद"}, ...]
+  items          String
+  // JSON array of item keys in the correct sequence.
+  correctOrder   String
+  // Only used when type = "mcq".
+  correctOption  String?
+  marks          Int      @default(1)
+  timeLimitSec   Int      @default(120)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  answers        Round2LiveAnswer[]
+
+  @@index([isActive])
+}
+
+// ============================================================
+// ROUND 2 LIVE ANSWERS
+// One row per participant per question. The @@unique constraint is the
+// one-shot guarantee: a participant physically cannot answer twice, even
+// if they double-tap, refresh, or open a second tab.
+// ============================================================
+model Round2LiveAnswer {
+  id               String   @id @default(cuid())
+  participantId    String
+  questionId       String
+  questionNumber   Int
+  answerType       String   @default("order")
+  // JSON array of item keys in the order the student submitted them.
+  submittedOrder   String?
+  selectedOption   String?
+  isCorrect        Boolean  @default(false)
+  // How many positions matched. Not used for scoring (all-or-nothing) but
+  // shown on the reveal screen so a student sees how close they were.
+  correctPositions Int      @default(0)
+  marks            Int      @default(0)
+  // Measured server-side from settings.round2QuestionOpenedAt.
+  // Never trusted from the client.
+  responseTimeMs   Int
+  isTest           Boolean  @default(false)
+  answeredAt       DateTime @default(now())
+
+  participant      Participant        @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  question         Round2LiveQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([participantId, questionId])
+  @@index([questionId])
+  @@index([questionNumber])
+  @@index([isTest])
+  @@index([isCorrect])
 }

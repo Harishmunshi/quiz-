@@ -139,8 +139,7 @@ export interface LiveLeaderboardEntry {
   participantId: string;
   participantCode: string;
   participantName: string;
-  className: string;
-  division: string;
+  schoolName: string;
   score: number;
   correctAnswers: number;
   answeredCount: number;

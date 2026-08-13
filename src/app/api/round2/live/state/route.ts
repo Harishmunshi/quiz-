@@ -55,6 +55,39 @@ export async function GET(request: Request) {
 
     const totalQuestions = await db.round2LiveQuestion.count({ where: { isActive: true } });
 
+    // Entry gate for this participant. Computed server-side so the student page
+    // renders the right door without having to guess.
+    let gate: {
+      requiresQualify: boolean;
+      requiresPin: boolean;
+      qualified: boolean;
+      joined: boolean;
+      disqualified: boolean;
+      blocked: null | 'NOT_QUALIFIED' | 'DISQUALIFIED' | 'NEEDS_PIN';
+    } = {
+      requiresQualify: settings.round2RequireQualify,
+      requiresPin: settings.round2RequirePin,
+      qualified: false,
+      joined: false,
+      disqualified: false,
+      blocked: null,
+    };
+
+    if (participantId) {
+      const me = await db.participant.findUnique({
+        where: { id: participantId },
+        select: { round2Eligible: true, round2JoinedAt: true, disqualified: true },
+      });
+      if (me) {
+        gate.qualified = me.round2Eligible;
+        gate.joined = Boolean(me.round2JoinedAt);
+        gate.disqualified = me.disqualified;
+        if (me.disqualified) gate.blocked = 'DISQUALIFIED';
+        else if (settings.round2RequireQualify && !me.round2Eligible) gate.blocked = 'NOT_QUALIFIED';
+        else if (settings.round2RequirePin && !me.round2JoinedAt) gate.blocked = 'NEEDS_PIN';
+      }
+    }
+
     let question: PublicQuestionPayload | null = null;
     let correctOrder: string[] | null = null;
     let answerCount = 0;
@@ -65,7 +98,9 @@ export async function GET(request: Request) {
       correctPositions: number | null;
     } | null = null;
 
-    if (currentNumber > 0 && state !== 'idle') {
+    // A blocked participant never receives the question body — withholding it
+    // in the UI alone would still leave it readable in the network tab.
+    if (currentNumber > 0 && state !== 'idle' && (!participantId || gate.blocked === null)) {
       const q = await db.round2LiveQuestion.findFirst({
         where: { questionNumber: currentNumber, isActive: true },
       });
@@ -129,6 +164,10 @@ export async function GET(request: Request) {
         openedAt: settings.round2QuestionOpenedAt?.toISOString() ?? null,
         lockedAt: settings.round2QuestionLockedAt?.toISOString() ?? null,
         showAnswer: settings.round2ShowAnswer,
+        gate,
+        // The PIN itself is never sent to a student device. The projector board
+        // reads it from the admin-only stats endpoint.
+        pinIsSet: Boolean(settings.round2JoinPin),
         question,
         correctOrder,
         answerCount,
