@@ -46,6 +46,17 @@ export interface LiveState {
   openedAt: string | null;
   lockedAt: string | null;
   showAnswer: boolean;
+  /** Server-computed entry gate for this participant. */
+  gate: {
+    requiresQualify: boolean;
+    requiresPin: boolean;
+    qualified: boolean;
+    joined: boolean;
+    disqualified: boolean;
+    blocked: null | 'NOT_QUALIFIED' | 'DISQUALIFIED' | 'NEEDS_PIN';
+  } | null;
+  /** Whether a PIN has been generated. The PIN value itself never reaches a student. */
+  pinIsSet: boolean;
   question: LiveQuestion | null;
   correctOrder: string[] | null;
   answerCount: number;

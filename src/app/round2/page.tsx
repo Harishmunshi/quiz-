@@ -15,7 +15,7 @@ import SequenceBuilder from '@/components/round2/SequenceBuilder';
 import { formatSeconds } from '@/lib/round2/live';
 import { useCountdown, useLiveRound2 } from '@/lib/round2/useLiveRound2';
 import { loadParticipant, saveParticipant, type StoredParticipant } from '@/lib/round2/session';
-import { SCHOOL_LOGO_URL, SCHOOL_NAME_DEFAULT } from '@/lib/theme';
+import { SCHOOL_LOGO_URL } from '@/lib/theme';
 
 /**
  * Round 2 — student screen. Its own page, its own URL, independent of the
@@ -32,6 +32,9 @@ export default function Round2Page() {
   const [placed, setPlaced] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [pin, setPin] = useState('');
+  const [joining, setJoining] = useState(false);
+  const [joinErr, setJoinErr] = useState<string | null>(null);
   const [standing, setStanding] = useState<{
     rank: number;
     score: number;
@@ -95,6 +98,32 @@ export default function Round2Page() {
       cancelled = true;
     };
   }, [participant?.id, state, live?.currentQuestionNumber]);
+
+  const gate = live?.gate ?? null;
+
+  const joinRound = async () => {
+    if (!participant) return;
+    setJoining(true);
+    setJoinErr(null);
+    try {
+      const res = await fetch('/api/round2/live/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participantId: participant.id, pin }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setPin('');
+        refresh();
+      } else {
+        setJoinErr(json.error ?? 'Could not join');
+      }
+    } catch {
+      setJoinErr('Network error — try again');
+    } finally {
+      setJoining(false);
+    }
+  };
 
   const complete = q ? placed.length === q.itemCount : false;
 
@@ -162,6 +191,102 @@ export default function Round2Page() {
             setParticipant(p);
           }}
         />
+      </Shell>
+    );
+  }
+
+  // A blocked student used to fall through to the generic "waiting" screen and
+  // sit there forever with no idea why. Each reason now has its own door.
+  if (gate?.blocked === 'DISQUALIFIED') {
+    return (
+      <Shell>
+        <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+          <XCircle className="mb-6 h-14 w-14 text-[#B3261E]" />
+          <h2 className="text-2xl font-bold tracking-tight text-[#063B2D]">
+            Removed from this round
+          </h2>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#5A6B5E]">
+            The quiz master has removed you from Round 2. Please speak to them if
+            you think this is a mistake.
+          </p>
+        </div>
+      </Shell>
+    );
+  }
+
+  if (gate?.blocked === 'NOT_QUALIFIED') {
+    return (
+      <Shell>
+        <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+          <Trophy className="mb-6 h-14 w-14 text-[#8A6A1C]/50" />
+          <h2 className="text-2xl font-bold tracking-tight text-[#063B2D]">
+            Not in Round 2
+          </h2>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#5A6B5E]">
+            Round 2 is for the top scorers from Round 1. If the quiz master has
+            not announced the cut yet, keep this page open — it updates on its own.
+          </p>
+          <p className="mt-6 font-mono text-xs text-[#5A6B5E]/70">
+            {participant.name} · {participant.participantCode}
+          </p>
+        </div>
+      </Shell>
+    );
+  }
+
+  if (gate?.blocked === 'NEEDS_PIN') {
+    return (
+      <Shell>
+        <div className="flex flex-1 items-center justify-center px-4 py-12">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              joinRound();
+            }}
+            className="w-full max-w-sm text-center"
+          >
+            <Lock className="mx-auto mb-5 h-12 w-12 text-[#8A6A1C]" />
+            <h2 className="text-2xl font-bold tracking-tight text-[#063B2D]">
+              You&apos;re in Round 2
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-[#5A6B5E]">
+              Enter the 4-digit code shown on the screen at the front of the hall.
+            </p>
+
+            {joinErr && (
+              <p className="mt-5 rounded-xl border border-[#B3261E]/40 bg-[#B3261E]/08 px-3.5 py-2.5 text-sm text-[#B3261E]">
+                {joinErr}
+              </p>
+            )}
+
+            {!live?.pinIsSet && (
+              <p className="mt-5 rounded-xl border border-[#C8A951]/50 bg-[#C8A951]/15 px-3.5 py-2.5 text-sm text-[#6B5314]">
+                The quiz master has not shown the code yet. Keep this page open.
+              </p>
+            )}
+
+            <input
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="0000"
+              className="my-6 w-full rounded-xl border border-[#D4C5A9] bg-white/80 px-3.5 py-4 text-center font-mono text-3xl tracking-[0.4em] text-[#063B2D] outline-none focus:border-[#C8A951]"
+            />
+
+            <button
+              type="submit"
+              disabled={joining || pin.length !== 4}
+              className="flex w-full items-center justify-center rounded-xl bg-[#063B2D] py-4 text-base font-bold text-[#F7F2E7] transition-colors hover:bg-[#0A5E3F] disabled:opacity-45"
+            >
+              {joining ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Join the round'}
+            </button>
+
+            <p className="mt-5 font-mono text-xs text-[#5A6B5E]/70">
+              {participant.name} · {participant.participantCode}
+            </p>
+          </form>
+        </div>
       </Shell>
     );
   }
@@ -497,43 +622,63 @@ function Stat({ label, value, sub }: { label: string; value: string; sub: string
 }
 
 function JoinForm({ onJoined }: { onJoined: (p: StoredParticipant) => void }) {
-  const [name, setName] = useState('');
-  const [schoolName, setSchoolName] = useState(SCHOOL_NAME_DEFAULT);
-  const [language, setLanguage] = useState<'english' | 'gujarati'>('english');
+  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
+  /**
+   * Round 2 does NOT register anyone. It identifies a student who already sat
+   * Round 1, by their participant code.
+   *
+   * This is the fix for the two-identity-systems bug: /round2 used to show a
+   * registration form, which created a brand new Participant with no Round 1
+   * attempt — a student who could never qualify no matter what the admin did.
+   */
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setErr(null);
+    setInfo(null);
     try {
-      const res = await fetch('/api/participant', {
+      const res = await fetch('/api/participant/lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, schoolName, language }),
+        body: JSON.stringify({ code }),
       });
       const json = await res.json();
-      if (json.success) {
-        onJoined({
-          id: json.participant.id,
-          participantCode: json.participant.participantCode,
-          name: json.participant.name,
-          schoolName: json.participant.schoolName ?? schoolName,
-          language,
-        });
-      } else {
-        setErr(json.error ?? 'Could not join');
+
+      if (!json.success) {
+        setErr(
+          json.code === 'NOT_FOUND'
+            ? 'That code was not found. Check it against your Round 1 screen.'
+            : (json.error ?? 'Could not find you')
+        );
+        return;
       }
+
+      const d = json.data;
+      if (d.disqualified) {
+        setErr('You have been removed from this round. Speak to the quiz master.');
+        return;
+      }
+      if (!d.completedRound1) {
+        setInfo('We found you, but no submitted Round 1 paper is on record yet.');
+      }
+
+      onJoined({
+        id: d.participant.id,
+        participantCode: d.participant.participantCode,
+        name: d.participant.name,
+        schoolName: d.participant.schoolName,
+        language: d.participant.language === 'gujarati' ? 'gujarati' : 'english',
+      });
     } catch {
       setErr('Network error \u2014 check your connection and try again');
     } finally {
       setBusy(false);
     }
   };
-
-  const field =
-    'w-full rounded-xl border border-[#D4C5A9] bg-white/80 px-3.5 py-3 text-[#063B2D] outline-none transition-colors placeholder:text-[#5A6B5E]/50 focus:border-[#C8A951]';
 
   return (
     <div className="flex flex-1 items-center justify-center px-4 py-12">
@@ -545,8 +690,11 @@ function JoinForm({ onJoined }: { onJoined: (p: StoredParticipant) => void }) {
             Round 02
           </p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-[#063B2D]">
-            Take your seat
+            Enter your code
           </h1>
+          <p className="mt-2 text-sm leading-relaxed text-[#5A6B5E]">
+            Use the participant code from Round 1 so we continue with your score.
+          </p>
         </div>
 
         {err && (
@@ -554,52 +702,35 @@ function JoinForm({ onJoined }: { onJoined: (p: StoredParticipant) => void }) {
             {err}
           </p>
         )}
+        {info && (
+          <p className="mb-4 rounded-xl border border-[#C8A951]/50 bg-[#C8A951]/15 px-3.5 py-2.5 text-sm text-[#6B5314]">
+            {info}
+          </p>
+        )}
 
-        <Label>Your name</Label>
+        <Label>Participant code</Label>
         <input
           required
-          minLength={2}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className={`${field} mb-4`}
-          placeholder="Full name"
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          placeholder="MES0001"
+          autoCapitalize="characters"
+          autoComplete="off"
+          className="mb-6 w-full rounded-xl border border-[#D4C5A9] bg-white/80 px-3.5 py-3 text-center font-mono text-xl tracking-[0.2em] text-[#063B2D] outline-none transition-colors placeholder:text-[#5A6B5E]/40 focus:border-[#C8A951]"
         />
-
-        <Label>School name</Label>
-        <input
-          required
-          minLength={2}
-          value={schoolName}
-          onChange={(e) => setSchoolName(e.target.value)}
-          className={`${field} mb-4`}
-          placeholder="Your school"
-        />
-
-        <Label>Language</Label>
-        <div className="mb-6 grid grid-cols-2 gap-2">
-          {(['english', 'gujarati'] as const).map((l) => (
-            <button
-              key={l}
-              type="button"
-              onClick={() => setLanguage(l)}
-              className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
-                language === l
-                  ? 'border-[#C8A951] bg-[#C8A951]/20 text-[#063B2D]'
-                  : 'border-[#D4C5A9] bg-white/60 text-[#5A6B5E]'
-              }`}
-            >
-              {l === 'english' ? 'English' : '\u0939\u093f\u0902\u0926\u0940'}
-            </button>
-          ))}
-        </div>
 
         <button
           type="submit"
           disabled={busy}
           className="flex w-full items-center justify-center rounded-xl bg-[#063B2D] py-4 text-base font-bold text-[#F7F2E7] transition-colors hover:bg-[#0A5E3F] disabled:opacity-60"
         >
-          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Enter Round 2'}
+          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Continue'}
         </button>
+
+        <p className="mt-4 text-center text-xs leading-relaxed text-[#5A6B5E]/80">
+          Round 2 is only for students who sat Round 1. If you have not done
+          Round 1 yet, go back to the home page and start there.
+        </p>
       </form>
     </div>
   );

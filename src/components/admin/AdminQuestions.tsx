@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -133,7 +133,7 @@ function QuestionFormDialog({
     const result = questionFormSchema.safeParse(form);
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
-      result.error.errors.forEach((err) => {
+      result.error.issues.forEach((err) => {
         const field = err.path[0];
         if (field) fieldErrors[String(field)] = err.message;
       });
@@ -360,6 +360,14 @@ function QuestionFormDialog({
 }
 
 // ── Main Component ───────────────────────────────────────────
+
+/** Admin token written at login; every call to the gated admin API needs it. */
+function adminHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const token =
+    typeof window !== 'undefined' ? window.localStorage.getItem('mes-admin-token') : null;
+  return token ? { ...extra, Authorization: `Bearer ${token}` } : extra;
+}
+
 export default function AdminQuestions() {
   const { navigate, goBack } = useAppStore();
 
@@ -380,7 +388,7 @@ export default function AdminQuestions() {
   const fetchQuestions = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/admin/questions');
+      const res = await fetch('/api/admin/questions', { headers: adminHeaders() });
       if (!res.ok) throw new Error('Failed to fetch questions');
       const data = await res.json();
       setQuestions(data.data);
@@ -419,7 +427,7 @@ export default function AdminQuestions() {
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: adminHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
       });
 
@@ -445,6 +453,7 @@ export default function AdminQuestions() {
     try {
       const res = await fetch(`/api/admin/questions?id=${deleteTarget.id}`, {
         method: 'DELETE',
+        headers: adminHeaders(),
       });
       if (!res.ok) {
         const errData = await res.json();

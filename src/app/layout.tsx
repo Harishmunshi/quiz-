@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SCHOOL_LOGO_URL } from "@/lib/theme";
 import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   title: "Islamic Quiz Competition - M.E.S. English Medium School",
   description: "Live quiz competition platform for M.E.S. English Medium School Islamic Quiz Competition.",
   icons: {
-    icon: "/logo.svg",
+    icon: SCHOOL_LOGO_URL,
   },
 };
 

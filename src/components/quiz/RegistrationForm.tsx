@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/lib/store';
+import { saveParticipant } from '@/lib/round2/session';
 import { registerParticipantSchema } from '@/lib/validation/schemas';
 
 // ── Animation Variants ──────────────────────────────────────────
@@ -127,6 +128,17 @@ export default function RegistrationForm() {
 
         // Store participant and navigate
         setParticipant(json.participant);
+        // Persist to localStorage as well as the in-memory store. Round 2 lives
+        // on its own page with its own React tree, and previously had no way to
+        // learn who this student was — so it offered a registration form and
+        // minted a SECOND participant that could never qualify.
+        saveParticipant({
+          id: json.participant.id,
+          participantCode: json.participant.participantCode,
+          name: json.participant.name,
+          schoolName: json.participant.schoolName ?? schoolName,
+          language: selectedLanguage,
+        });
         navigate('round1-quiz');
       } catch (err) {
         setGeneralError(

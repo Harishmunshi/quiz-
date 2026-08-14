@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/lib/store';
 import type { CompetitionSettings } from '@/types/database';
 import { isMuted, toggleMuted } from '@/lib/sound/effects';
+import { SCHOOL_LOGO_URL } from '@/lib/theme';
 
 // ── Animation Variants ──────────────────────────────────────────
 const containerVariants = {
@@ -100,6 +101,9 @@ export default function LandingPage() {
   }, []);
 
   const round1Open = competitionSettings?.round1Status === 'open';
+  // Read from settings rather than hardcoding: the paper grew from 10 to 30 and
+  // the landing copy silently kept advertising 10.
+  const questionCount = competitionSettings?.round1TotalQuestions ?? 30;
   const statusLabel = getStatusLabel(competitionSettings);
   const statusColor = getStatusColor(competitionSettings);
 
@@ -199,10 +203,11 @@ export default function LandingPage() {
         <motion.div variants={itemVariants}>
           <div className="relative">
             <div className="absolute inset-0 rounded-full bg-gold-accent/30 blur-2xl scale-110" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/school-crest.svg"
+              src={SCHOOL_LOGO_URL}
               alt="M.E.S. English Medium School crest"
-              className="relative w-24 h-24 sm:w-32 sm:h-32 drop-shadow-2xl"
+              className="relative w-24 h-24 sm:w-32 sm:h-32 object-contain drop-shadow-2xl"
             />
           </div>
         </motion.div>
@@ -262,7 +267,7 @@ export default function LandingPage() {
           </Button>
           <p className="text-center text-xs sm:text-sm text-navy-deep/60 mt-3 font-medium">
             {round1Open
-              ? 'Takes about 2–3 minutes · 10 questions'
+              ? `${questionCount} questions · both English and हिंदी`
               : 'Round 1 will open when the administrator starts the competition'}
           </p>
         </motion.div>
@@ -271,10 +276,12 @@ export default function LandingPage() {
         <motion.button
           variants={itemVariants}
           type="button"
-          onClick={() => navigate('round2-landing')}
+          onClick={() => {
+            window.location.href = '/round2';
+          }}
           className="text-xs sm:text-sm text-navy-deep/50 hover:text-gold-accent transition-colors font-medium underline underline-offset-4 decoration-navy-deep/20 hover:decoration-gold-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm mt-2"
         >
-          Round 2 — Speed Challenge →
+          Round 2 — Live Round →
         </motion.button>
       </motion.div>
 

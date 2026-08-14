@@ -41,6 +41,8 @@ interface Stats {
   itemCount: number;
   fastestCorrect: { name: string; responseTimeMs: number } | null;
   correctSequence: string[];
+  joinPin: string | null;
+  qualifiedCount: number;
   pending: Array<{ id: string; name: string; schoolName: string }>;
   state: Round2State;
   currentQuestionNumber: number;
@@ -386,6 +388,64 @@ export default function AdminRound2Page() {
               </div>
             </Panel>
 
+            {/* ── Entry gate: who may play, and the code that lets them in ── */}
+            <Panel>
+              <div className="mb-4 flex items-center gap-2">
+                <Lock className="h-5 w-5 text-[#8A6A1C]" />
+                <h2 className="text-lg font-bold text-[#063B2D]">Entry gate</h2>
+                <span className="ml-auto font-mono text-sm tabular-nums text-[#5A6B5E]">
+                  {stats?.qualifiedCount ?? 0} qualified
+                </span>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        'Apply the Round 1 cut? This marks the top scorers as qualified for Round 2 and clears any previous cut.'
+                      )
+                    ) {
+                      control('qualify');
+                    }
+                  }}
+                  disabled={busy !== null}
+                  className="flex flex-col items-start rounded-xl border border-[#D4C5A9] bg-white/70 px-4 py-3 text-left transition-colors hover:border-[#C8A951] disabled:opacity-50"
+                >
+                  <span className="text-sm font-bold text-[#063B2D]">
+                    1 · Qualify from Round 1
+                  </span>
+                  <span className="mt-0.5 text-xs text-[#5A6B5E]">
+                    Top scorers by score, then fastest
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => control('generate-pin')}
+                  disabled={busy !== null}
+                  className="flex flex-col items-start rounded-xl border border-[#D4C5A9] bg-white/70 px-4 py-3 text-left transition-colors hover:border-[#C8A951] disabled:opacity-50"
+                >
+                  <span className="text-sm font-bold text-[#063B2D]">
+                    2 · {stats?.joinPin ? 'New join code' : 'Show join code'}
+                  </span>
+                  <span className="mt-0.5 text-xs text-[#5A6B5E]">
+                    Students type this to enter
+                  </span>
+                </button>
+              </div>
+
+              {stats?.joinPin && (
+                <div className="mt-4 rounded-xl border-2 border-[#C8A951] bg-[#C8A951]/15 px-4 py-5 text-center">
+                  <p className="font-mono text-[10px] tracking-[0.3em] text-[#6B5314]">
+                    JOIN CODE — READ THIS OUT
+                  </p>
+                  <p className="mt-1 font-mono text-5xl font-bold tracking-[0.25em] text-[#063B2D]">
+                    {stats.joinPin}
+                  </p>
+                </div>
+              )}
+            </Panel>
+
             {/* Live response monitor */}
             <Panel>
               <div className="mb-4 flex items-center gap-2">
@@ -460,12 +520,18 @@ export default function AdminRound2Page() {
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {stats.pending.slice(0, 24).map((p) => (
-                      <span
+                      <button
                         key={p.id}
-                        className="rounded-md bg-white/60 px-2 py-1 text-xs text-[#5A6B5E]"
+                        onClick={() => {
+                          if (window.confirm(`Remove ${p.name} from Round 2? Their answers stop counting immediately.`)) {
+                            control('disqualify', { participantId: p.id });
+                          }
+                        }}
+                        title="Click to remove from the round"
+                        className="rounded-md bg-white/60 px-2 py-1 text-xs text-[#5A6B5E] transition-colors hover:bg-[#B3261E]/15 hover:text-[#B3261E]"
                       >
                         {p.name}
-                      </span>
+                      </button>
                     ))}
                     {stats.pendingCount > 24 && (
                       <span className="rounded-md bg-white/60 px-2 py-1 text-xs text-[#5A6B5E]/70">
