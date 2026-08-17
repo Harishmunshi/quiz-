@@ -35,6 +35,13 @@ const SLOW_MS = 2000;
 /** Belt-and-braces full refetch, catching anything `rev` does not cover. */
 const RESYNC_MS = 10_000;
 
+export interface MyAnswer {
+  submittedOrder: string[];
+  responseTimeMs: number;
+  isCorrect: boolean | null;
+  correctPositions: number | null;
+}
+
 export interface LiveQuestion {
   id: string;
   questionNumber: number;
@@ -47,6 +54,17 @@ export interface LiveQuestion {
   itemCount: number;
   marks: number;
   timeLimitSec: number;
+  /** This question's own start line. Null means it has not been started. */
+  openedAt?: string | null;
+  /** Non-null once its answer key is public — the question is then closed. */
+  revealedAt?: string | null;
+  /** Whether this student may still submit this question. */
+  answerable?: boolean;
+  /** This student's answer to THIS question. */
+  myAnswer?: MyAnswer | null;
+  /** Correct sequence — present only after this question's own reveal. */
+  correctOrder?: string[] | null;
+  answerCount?: number;
 }
 
 export interface LiveState {
@@ -71,15 +89,22 @@ export interface LiveState {
   } | null;
   /** Whether a PIN has been generated. The PIN value itself never reaches a student. */
   pinIsSet: boolean;
+  /** The question the board is on. Still here for the projector and admin. */
   question: LiveQuestion | null;
   correctOrder: string[] | null;
   answerCount: number;
-  myAnswer: {
-    submittedOrder: string[];
-    responseTimeMs: number;
-    isCorrect: boolean | null;
-    correctPositions: number | null;
-  } | null;
+  myAnswer: MyAnswer | null;
+  /**
+   * Every question that has been started, each carrying this student's own
+   * answer and whether they may still submit it.
+   *
+   * The student screen drives its question switcher from this. Before it existed
+   * the client only ever held the one question the board was showing, so going
+   * back to Q1 was impossible on the screen even once the API allowed it.
+   */
+  questions: LiveQuestion[];
+  /** How many questions this student could still answer right now. */
+  answerableCount: number;
 }
 
 export function useLiveRound2(participantId?: string | null) {

@@ -87,6 +87,29 @@ export async function POST(request: Request) {
 
     const update: Record<string, unknown> = { updatedAt: new Date() };
 
+    /**
+     * Start a question's own clock, once.
+     *
+     * Deliberately only sets openedAt when it is still null. Re-opening or
+     * stepping back and forth must not restart it: the clock is what every
+     * already-recorded responseTimeMs for that question was measured against,
+     * so moving it would silently rewrite everyone's time.
+     */
+    const openQuestionClock = async (questionNumber: number) => {
+      await db.round2LiveQuestion.updateMany({
+        where: { questionNumber, isActive: true, openedAt: null },
+        data: { openedAt: new Date() },
+      });
+    };
+
+    /** Close a question for good. This is what ends answering, nothing else. */
+    const revealQuestionClock = async (questionNumber: number) => {
+      await db.round2LiveQuestion.updateMany({
+        where: { questionNumber, isActive: true, revealedAt: null },
+        data: { revealedAt: new Date() },
+      });
+    };
+
     switch (action) {
       case 'qualify': {
         // Rank Round 1 the same way the leaderboard does — score desc, then
@@ -173,7 +196,10 @@ export async function POST(request: Request) {
             { status: 400 }
           );
         }
-        // Opening resets the clock for that question.
+        // Start that question's own clock (once — see openQuestionClock) and put
+        // it on the board. Questions opened earlier stay answerable; opening a
+        // new one no longer shuts the previous ones.
+        await openQuestionClock(target);
         update.round2CurrentQuestion = target;
         update.round2QuestionState = 'open';
         update.round2QuestionOpenedAt = new Date();
@@ -204,6 +230,10 @@ export async function POST(request: Request) {
         }
         // Revealing from 'open' implicitly locks first — never leak the answer
         // while answers are still being accepted.
+        //
+        // This is now the ONLY action that closes a question to submissions.
+        // Everything else — lock, next, previous — leaves it answerable.
+        await revealQuestionClock(current);
         update.round2QuestionState = 'revealed';
         if (state === 'open') update.round2QuestionLockedAt = new Date();
         break;
@@ -213,7 +243,10 @@ export async function POST(request: Request) {
         const idx = numbers.indexOf(current);
         const nextNumber = idx === -1 ? numbers[0] : numbers[idx + 1];
         if (nextNumber === undefined) {
-          // Ran off the end — the round is finished.
+          // Ran off the end — the round is finished, so close the last question
+          // for good. Without this it would stay answerable after the round had
+          // ended, since revealedAt is the only thing that shuts a question now.
+          await revealQuestionClock(current);
           update.round2QuestionState = 'revealed';
           update.round2Status = 'closed';
           const updated = await db.competitionSettings.update({
@@ -228,6 +261,9 @@ export async function POST(request: Request) {
             message: 'All Round 2 questions completed',
           });
         }
+        // Moving on starts the next question without closing this one. A student
+        // still working through Q1 keeps their chance at it until it is revealed.
+        await openQuestionClock(nextNumber);
         update.round2CurrentQuestion = nextNumber;
         update.round2QuestionState = 'open';
         update.round2QuestionOpenedAt = new Date();
@@ -240,8 +276,10 @@ export async function POST(request: Request) {
         const idx = numbers.indexOf(current);
         const prevNumber = idx > 0 ? numbers[idx - 1] : numbers[0];
         update.round2CurrentQuestion = prevNumber;
-        // Step back into the revealed state rather than reopening — reopening
-        // would restart the clock and let people answer a second time.
+        // Show it again without reopening the round-wide clock. Whether that
+        // question still accepts answers is now decided by its own revealedAt,
+        // not by this state, so stepping back is safe: an already-revealed
+        // question stays closed, an unrevealed one stays open.
         update.round2QuestionState = 'revealed';
         update.round2QuestionLockedAt = new Date();
         break;
@@ -249,6 +287,12 @@ export async function POST(request: Request) {
 
       case 'reset': {
         await db.round2LiveAnswer.deleteMany({ where: { isTest: settings.isTestMode } });
+        // Clear the per-question clocks too, or every question would still count
+        // as opened-and-possibly-revealed after a reset and the round could not
+        // be run again.
+        await db.round2LiveQuestion.updateMany({
+          data: { openedAt: null, revealedAt: null },
+        });
         update.round2CurrentQuestion = 0;
         update.round2QuestionState = 'idle';
         update.round2QuestionOpenedAt = null;

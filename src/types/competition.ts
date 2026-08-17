@@ -93,6 +93,13 @@ export interface Round1LeaderboardEntry {
   rank: number;
   participantId: string;
   participantName: string;
+  /**
+   * Two students genuinely sharing a name is allowed and does happen. The code
+   * is the only thing on the board that tells them apart, so it is not optional
+   * decoration — without it the standings are unreadable to the room.
+   */
+  participantCode: string;
+  schoolName: string;
   className: string;
   division: string;
   language: Language;
@@ -107,6 +114,9 @@ export interface Round2LeaderboardEntry {
   rank: number;
   participantId: string;
   participantName: string;
+  /** See the note on Round1LeaderboardEntry — names are not unique, codes are. */
+  participantCode: string;
+  schoolName: string;
   className: string;
   division: string;
   finalTimeMs: number;

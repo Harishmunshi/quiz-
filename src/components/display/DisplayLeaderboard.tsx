@@ -92,8 +92,14 @@ function Round1Row({
         <h3 className={`text-2xl md:text-3xl text-[#F4F5F7] ${style.nameWeight} truncate`}>
           {entry.participantName}
         </h3>
+        {/* Was `className — division`. Both columns became nullable when school
+            name replaced them at registration, so on every recent participant
+            this line rendered as a lone em dash. The code is what the hall
+            actually needs anyway: it is the only thing separating two students
+            who share a name. */}
         <p className="text-sm md:text-base text-[#F4F5F7]/50 mt-0.5">
-          {entry.className} — {entry.division}
+          <span className="font-mono tracking-wide">{entry.participantCode}</span>
+          {entry.schoolName ? ` · ${entry.schoolName}` : ''}
         </p>
       </div>
       <div className="flex items-center gap-4 md:gap-6 shrink-0">
@@ -142,8 +148,14 @@ function Round2Row({
         <h3 className={`text-2xl md:text-3xl text-[#F4F5F7] ${style.nameWeight} truncate`}>
           {entry.participantName}
         </h3>
+        {/* Was `className — division`. Both columns became nullable when school
+            name replaced them at registration, so on every recent participant
+            this line rendered as a lone em dash. The code is what the hall
+            actually needs anyway: it is the only thing separating two students
+            who share a name. */}
         <p className="text-sm md:text-base text-[#F4F5F7]/50 mt-0.5">
-          {entry.className} — {entry.division}
+          <span className="font-mono tracking-wide">{entry.participantCode}</span>
+          {entry.schoolName ? ` · ${entry.schoolName}` : ''}
         </p>
       </div>
       <div className="text-right shrink-0">

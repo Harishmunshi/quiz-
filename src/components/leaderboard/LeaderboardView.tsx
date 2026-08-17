@@ -331,13 +331,16 @@ function Round1Table({ entries }: { entries: Round1LeaderboardEntry[] }) {
                         <span className={entry.rank === 1 ? 'text-gold-accent' : ''}>
                           {entry.participantName}
                         </span>
-                        <span className="text-xs text-muted-foreground sm:hidden">
-                          {entry.className} · {entry.division}
+                        {/* The code, always. Several students share a name — the
+                            board showed three identical "Harish Munshi" rows
+                            with no way to tell whose result was whose. */}
+                        <span className="font-mono text-[11px] tracking-wide text-muted-foreground">
+                          {entry.participantCode}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell className="text-center text-muted-foreground hidden sm:table-cell py-3">
-                      {entry.className}
+                      {entry.schoolName || entry.className || '—'}
                     </TableCell>
                     <TableCell className="text-center font-bold py-3">
                       <span
@@ -434,13 +437,16 @@ function Round2Table({ entries }: { entries: Round2LeaderboardEntry[] }) {
                         <span className={entry.rank === 1 ? 'text-gold-accent' : ''}>
                           {entry.participantName}
                         </span>
-                        <span className="text-xs text-muted-foreground sm:hidden">
-                          {entry.className} · {entry.division}
+                        {/* The code, always. Several students share a name — the
+                            board showed three identical "Harish Munshi" rows
+                            with no way to tell whose result was whose. */}
+                        <span className="font-mono text-[11px] tracking-wide text-muted-foreground">
+                          {entry.participantCode}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell className="text-center text-muted-foreground hidden sm:table-cell py-3">
-                      {entry.className}
+                      {entry.schoolName || entry.className || '—'}
                     </TableCell>
                     <TableCell className="text-right font-mono font-bold py-3">
                       <span

@@ -118,6 +118,13 @@ export function validateSubmission(
  * A question that is still `open` is in flight and must not be counted,
  * otherwise everyone would appear to carry a missed-question penalty for the
  * question they are currently working on.
+ *
+ * @deprecated Superseded by per-question `revealedAt`. This assumed questions
+ * were finished strictly in order — true only while exactly one question could
+ * be open at a time. Now that Q1 stays answerable after Q2 opens, "how many are
+ * finished" is no longer a position on a number line: it is the set of questions
+ * whose own answer has been revealed. The leaderboard route counts that set
+ * directly. Kept because the admin panel still displays it.
  */
 export function scoredQuestionCount(currentQuestion: number, state: Round2State): number {
   if (state === 'locked' || state === 'revealed') return currentQuestion;
@@ -163,7 +170,15 @@ export function rankLiveEntries(
   const sorted = [...rows].sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
     if (a.totalTimeMs !== b.totalTimeMs) return a.totalTimeMs - b.totalTimeMs;
-    return a.participantName.localeCompare(b.participantName);
+    // Names are NOT unique — several students genuinely share one, and that is
+    // allowed. Falling back to name alone left two same-named students on equal
+    // score and time comparing 0, so their order came down to whatever sequence
+    // Postgres happened to return and flipped between polls: the board visibly
+    // swapped them every 1.5 seconds. participantCode is unique, so this is a
+    // total order and the board holds still.
+    const byName = a.participantName.localeCompare(b.participantName);
+    if (byName !== 0) return byName;
+    return a.participantCode.localeCompare(b.participantCode);
   });
 
   // Standard competition ranking: identical score AND time share a rank.

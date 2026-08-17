@@ -258,12 +258,27 @@ model Round2LiveQuestion {
   marks          Int      @default(1)
   timeLimitSec   Int      @default(120)
   isActive       Boolean  @default(true)
+  // Per-question clocks. Round 2 used to keep a single openedAt on
+  // CompetitionSettings, which meant only ONE question could be in play at a
+  // time: a student who had not answered Q1 could never submit it once the quiz
+  // master moved to Q2, because there was nowhere to measure Q1's time from.
+  //
+  // openedAt   set the first time this question is put on the board. Until it
+  //            is set the question has not started and is not sent to students.
+  // revealedAt set when its answer key goes on screen. After that the question
+  //            is closed for good — accepting an answer once the correct
+  //            sequence is public is indefensible. This is the ONLY thing that
+  //            closes a question now.
+  openedAt       DateTime?
+  revealedAt     DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   answers        Round2LiveAnswer[]
 
   @@index([isActive])
+  @@index([openedAt])
+  @@index([revealedAt])
 }
 
 // ============================================================
