@@ -301,7 +301,13 @@ model Round2LiveAnswer {
   // shown on the reveal screen so a student sees how close they were.
   correctPositions Int      @default(0)
   marks            Int      @default(0)
-  // Measured server-side from settings.round2QuestionOpenedAt.
+  // Submitted after this question's own time limit ran out. Late answers are
+  // still accepted and still graded — the student sees whether they were right —
+  // but they score nothing, so marks is 0 even when isCorrect is true.
+  // Stored explicitly rather than inferred from marks == 0, which would be
+  // indistinguishable from an ordinary wrong answer.
+  late             Boolean  @default(false)
+  // Measured server-side from this question's own openedAt.
   // Never trusted from the client.
   responseTimeMs   Int
   isTest           Boolean  @default(false)

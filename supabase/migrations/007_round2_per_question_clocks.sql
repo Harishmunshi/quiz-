@@ -33,6 +33,11 @@
 ALTER TABLE "Round2LiveQuestion" ADD COLUMN IF NOT EXISTS "openedAt"   TIMESTAMP(3);
 ALTER TABLE "Round2LiveQuestion" ADD COLUMN IF NOT EXISTS "revealedAt" TIMESTAMP(3);
 
+-- A late answer is accepted and graded but scores nothing. Recorded explicitly:
+-- marks = 0 alone cannot be told apart from an ordinary wrong answer, and the
+-- student is shown "correct, but out of time" rather than simply "wrong".
+ALTER TABLE "Round2LiveAnswer" ADD COLUMN IF NOT EXISTS "late" BOOLEAN NOT NULL DEFAULT false;
+
 CREATE INDEX IF NOT EXISTS "Round2LiveQuestion_openedAt_idx"   ON "Round2LiveQuestion"("openedAt");
 CREATE INDEX IF NOT EXISTS "Round2LiveQuestion_revealedAt_idx" ON "Round2LiveQuestion"("revealedAt");
 

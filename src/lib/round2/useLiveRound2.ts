@@ -40,6 +40,8 @@ export interface MyAnswer {
   responseTimeMs: number;
   isCorrect: boolean | null;
   correctPositions: number | null;
+  /** Submitted after the question's time limit: graded and shown, but scores 0. */
+  late: boolean;
 }
 
 export interface LiveQuestion {

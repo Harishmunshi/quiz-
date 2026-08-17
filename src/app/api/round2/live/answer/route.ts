@@ -157,14 +157,15 @@ export async function POST(request: Request) {
     const openedAt = new Date(question.openedAt).getTime();
     const responseTimeMs = Math.max(0, now - openedAt);
 
-    // Deliberately NOT refused for being late.
+    // Late answers are accepted but score nothing.
     //
-    // The old code returned TOO_LATE past the countdown, which is what made a
-    // question unanswerable the moment its window elapsed — the single biggest
-    // source of "my submit button did nothing" during a round. Lateness is now
-    // priced instead of punished: the elapsed time is recorded honestly and
-    // costs the student on the cumulative-time tiebreak, while the mark itself
-    // still counts. `late` is reported so the UI can be straight with them.
+    // The old code returned TOO_LATE past the countdown and refused the write
+    // outright, which is what made a question unanswerable the moment its window
+    // elapsed — the single biggest source of "my submit button did nothing"
+    // during a round. The submission now always lands and is always graded, so
+    // the student finds out whether they were right and their attempt is on
+    // record; it simply earns no marks. That keeps the countdown meaningful
+    // without the button appearing broken.
     const windowSec = question.timeLimitSec || settings.round2QuestionSeconds;
     const late = windowSec > 0 && responseTimeMs > windowSec * 1000;
 
@@ -181,7 +182,11 @@ export async function POST(request: Request) {
           submittedOrder: JSON.stringify(submittedOrder),
           isCorrect,
           correctPositions,
-          marks: isCorrect ? question.marks : 0,
+          // Right but late still scores zero. isCorrect stays truthful so the
+          // reveal can tell them they had the sequence, and `late` is what
+          // explains the zero.
+          marks: isCorrect && !late ? question.marks : 0,
+          late,
           responseTimeMs,
           isTest: settings.isTestMode,
         },

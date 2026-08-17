@@ -222,20 +222,47 @@ export async function POST(request: Request) {
       }
 
       case 'reveal': {
-        if (state !== 'open' && state !== 'locked') {
+        // Each question is closed on its own. `questionNumber` targets a
+        // specific one, so the quiz master can finish Q1 — which is still taking
+        // answers from stragglers — while Q2 is up on the board. Without the
+        // parameter this acted only on whatever was currently displayed, which
+        // is the coupling that made every question rise and fall together.
+        const target = questionNumber ?? current;
+        if (!numbers.includes(target)) {
           return NextResponse.json(
-            { success: false, error: `Cannot reveal from state "${state}"` },
+            { success: false, error: `Question ${target} does not exist in Round 2` },
+            { status: 400 }
+          );
+        }
+
+        const targetQuestion = await db.round2LiveQuestion.findFirst({
+          where: { questionNumber: target, isActive: true },
+          select: { openedAt: true, revealedAt: true },
+        });
+        if (!targetQuestion?.openedAt) {
+          return NextResponse.json(
+            { success: false, error: `Question ${target} has not been started yet` },
             { status: 409 }
           );
         }
-        // Revealing from 'open' implicitly locks first — never leak the answer
-        // while answers are still being accepted.
-        //
-        // This is now the ONLY action that closes a question to submissions.
+        if (targetQuestion.revealedAt) {
+          return NextResponse.json(
+            { success: false, error: `Question ${target} has already been revealed` },
+            { status: 409 }
+          );
+        }
+
+        // This is the ONLY action that closes a question to submissions.
         // Everything else — lock, next, previous — leaves it answerable.
-        await revealQuestionClock(current);
-        update.round2QuestionState = 'revealed';
-        if (state === 'open') update.round2QuestionLockedAt = new Date();
+        await revealQuestionClock(target);
+
+        // Only move the board if we revealed the question it was showing;
+        // finishing an earlier question must not yank the hall off the current
+        // one.
+        if (target === current) {
+          update.round2QuestionState = 'revealed';
+          if (state === 'open') update.round2QuestionLockedAt = new Date();
+        }
         break;
       }
 

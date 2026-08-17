@@ -40,6 +40,8 @@ interface MyAnswerPayload {
   responseTimeMs: number;
   isCorrect: boolean | null;
   correctPositions: number | null;
+  /** Submitted after the question's time limit: graded and shown, but scores 0. */
+  late: boolean;
 }
 
 // Polled endpoint — never cache, never statically render.
@@ -193,6 +195,9 @@ export async function GET(request: Request) {
                 responseTimeMs: answer.responseTimeMs,
                 isCorrect: revealed ? answer.isCorrect : null,
                 correctPositions: revealed ? answer.correctPositions : null,
+                // Not withheld until the reveal: a student who submitted late
+                // should be told so immediately, not left expecting marks.
+                late: answer.late,
               }
             : null,
           // The answer key crosses the wire only after that question's reveal.

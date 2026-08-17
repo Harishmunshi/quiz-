@@ -194,7 +194,7 @@ export default function Round2Page() {
         success?: boolean;
         error?: string;
         code?: string;
-        data?: { submittedOrder: string[]; responseTimeMs: number };
+        data?: { submittedOrder: string[]; responseTimeMs: number; late?: boolean };
       } | null = null;
       try {
         json = await res.json();
@@ -208,6 +208,9 @@ export default function Round2Page() {
           responseTimeMs: json.data.responseTimeMs,
           isCorrect: null,
           correctPositions: null,
+          // Straight from the server's own timing decision — the client must not
+          // second-guess whether it was late.
+          late: Boolean(json.data.late),
         };
         // Attach the answer to the question it belongs to, not to a single
         // top-level slot — with several questions in play at once, one shared
@@ -618,23 +621,43 @@ export default function Round2Page() {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: 'spring' as const, stiffness: 300, damping: 20 }}
                   className={`mb-6 flex flex-col items-center rounded-2xl border p-6 text-center ${
-                    myAnswer.isCorrect
+                    myAnswer.isCorrect && !myAnswer.late
                       ? 'border-[#1A7D70]/50 bg-[#1A7D70]/10'
-                      : 'border-[#B3261E]/35 bg-[#B3261E]/07'
+                      : myAnswer.late
+                        ? 'border-[#FFB000]/55 bg-[#FFB000]/12'
+                        : 'border-[#B3261E]/35 bg-[#B3261E]/07'
                   }`}
                 >
-                  {myAnswer.isCorrect ? (
+                  {myAnswer.isCorrect && !myAnswer.late ? (
                     <CheckCircle2 className="mb-3 h-11 w-11 text-[#1A7D70]" />
+                  ) : myAnswer.late ? (
+                    <Hourglass className="mb-3 h-11 w-11 text-[#966700]" />
                   ) : (
                     <XCircle className="mb-3 h-11 w-11 text-[#B3261E]" />
                   )}
                   <p className="text-2xl font-bold tracking-tight text-[#0A0D14]">
-                    {myAnswer.isCorrect ? 'Perfect sequence' : 'Not quite'}
+                    {/* A late answer that was right is neither "perfect" nor
+                        "not quite" — telling a student they were wrong when
+                        their sequence was correct is the kind of thing they
+                        argue about afterwards, rightly. */}
+                    {myAnswer.late
+                      ? myAnswer.isCorrect
+                        ? 'Correct, but out of time'
+                        : 'Out of time'
+                      : myAnswer.isCorrect
+                        ? 'Perfect sequence'
+                        : 'Not quite'}
                   </p>
                   <p className="mt-2 font-mono text-xs tabular-nums text-[#5B6472]">
                     {myAnswer.correctPositions ?? 0} / {q.itemCount} in place ·{' '}
                     {formatSeconds(myAnswer.responseTimeMs)}
                   </p>
+                  {myAnswer.late && (
+                    <p className="mt-3 max-w-xs text-xs leading-relaxed text-[#7C5A00]">
+                      This came in after the {q.timeLimitSec}s limit, so it scores
+                      no marks. It is still on record.
+                    </p>
+                  )}
                 </motion.div>
               ) : (
                 <div className="mb-6 rounded-2xl border border-[#D7DAE1] bg-white/60 p-6 text-center">
