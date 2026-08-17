@@ -23,7 +23,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 260, damping: 20 },
+    transition: { type: 'spring' as const, stiffness: 260, damping: 20 },
   },
 };
 
@@ -117,8 +117,8 @@ export default function Round2Landing() {
       className="speed-theme min-h-screen flex flex-col items-center justify-between px-4 sm:px-6 py-8 sm:py-12 relative overflow-hidden"
       style={{
         background:
-          'radial-gradient(ellipse at top, #1A3050 0%, #071A2B 50%, #02060C 100%)',
-        color: '#F7F2E7',
+          'radial-gradient(ellipse at top, #1A3050 0%, #0A0D14 50%, #02060C 100%)',
+        color: '#F4F5F7',
       }}
     >
       {/* Animated speed lines */}
@@ -131,7 +131,7 @@ export default function Round2Landing() {
               top: `${(i + 1) * 8}%`,
               left: 0,
               right: 0,
-              background: 'linear-gradient(90deg, transparent 0%, #C8A951 50%, transparent 100%)',
+              background: 'linear-gradient(90deg, transparent 0%, #FFB000 50%, transparent 100%)',
               animation: `speedLine ${1.5 + (i % 4) * 0.5}s linear infinite`,
               animationDelay: `${(i % 5) * 0.2}s`,
             }}
@@ -196,7 +196,7 @@ export default function Round2Landing() {
           <div className="h-px w-8 sm:w-12 bg-gold-accent/60" />
           <Badge
             className="px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold uppercase tracking-widest border-0"
-            style={{ background: '#C8A951', color: '#071A2B' }}
+            style={{ background: '#FFB000', color: '#0A0D14' }}
           >
             <Zap className="size-3.5 mr-1.5 fill-current" />
             Round 02
@@ -209,7 +209,7 @@ export default function Round2Landing() {
           <h1
             className="text-5xl sm:text-7xl md:text-8xl font-black leading-[0.95] tracking-tight"
             style={{
-              background: 'linear-gradient(180deg, #F7F2E7 0%, #C8A951 100%)',
+              background: 'linear-gradient(180deg, #F4F5F7 0%, #FFB000 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -228,7 +228,7 @@ export default function Round2Landing() {
           style={{ color: 'rgba(247, 242, 231, 0.7)' }}
         >
           Arrange 10–12 items in the correct order. Race against the clock at
-          <span style={{ color: '#C8A951' }} className="font-bold">
+          <span style={{ color: '#966700' }} className="font-bold">
             {' '}
             microsecond
           </span>{' '}
@@ -255,7 +255,7 @@ export default function Round2Landing() {
             >
               <span
                 className="text-xl sm:text-2xl font-black"
-                style={{ color: '#C8A951' }}
+                style={{ color: '#966700' }}
               >
                 {step.t}
               </span>
@@ -276,7 +276,7 @@ export default function Round2Landing() {
               type="button"
               disabled
               className="w-full h-16 sm:h-20 text-lg sm:text-2xl font-extrabold uppercase tracking-wider rounded-2xl"
-              style={{ background: 'rgba(200, 169, 81, 0.3)', color: '#F7F2E7' }}
+              style={{ background: 'rgba(200, 169, 81, 0.3)', color: '#F4F5F7' }}
             >
               <Loader2 className="size-5 sm:size-7 animate-spin mr-2" />
               Loading…
@@ -297,9 +297,9 @@ export default function Round2Landing() {
               onClick={handleStart}
               className="group relative w-full h-16 sm:h-20 text-lg sm:text-2xl font-extrabold uppercase tracking-wider overflow-hidden rounded-2xl transition-all"
               style={{
-                background: 'linear-gradient(135deg, #C8A951 0%, #E8C76A 100%)',
-                color: '#071A2B',
-                boxShadow: '0 10px 30px -10px rgba(200, 169, 81, 0.6), 0 0 0 2px #071A2B inset',
+                background: 'linear-gradient(135deg, #FFB000 0%, #E8C76A 100%)',
+                color: '#0A0D14',
+                boxShadow: '0 10px 30px -10px rgba(200, 169, 81, 0.6), 0 0 0 2px #0A0D14 inset',
               }}
             >
               <span className="relative z-10 flex items-center justify-center gap-2 sm:gap-3">

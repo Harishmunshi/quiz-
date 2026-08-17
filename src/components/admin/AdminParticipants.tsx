@@ -49,18 +49,18 @@ function formatDateTime(dateStr: string): string {
 // ─── Mobile Card for each participant ────────────────────
 function ParticipantCard({ p }: { p: ParticipantRow }) {
   return (
-    <Card className="border-[#D4C5A9]/60">
+    <Card className="border-[#D7DAE1]/60">
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="font-bold text-[#063B2D] text-base truncate">{p.name}</p>
-            <p className="text-sm text-[#5A6B5E] mt-0.5">
+            <p className="font-bold text-[#0A0D14] text-base truncate">{p.name}</p>
+            <p className="text-sm text-[#5B6472] mt-0.5">
               {p.className} — Div {p.division}
             </p>
           </div>
           <Badge
             variant="outline"
-            className="shrink-0 text-xs border-[#C8A951]/60 text-[#063B2D] font-mono"
+            className="shrink-0 text-xs border-[#FFB000]/60 text-[#0A0D14] font-mono"
           >
             {p.participantCode}
           </Badge>
@@ -70,7 +70,7 @@ function ParticipantCard({ p }: { p: ParticipantRow }) {
             <Globe className="w-3 h-3" />
             {p.language === 'english' ? 'EN' : 'GU'}
           </Badge>
-          <div className="flex items-center gap-1.5 text-sm text-[#5A6B5E]">
+          <div className="flex items-center gap-1.5 text-sm text-[#5B6472]">
             <BookOpen className="w-3.5 h-3.5" />
             <span className="font-semibold">
               {p._count.round1Attempts > 0
@@ -79,10 +79,10 @@ function ParticipantCard({ p }: { p: ParticipantRow }) {
                   : 'Submitted'
                 : '—'}
             </span>
-            <span className="text-[#5A6B5E]/60">R1</span>
+            <span className="text-[#5B6472]/60">R1</span>
           </div>
         </div>
-        <p className="text-xs text-[#5A6B5E]/60">
+        <p className="text-xs text-[#5B6472]/60">
           {formatDateTime(p.createdAt)}
         </p>
       </CardContent>
@@ -135,24 +135,24 @@ export default function AdminParticipants() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F7F2E7] flex flex-col">
+    <div className="min-h-screen bg-[#F4F5F7] flex flex-col">
       {/* ─── Header ──────────────────────────────────── */}
-      <header className="sticky top-0 z-30 bg-[#F7F2E7]/90 backdrop-blur-md border-b border-[#D4C5A9]/50">
+      <header className="sticky top-0 z-30 bg-[#F4F5F7]/90 backdrop-blur-md border-b border-[#D7DAE1]/50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3 sm:gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={goBack}
-            className="shrink-0 hover:bg-[#063B2D]/10 text-[#063B2D]"
+            className="shrink-0 hover:bg-[#0A0D14]/10 text-[#0A0D14]"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#063B2D] truncate">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#0A0D14] truncate">
               Participants
             </h1>
-            <p className="text-xs sm:text-sm text-[#5A6B5E]">
+            <p className="text-xs sm:text-sm text-[#5B6472]">
               {loading
                 ? 'Loading…'
                 : `${filtered.length} of ${participants.length} participant${participants.length !== 1 ? 's' : ''}`}
@@ -166,13 +166,13 @@ export default function AdminParticipants() {
         {/* Tabs + Search Row */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           {/* Tabs */}
-          <div className="flex rounded-xl bg-[#063B2D]/5 p-1 shrink-0">
+          <div className="flex rounded-xl bg-[#0A0D14]/5 p-1 shrink-0">
             <button
               onClick={() => setActiveTab('official')}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                 activeTab === 'official'
-                  ? 'bg-[#063B2D] text-[#F7F2E7] shadow-sm'
-                  : 'text-[#5A6B5E] hover:text-[#063B2D]'
+                  ? 'bg-[#0A0D14] text-[#F4F5F7] shadow-sm'
+                  : 'text-[#5B6472] hover:text-[#0A0D14]'
               }`}
             >
               Official
@@ -181,8 +181,8 @@ export default function AdminParticipants() {
               onClick={() => setActiveTab('test')}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                 activeTab === 'test'
-                  ? 'bg-[#063B2D] text-[#F7F2E7] shadow-sm'
-                  : 'text-[#5A6B5E] hover:text-[#063B2D]'
+                  ? 'bg-[#0A0D14] text-[#F4F5F7] shadow-sm'
+                  : 'text-[#5B6472] hover:text-[#0A0D14]'
               }`}
             >
               Test
@@ -191,13 +191,13 @@ export default function AdminParticipants() {
 
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5A6B5E]/50" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5B6472]/50" />
             <input
               type="text"
               placeholder="Search by name, code, class…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-lg border border-[#D4C5A9] bg-white text-sm text-[#063B2D] placeholder:text-[#5A6B5E]/50 focus:outline-none focus:ring-2 focus:ring-[#C8A951]/40 focus:border-[#C8A951]/60 transition-all"
+              className="w-full pl-9 pr-4 py-2 rounded-lg border border-[#D7DAE1] bg-white text-sm text-[#0A0D14] placeholder:text-[#5B6472]/50 focus:outline-none focus:ring-2 focus:ring-[#FFB000]/40 focus:border-[#FFB000]/60 transition-all"
             />
           </div>
         </div>
@@ -212,7 +212,7 @@ export default function AdminParticipants() {
               exit={{ opacity: 0 }}
               className="flex items-center justify-center py-20"
             >
-              <div className="w-8 h-8 border-3 border-[#C8A951]/30 border-t-[#C8A951] rounded-full animate-spin" />
+              <div className="w-8 h-8 border-3 border-[#FFB000]/30 border-t-[#FFB000] rounded-full animate-spin" />
             </motion.div>
           ) : filtered.length === 0 ? (
             <motion.div
@@ -223,14 +223,14 @@ export default function AdminParticipants() {
               transition={{ duration: 0.25 }}
               className="flex flex-col items-center justify-center py-20 sm:py-28 text-center"
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#063B2D]/5 mb-4">
-                <UserX className="w-8 h-8 text-[#5A6B5E]/40" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#0A0D14]/5 mb-4">
+                <UserX className="w-8 h-8 text-[#5B6472]/40" />
               </div>
-              <p className="text-lg font-bold text-[#063B2D]/50 tracking-wider">
+              <p className="text-lg font-bold text-[#0A0D14]/50 tracking-wider">
                 NO PARTICIPANTS YET
               </p>
               {searchQuery.trim() && (
-                <p className="text-sm text-[#5A6B5E]/50 mt-1">
+                <p className="text-sm text-[#5B6472]/50 mt-1">
                   No results for &quot;{searchQuery}&quot;
                 </p>
               )}
@@ -244,19 +244,19 @@ export default function AdminParticipants() {
               transition={{ duration: 0.25 }}
             >
               {/* Desktop Table */}
-              <div className="hidden md:block rounded-xl border border-[#D4C5A9]/60 bg-white overflow-hidden">
+              <div className="hidden md:block rounded-xl border border-[#D7DAE1]/60 bg-white overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-[#063B2D]/[0.03] hover:bg-[#063B2D]/[0.03]">
-                      <TableHead className="w-28 font-semibold text-[#063B2D]">Code</TableHead>
-                      <TableHead className="font-semibold text-[#063B2D]">Name</TableHead>
-                      <TableHead className="w-20 font-semibold text-[#063B2D]">Class</TableHead>
-                      <TableHead className="w-20 font-semibold text-[#063B2D]">Div</TableHead>
-                      <TableHead className="w-24 font-semibold text-[#063B2D]">Language</TableHead>
-                      <TableHead className="w-32 text-center font-semibold text-[#063B2D]">
+                    <TableRow className="bg-[#0A0D14]/[0.03] hover:bg-[#0A0D14]/[0.03]">
+                      <TableHead className="w-28 font-semibold text-[#0A0D14]">Code</TableHead>
+                      <TableHead className="font-semibold text-[#0A0D14]">Name</TableHead>
+                      <TableHead className="w-20 font-semibold text-[#0A0D14]">Class</TableHead>
+                      <TableHead className="w-20 font-semibold text-[#0A0D14]">Div</TableHead>
+                      <TableHead className="w-24 font-semibold text-[#0A0D14]">Language</TableHead>
+                      <TableHead className="w-32 text-center font-semibold text-[#0A0D14]">
                         R1 Score
                       </TableHead>
-                      <TableHead className="w-48 font-semibold text-[#063B2D]">
+                      <TableHead className="w-48 font-semibold text-[#0A0D14]">
                         Registered At
                       </TableHead>
                     </TableRow>
@@ -265,16 +265,16 @@ export default function AdminParticipants() {
                     {filtered.map((p, idx) => (
                       <TableRow
                         key={p.id}
-                        className="border-t border-[#D4C5A9]/30 hover:bg-[#C8A951]/[0.04] transition-colors"
+                        className="border-t border-[#D7DAE1]/30 hover:bg-[#FFB000]/[0.04] transition-colors"
                       >
-                        <TableCell className="font-mono text-sm font-semibold text-[#063B2D]">
+                        <TableCell className="font-mono text-sm font-semibold text-[#0A0D14]">
                           {p.participantCode}
                         </TableCell>
-                        <TableCell className="font-semibold text-[#063B2D]">
+                        <TableCell className="font-semibold text-[#0A0D14]">
                           {p.name}
                         </TableCell>
-                        <TableCell className="text-[#5A6B5E]">{p.className}</TableCell>
-                        <TableCell className="text-[#5A6B5E]">{p.division}</TableCell>
+                        <TableCell className="text-[#5B6472]">{p.className}</TableCell>
+                        <TableCell className="text-[#5B6472]">{p.division}</TableCell>
                         <TableCell>
                           <Badge variant="secondary" className="text-xs gap-1">
                             <Globe className="w-3 h-3" />
@@ -285,18 +285,18 @@ export default function AdminParticipants() {
                           {p._count.round1Attempts > 0 ? (
                             p.latestRound1Score !== null && p.latestRound1Score !== undefined ? (
                               <Badge
-                                className="bg-[#063B2D] text-[#F7F2E7] hover:bg-[#063B2D]/90 font-bold text-sm"
+                                className="bg-[#0A0D14] text-[#F4F5F7] hover:bg-[#0A0D14]/90 font-bold text-sm"
                               >
                                 {p.latestRound1Score}
                               </Badge>
                             ) : (
-                              <span className="text-sm text-[#5A6B5E]">Submitted</span>
+                              <span className="text-sm text-[#5B6472]">Submitted</span>
                             )
                           ) : (
-                            <span className="text-sm text-[#5A6B5E]/50">—</span>
+                            <span className="text-sm text-[#5B6472]/50">—</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-sm text-[#5A6B5E]">
+                        <TableCell className="text-sm text-[#5B6472]">
                           {formatDateTime(p.createdAt)}
                         </TableCell>
                       </TableRow>

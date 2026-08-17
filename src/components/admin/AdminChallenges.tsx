@@ -113,20 +113,20 @@ export default function AdminChallenges() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F2E7] islamic-pattern">
+    <div className="min-h-screen bg-[#F4F5F7] islamic-pattern">
       <div className="max-w-4xl mx-auto p-4 md:p-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={goBack} className="text-[#063B2D]"><ArrowLeft className="w-4 h-4 mr-2" /> Back</Button>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#063B2D]">Round 2 Challenges</h1>
+            <Button variant="ghost" onClick={goBack} className="text-[#0A0D14]"><ArrowLeft className="w-4 h-4 mr-2" /> Back</Button>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#0A0D14]">Round 2 Challenges</h1>
           </div>
-          <Button onClick={openNew} className="bg-[#071A2B] text-[#F7F2E7]"><Plus className="w-4 h-4 mr-2" /> Add Challenge</Button>
+          <Button onClick={openNew} className="bg-[#0A0D14] text-[#F4F5F7]"><Plus className="w-4 h-4 mr-2" /> Add Challenge</Button>
         </div>
 
         {loading ? (
-          <div className="text-center py-8 text-[#5A6B5E]">Loading...</div>
+          <div className="text-center py-8 text-[#5B6472]">Loading...</div>
         ) : challenges.length === 0 ? (
-          <Card><CardContent className="py-12 text-center text-[#5A6B5E]"><GripVertical className="w-12 h-12 mx-auto mb-2 opacity-30" /><p className="font-semibold">NO CHALLENGES YET</p></CardContent></Card>
+          <Card><CardContent className="py-12 text-center text-[#5B6472]"><GripVertical className="w-12 h-12 mx-auto mb-2 opacity-30" /><p className="font-semibold">NO CHALLENGES YET</p></CardContent></Card>
         ) : (
           <div className="space-y-4">
             <AnimatePresence>
@@ -139,7 +139,7 @@ export default function AdminChallenges() {
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <span className="text-2xl font-bold text-[#C8A951]">#{c.challengeNumber}</span>
+                            <span className="text-2xl font-bold text-[#966700]">#{c.challengeNumber}</span>
                             <CardTitle className="text-lg">{c.prompt}</CardTitle>
                             <Badge variant={c.isActive ? 'default' : 'secondary'}>{c.isActive ? 'Active' : 'Inactive'}</Badge>
                           </div>
@@ -151,14 +151,14 @@ export default function AdminChallenges() {
                       </CardHeader>
                       <CardContent>
                         <div className="flex flex-wrap gap-2 mb-2">
-                          <span className="text-sm text-[#5A6B5E]">Items:</span>
+                          <span className="text-sm text-[#5B6472]">Items:</span>
                           {items.map((item) => <Badge key={item} variant="outline">{item}</Badge>)}
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          <span className="text-sm text-[#5A6B5E]">Correct:</span>
-                          {correct.map((item) => <Badge key={item} className="bg-[#063B2D] text-[#F7F2E7]">{item}</Badge>)}
+                          <span className="text-sm text-[#5B6472]">Correct:</span>
+                          {correct.map((item) => <Badge key={item} className="bg-[#0A0D14] text-[#F4F5F7]">{item}</Badge>)}
                         </div>
-                        <div className="flex gap-4 mt-3 text-sm text-[#5A6B5E]">
+                        <div className="flex gap-4 mt-3 text-sm text-[#5B6472]">
                           <span>Time: {c.timeLimitMs / 1000}s</span>
                           <span>Max attempts: {c.maxAttempts}</span>
                         </div>
@@ -184,7 +184,7 @@ export default function AdminChallenges() {
               <div><Label>Time Limit (ms)</Label><Input type="number" value={form.timeLimitMs} onChange={e => setForm(f => ({ ...f, timeLimitMs: parseInt(e.target.value) || 30000 }))} className="mt-1" /></div>
               <div><Label>Max Attempts</Label><Input type="number" min={1} value={form.maxAttempts} onChange={e => setForm(f => ({ ...f, maxAttempts: parseInt(e.target.value) || 3 }))} className="mt-1" /></div>
               <div className="flex items-center justify-between"><Label>Active</Label><Switch checked={form.isActive} onCheckedChange={v => setForm(f => ({ ...f, isActive: v }))} /></div>
-              <Button onClick={save} className="w-full bg-[#071A2B] text-[#F7F2E7]">{editing ? 'Update' : 'Create'} Challenge</Button>
+              <Button onClick={save} className="w-full bg-[#0A0D14] text-[#F4F5F7]">{editing ? 'Update' : 'Create'} Challenge</Button>
             </div>
           </DialogContent>
         </Dialog>

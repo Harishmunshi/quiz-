@@ -1,0 +1,29 @@
+[
+ {
+  "questionNumber": 1,
+  "titleEnglish": "Order of the Surahs",
+  "marks": 1,
+  "timeLimitSec": 120,
+  "items": "[{\"key\": \"al-balad\", \"en\": \"Al-Balad\"}, {\"key\": \"al-qadr\", \"en\": \"Al-Qadr\"}, {\"key\": \"al-adiyat\", \"en\": \"Al-'Adiyat\"}, {\"key\": \"ash-sharh\", \"en\": \"Ash-Sharh\"}, {\"key\": \"ad-duha\", \"en\": \"Ad-Duha\"}, {\"key\": \"al-alaq\", \"en\": \"Al-'Alaq\"}, {\"key\": \"al-layl\", \"en\": \"Al-Layl\"}, {\"key\": \"al-bayyinah\", \"en\": \"Al-Bayyinah\"}, {\"key\": \"az-zalzalah\", \"en\": \"Az-Zalzalah\"}, {\"key\": \"at-tin\", \"en\": \"At-Tin\"}, {\"key\": \"al-qariah\", \"en\": \"Al-Qari'ah\"}, {\"key\": \"ash-shams\", \"en\": \"Ash-Shams\"}]",
+  "correctOrder": "[\"al-balad\", \"ash-shams\", \"al-layl\", \"ad-duha\", \"ash-sharh\", \"at-tin\", \"al-alaq\", \"al-qadr\", \"al-bayyinah\", \"az-zalzalah\", \"al-adiyat\", \"al-qariah\"]",
+  "id": "qe7301f8b5d28f891"
+ },
+ {
+  "questionNumber": 2,
+  "titleEnglish": "Events in the life of the Prophet",
+  "marks": 1,
+  "timeLimitSec": 120,
+  "items": "[{\"key\": \"uhud\", \"en\": \"Battle of Uhud\"}, {\"key\": \"first-revelation\", \"en\": \"First Revelation\"}, {\"key\": \"hudaybiyyah\", \"en\": \"Treaty of Hudaybiyyah\"}, {\"key\": \"khandaq\", \"en\": \"Battle of Khandaq\"}, {\"key\": \"hijrah\", \"en\": \"Hijrah to Madinah\"}, {\"key\": \"conquest-makkah\", \"en\": \"Conquest of Makkah\"}, {\"key\": \"isra-miraj\", \"en\": \"Isra and Mi'raj\"}, {\"key\": \"badr\", \"en\": \"Battle of Badr\"}, {\"key\": \"public-preaching\", \"en\": \"Public preaching begins\"}, {\"key\": \"year-elephant\", \"en\": \"Year of the Elephant\"}, {\"key\": \"farewell-hajj\", \"en\": \"Farewell Hajj\"}, {\"key\": \"first-aqabah\", \"en\": \"First Pledge at Aqabah\"}]",
+  "correctOrder": "[\"year-elephant\", \"first-revelation\", \"public-preaching\", \"isra-miraj\", \"first-aqabah\", \"hijrah\", \"badr\", \"uhud\", \"khandaq\", \"hudaybiyyah\", \"conquest-makkah\", \"farewell-hajj\"]",
+  "id": "q887482d7c28a4ef8"
+ },
+ {
+  "questionNumber": 3,
+  "titleEnglish": "Order of the Prophets",
+  "marks": 1,
+  "timeLimitSec": 120,
+  "items": "[{\"key\": \"musa\", \"en\": \"Musa\"}, {\"key\": \"yusuf\", \"en\": \"Yusuf\"}, {\"key\": \"hud\", \"en\": \"Hud\"}, {\"key\": \"ishaq\", \"en\": \"Ishaq\"}, {\"key\": \"shuayb\", \"en\": \"Shu'ayb\"}, {\"key\": \"ismail\", \"en\": \"Ismail\"}, {\"key\": \"ayyub\", \"en\": \"Ayyub\"}, {\"key\": \"lut\", \"en\": \"Lut\"}, {\"key\": \"harun\", \"en\": \"Harun\"}, {\"key\": \"salih\", \"en\": \"Salih\"}, {\"key\": \"yaqub\", \"en\": \"Yaqub\"}, {\"key\": \"ibrahim\", \"en\": \"Ibrahim\"}]",
+  "correctOrder": "[\"hud\", \"salih\", \"ibrahim\", \"lut\", \"ismail\", \"ishaq\", \"yaqub\", \"yusuf\", \"ayyub\", \"shuayb\", \"musa\", \"harun\"]",
+  "id": "q0b5e9faec4d52a9c"
+ }
+]

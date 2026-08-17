@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth/admin';
+import { invalidateSettings } from '@/lib/round2/settingsCache';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -115,6 +116,7 @@ export async function POST(request: Request) {
         const qualified = await db.competitionSettings.update({
           where: { id: settings.id }, data: update,
         });
+        invalidateSettings();
         return NextResponse.json({
           success: true, data: qualified,
           message: `${ids.length} participant${ids.length === 1 ? '' : 's'} qualified for Round 2`,
@@ -147,6 +149,7 @@ export async function POST(request: Request) {
           where: { id: participantId },
           data: { disqualified: action === 'disqualify' },
         });
+        invalidateSettings();
         const after = await db.competitionSettings.findFirst();
         return NextResponse.json({
           success: true, data: after,
@@ -217,6 +220,7 @@ export async function POST(request: Request) {
             where: { id: settings.id },
             data: update,
           });
+          invalidateSettings();
           return NextResponse.json({
             success: true,
             data: updated,
@@ -258,6 +262,9 @@ export async function POST(request: Request) {
       where: { id: settings.id },
       data: update,
     });
+    // Drop the read cache so the very next poll from any screen sees this,
+    // rather than waiting out the TTL. Keeps control clicks feeling instant.
+    invalidateSettings();
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {

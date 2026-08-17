@@ -26,7 +26,7 @@ const cardVariants = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { type: 'spring', stiffness: 300, damping: 24 },
+    transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
   },
   exit: {
     opacity: 0,
@@ -41,7 +41,7 @@ const fieldVariants = {
   visible: (i: number) => ({
     opacity: 1,
     x: 0,
-    transition: { delay: 0.15 + i * 0.08, type: 'spring', stiffness: 260, damping: 20 },
+    transition: { delay: 0.15 + i * 0.08, type: 'spring' as const, stiffness: 260, damping: 20 },
   }),
 };
 
@@ -61,7 +61,7 @@ export default function RegistrationForm() {
 
   // Form state
   const [name, setName] = useState('');
-  const [schoolName, setSchoolName] = useState('M.E.S. English Medium School');
+  const [schoolName, setSchoolName] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldError>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -71,7 +71,7 @@ export default function RegistrationForm() {
   const isRound1Available = round1Status === 'open';
 
   const isGujarati = selectedLanguage === 'gujarati';
-  const title = isGujarati ? 'Register — हिंदी ક્વિઝ' : 'Register — English Quiz';
+  const title = isGujarati ? 'Register — हिंदी क्विज़' : 'Register — English Quiz';
 
   // Validate fields with Zod
   function validateFields(): boolean {
@@ -183,7 +183,7 @@ export default function RegistrationForm() {
                     : 'bg-emerald-deep text-ivory-warm'
                 }`}
               >
-                {isGujarati ? 'हिंदी ક્વિઝ' : 'English Quiz'}
+                {isGujarati ? 'हिंदी क्विज़' : 'English Quiz'}
               </Badge>
             </div>
 

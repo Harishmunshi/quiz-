@@ -18,12 +18,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Round 1 is not open' }, { status: 403 });
     }
 
+    // 'grading' must be in this set. It is the brief window while /submit is
+    // scoring an attempt; leaving it out meant a student who refreshed at that
+    // exact moment was handed a brand new attempt, and their real one landed on
+    // the leaderboard seconds later as a second row for the same person.
     const existingAttempt = await db.round1Attempt.findFirst({
-      where: { participantId, status: { in: ['in_progress', 'submitted'] }, isTest: settings.isTestMode },
+      where: { participantId, status: { in: ['in_progress', 'grading', 'submitted'] }, isTest: settings.isTestMode },
     });
 
     if (existingAttempt) {
-      if (existingAttempt.status === 'submitted') {
+      if (existingAttempt.status === 'submitted' || existingAttempt.status === 'grading') {
         return NextResponse.json({ success: false, error: 'You have already submitted this round' }, { status: 403 });
       }
       return NextResponse.json({ success: true, data: { attemptId: existingAttempt.id, resumed: true } });

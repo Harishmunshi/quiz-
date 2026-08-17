@@ -95,7 +95,7 @@ function SortableTile({ id, text, index }: { id: string; text: string; index: nu
         className="flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold shrink-0"
         style={{
           backgroundColor: 'rgba(200, 169, 81, 0.15)',
-          color: '#C8A951',
+          color: '#966700',
         }}
       >
         {index + 1}
@@ -117,7 +117,7 @@ function SortableTile({ id, text, index }: { id: string; text: string; index: nu
         <GripVertical className="w-5 h-5 shrink-0" style={{ color: 'rgba(200, 169, 81, 0.5)' }} />
         <span
           className="text-sm sm:text-base font-medium leading-snug"
-          style={{ color: '#F7F2E7' }}
+          style={{ color: '#F4F5F7' }}
         >
           {text}
         </span>
@@ -434,7 +434,7 @@ export default function Round2Challenge() {
             <>
               <motion.p
                 className="text-2xl sm:text-3xl font-bold tracking-widest mb-2"
-                style={{ color: '#C8A951' }}
+                style={{ color: '#966700' }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -446,7 +446,7 @@ export default function Round2Challenge() {
           {phase === 'countdown-title' && (
             <motion.p
               className="text-xl sm:text-2xl font-bold tracking-wide px-6"
-              style={{ color: '#F7F2E7' }}
+              style={{ color: '#F4F5F7' }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
@@ -456,7 +456,7 @@ export default function Round2Challenge() {
           {phase === 'countdown-ready' && (
             <motion.p
               className="text-3xl sm:text-4xl font-bold"
-              style={{ color: '#C8A951' }}
+              style={{ color: '#966700' }}
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
             >
@@ -466,7 +466,7 @@ export default function Round2Challenge() {
           {phase === 'countdown-3' && (
             <span
               className="text-8xl sm:text-9xl font-black countdown-number"
-              style={{ color: '#C8A951' }}
+              style={{ color: '#966700' }}
             >
               3
             </span>
@@ -474,7 +474,7 @@ export default function Round2Challenge() {
           {phase === 'countdown-2' && (
             <span
               className="text-8xl sm:text-9xl font-black countdown-number"
-              style={{ color: '#C8A951' }}
+              style={{ color: '#966700' }}
             >
               2
             </span>
@@ -482,7 +482,7 @@ export default function Round2Challenge() {
           {phase === 'countdown-1' && (
             <span
               className="text-8xl sm:text-9xl font-black countdown-number"
-              style={{ color: '#C8A951' }}
+              style={{ color: '#966700' }}
             >
               1
             </span>
@@ -490,10 +490,10 @@ export default function Round2Challenge() {
           {phase === 'countdown-go' && (
             <motion.span
               className="text-8xl sm:text-9xl font-black"
-              style={{ color: '#F7F2E7' }}
+              style={{ color: '#F4F5F7' }}
               initial={{ scale: 0.3, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+              transition={{ type: 'spring' as const, stiffness: 300, damping: 15 }}
             >
               GO!
             </motion.span>
@@ -519,9 +519,9 @@ export default function Round2Challenge() {
                 className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: 'rgba(200, 169, 81, 0.15)' }}
               >
-                <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#C8A951' }} />
+                <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#966700' }} />
               </div>
-              <p className="text-lg font-medium" style={{ color: '#F7F2E7' }}>
+              <p className="text-lg font-medium" style={{ color: '#F4F5F7' }}>
                 Preparing challenge…
               </p>
               <p className="text-sm mt-2" style={{ color: 'rgba(247, 242, 231, 0.6)' }}>
@@ -543,7 +543,7 @@ export default function Round2Challenge() {
                 >
                   <AlertCircle className="w-7 h-7 text-red-400" />
                 </div>
-                <h2 className="text-xl font-semibold mb-2" style={{ color: '#F7F2E7' }}>
+                <h2 className="text-xl font-semibold mb-2" style={{ color: '#F4F5F7' }}>
                   {error?.includes('not open') ? 'Round Closed' : 'Error'}
                 </h2>
                 <p className="text-sm mb-6" style={{ color: 'rgba(247, 242, 231, 0.7)' }}>
@@ -552,7 +552,7 @@ export default function Round2Challenge() {
                 <Button
                   onClick={() => navigate('landing')}
                   className="w-full h-11 text-sm font-medium"
-                  style={{ backgroundColor: '#C8A951', color: '#071A2B' }}
+                  style={{ backgroundColor: '#FFB000', color: '#0A0D14' }}
                 >
                   Back to Home
                 </Button>
@@ -598,7 +598,7 @@ export default function Round2Challenge() {
               </div>
               <h2
                 className="text-2xl font-bold mb-2"
-                style={{ color: '#F7F2E7' }}
+                style={{ color: '#F4F5F7' }}
               >
                 TIME'S UP!
               </h2>
@@ -611,7 +611,7 @@ export default function Round2Challenge() {
               <Button
                 onClick={() => navigate('round2-result')}
                 className="w-full h-11 text-sm font-medium"
-                style={{ backgroundColor: '#C8A951', color: '#071A2B' }}
+                style={{ backgroundColor: '#FFB000', color: '#0A0D14' }}
               >
                 View Result
               </Button>
@@ -629,19 +629,19 @@ export default function Round2Challenge() {
         <motion.div
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+          transition={{ type: 'spring' as const, stiffness: 200, damping: 15 }}
           className="text-center"
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+            transition={{ delay: 0.2, type: 'spring' as const, stiffness: 200 }}
           >
-            <CheckCircle2 className="w-24 h-24 mx-auto mb-6" style={{ color: '#22c55e' }} />
+            <CheckCircle2 className="w-24 h-24 mx-auto mb-6" style={{ color: '#2DD4BF' }} />
           </motion.div>
           <motion.h2
             className="text-4xl sm:text-5xl font-black mb-3"
-            style={{ color: '#22c55e' }}
+            style={{ color: '#2DD4BF' }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -650,7 +650,7 @@ export default function Round2Challenge() {
           </motion.h2>
           <motion.p
             className="text-2xl sm:text-3xl font-bold timer-glow mb-2"
-            style={{ color: '#C8A951' }}
+            style={{ color: '#966700' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
@@ -691,7 +691,7 @@ export default function Round2Challenge() {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200 }}
+                transition={{ type: 'spring' as const, stiffness: 200 }}
               >
                 <XCircle className="w-20 h-20 mx-auto mb-4" style={{ color: '#ef4444' }} />
               </motion.div>
@@ -714,7 +714,7 @@ export default function Round2Challenge() {
                   <Button
                     onClick={handleTryAgain}
                     className="w-full h-11 text-sm font-semibold"
-                    style={{ backgroundColor: '#C8A951', color: '#071A2B' }}
+                    style={{ backgroundColor: '#FFB000', color: '#0A0D14' }}
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
                     Try Again
@@ -726,7 +726,7 @@ export default function Round2Challenge() {
                   className="w-full h-11 text-sm font-medium"
                   style={{
                     borderColor: 'rgba(200, 169, 81, 0.3)',
-                    color: '#C8A951',
+                    color: '#966700',
                     backgroundColor: 'rgba(200, 169, 81, 0.05)',
                   }}
                 >
@@ -751,14 +751,14 @@ export default function Round2Challenge() {
         <div className="max-w-lg mx-auto">
           {/* Round badge */}
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Zap className="w-4 h-4" style={{ color: '#C8A951' }} />
+            <Zap className="w-4 h-4" style={{ color: '#966700' }} />
             <span
               className="text-xs font-semibold tracking-widest uppercase"
               style={{ color: 'rgba(200, 169, 81, 0.8)' }}
             >
               Round 02 — Speed Challenge
             </span>
-            <Zap className="w-4 h-4" style={{ color: '#C8A951' }} />
+            <Zap className="w-4 h-4" style={{ color: '#966700' }} />
           </div>
 
           {/* Large Central Timer */}
@@ -770,7 +770,7 @@ export default function Round2Challenge() {
             <p
               className="text-5xl sm:text-7xl font-black tabular-nums timer-glow"
               style={{
-                color: isTimeLow ? '#ef4444' : '#F7F2E7',
+                color: isTimeLow ? '#ef4444' : '#F4F5F7',
               }}
             >
               {formatTimerMicroseconds(elapsedMs)}
@@ -807,7 +807,7 @@ export default function Round2Challenge() {
                 <CardContent className="p-3 sm:p-4">
                   <p
                     className="text-sm sm:text-base font-medium"
-                    style={{ color: '#F7F2E7' }}
+                    style={{ color: '#F4F5F7' }}
                   >
                     {challenge.prompt}
                   </p>
@@ -855,8 +855,8 @@ export default function Round2Challenge() {
               backgroundColor:
                 phase === 'submitting'
                   ? 'rgba(200, 169, 81, 0.5)'
-                  : '#C8A951',
-              color: '#071A2B',
+                  : '#FFB000',
+              color: '#0A0D14',
             }}
           >
             {phase === 'submitting' ? (
@@ -878,7 +878,7 @@ export default function Round2Challenge() {
             className="h-12 sm:h-14 px-6 text-sm font-medium rounded-xl"
             style={{
               borderColor: 'rgba(200, 169, 81, 0.3)',
-              color: '#C8A951',
+              color: '#966700',
               backgroundColor: 'rgba(200, 169, 81, 0.05)',
             }}
           >

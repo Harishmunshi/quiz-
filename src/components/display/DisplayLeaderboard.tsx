@@ -16,11 +16,11 @@ function getRankStyle(rank: number) {
   switch (rank) {
     case 1:
       return {
-        rankColor: 'text-[#C8A951]',
-        rankBg: 'bg-[#C8A951]/15 border-[#C8A951]/40',
+        rankColor: 'text-[#966700]',
+        rankBg: 'bg-[#FFB000]/15 border-[#FFB000]/40',
         rankSize: 'text-4xl md:text-5xl',
         nameWeight: 'font-bold',
-        rowBorder: 'border-l-4 border-l-[#C8A951]',
+        rowBorder: 'border-l-4 border-l-[#FFB000]',
       };
     case 2:
       return {
@@ -40,7 +40,7 @@ function getRankStyle(rank: number) {
       };
     default:
       return {
-        rankColor: 'text-[#F7F2E7]/70',
+        rankColor: 'text-[#F4F5F7]/70',
         rankBg: 'bg-white/5 border-white/10',
         rankSize: 'text-2xl md:text-3xl',
         nameWeight: 'font-medium',
@@ -59,7 +59,7 @@ function AnimatedRank({ rank, previousRank }: { rank: number; previousRank?: num
       key={rank}
       initial={{ scale: 0.5, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      transition={{ type: 'spring' as const, stiffness: 300, damping: 20 }}
       className={`${rankStyle.rankBg} border rounded-xl px-4 py-2 md:px-6 md:py-3 ${rankStyle.rankSize} ${rankStyle.rankColor} font-black tabular-nums flex items-center justify-center min-w-[5rem] ${isNew ? 'new-record' : ''}`}
     >
       #{rank}
@@ -89,25 +89,25 @@ function Round1Row({
     >
       <AnimatedRank rank={entry.rank} />
       <div className="flex-1 min-w-0">
-        <h3 className={`text-2xl md:text-3xl text-[#F7F2E7] ${style.nameWeight} truncate`}>
+        <h3 className={`text-2xl md:text-3xl text-[#F4F5F7] ${style.nameWeight} truncate`}>
           {entry.participantName}
         </h3>
-        <p className="text-sm md:text-base text-[#F7F2E7]/50 mt-0.5">
+        <p className="text-sm md:text-base text-[#F4F5F7]/50 mt-0.5">
           {entry.className} — {entry.division}
         </p>
       </div>
       <div className="flex items-center gap-4 md:gap-6 shrink-0">
         <div className="text-center">
-          <p className="text-xs md:text-sm text-[#F7F2E7]/40 uppercase tracking-wider">Score</p>
-          <p className="text-2xl md:text-4xl font-black text-[#C8A951] tabular-nums">
-            {entry.score}<span className="text-lg md:text-xl text-[#F7F2E7]/40">/{entry.totalQuestions}</span>
+          <p className="text-xs md:text-sm text-[#F4F5F7]/40 uppercase tracking-wider">Score</p>
+          <p className="text-2xl md:text-4xl font-black text-[#966700] tabular-nums">
+            {entry.score}<span className="text-lg md:text-xl text-[#F4F5F7]/40">/{entry.totalQuestions}</span>
           </p>
         </div>
         <div className="text-center hidden sm:block">
-          <p className="text-xs md:text-sm text-[#F7F2E7]/40 uppercase tracking-wider">Time</p>
+          <p className="text-xs md:text-sm text-[#F4F5F7]/40 uppercase tracking-wider">Time</p>
           <div className="flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-[#F7F2E7]/40" />
-            <p className="text-xl md:text-2xl font-bold text-[#F7F2E7]/80 tabular-nums">
+            <Clock className="w-4 h-4 text-[#F4F5F7]/40" />
+            <p className="text-xl md:text-2xl font-bold text-[#F4F5F7]/80 tabular-nums">
               {formatTimerDisplay(entry.completionTimeMs)}
             </p>
           </div>
@@ -139,16 +139,16 @@ function Round2Row({
     >
       <AnimatedRank rank={entry.rank} />
       <div className="flex-1 min-w-0">
-        <h3 className={`text-2xl md:text-3xl text-[#F7F2E7] ${style.nameWeight} truncate`}>
+        <h3 className={`text-2xl md:text-3xl text-[#F4F5F7] ${style.nameWeight} truncate`}>
           {entry.participantName}
         </h3>
-        <p className="text-sm md:text-base text-[#F7F2E7]/50 mt-0.5">
+        <p className="text-sm md:text-base text-[#F4F5F7]/50 mt-0.5">
           {entry.className} — {entry.division}
         </p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-xs md:text-sm text-[#F7F2E7]/40 uppercase tracking-wider">Time</p>
-        <p className="text-3xl md:text-4xl font-black text-[#C8A951] timer-glow tabular-nums">
+        <p className="text-xs md:text-sm text-[#F4F5F7]/40 uppercase tracking-wider">Time</p>
+        <p className="text-3xl md:text-4xl font-black text-[#966700] timer-glow tabular-nums">
           {formatTimerDisplay(entry.finalTimeMs)}
         </p>
       </div>
@@ -242,7 +242,7 @@ export default function DisplayLeaderboard() {
     <div
       className="min-h-screen w-full flex flex-col relative overflow-hidden"
       style={{
-        background: 'linear-gradient(160deg, #063B2D 0%, #071A2B 100%)',
+        background: 'linear-gradient(160deg, #0A0D14 0%, #0A0D14 100%)',
       }}
     >
       {/* Subtle decorative overlay pattern */}
@@ -255,7 +255,7 @@ export default function DisplayLeaderboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="text-xl md:text-3xl lg:text-4xl font-black tracking-widest"
-          style={{ color: '#C8A951' }}
+          style={{ color: '#966700' }}
         >
           M.E.S. ENGLISH MEDIUM SCHOOL
         </motion.h1>
@@ -279,11 +279,11 @@ export default function DisplayLeaderboard() {
             onClick={() => setActiveRound(1)}
             className={`group flex items-center gap-2 md:gap-3 px-5 py-2.5 md:px-8 md:py-3 rounded-xl text-base md:text-xl lg:text-2xl font-bold tracking-wide transition-all duration-300 ${
               activeRound === 1
-                ? 'bg-[#C8A951]/20 text-[#C8A951] border-2 border-[#C8A951]/60 shadow-[0_0_30px_rgba(200,169,81,0.15)]'
+                ? 'bg-[#FFB000]/20 text-[#966700] border-2 border-[#FFB000]/60 shadow-[0_0_30px_rgba(200,169,81,0.15)]'
                 : 'bg-white/5 text-white/50 border-2 border-white/10 hover:bg-white/10 hover:text-white/70'
             }`}
           >
-            <Trophy className={`w-5 h-5 md:w-6 md:h-6 ${activeRound === 1 ? 'text-[#C8A951]' : 'text-white/40'}`} />
+            <Trophy className={`w-5 h-5 md:w-6 md:h-6 ${activeRound === 1 ? 'text-[#966700]' : 'text-white/40'}`} />
             ROUND 01 — KNOWLEDGE
           </button>
 
@@ -291,11 +291,11 @@ export default function DisplayLeaderboard() {
             onClick={() => setActiveRound(2)}
             className={`group flex items-center gap-2 md:gap-3 px-5 py-2.5 md:px-8 md:py-3 rounded-xl text-base md:text-xl lg:text-2xl font-bold tracking-wide transition-all duration-300 ${
               activeRound === 2
-                ? 'bg-[#C8A951]/20 text-[#C8A951] border-2 border-[#C8A951]/60 shadow-[0_0_30px_rgba(200,169,81,0.15)]'
+                ? 'bg-[#FFB000]/20 text-[#966700] border-2 border-[#FFB000]/60 shadow-[0_0_30px_rgba(200,169,81,0.15)]'
                 : 'bg-white/5 text-white/50 border-2 border-white/10 hover:bg-white/10 hover:text-white/70'
             }`}
           >
-            <Zap className={`w-5 h-5 md:w-6 md:h-6 ${activeRound === 2 ? 'text-[#C8A951]' : 'text-white/40'}`} />
+            <Zap className={`w-5 h-5 md:w-6 md:h-6 ${activeRound === 2 ? 'text-[#966700]' : 'text-white/40'}`} />
             ROUND 02 — SPEED
           </button>
 
@@ -321,7 +321,7 @@ export default function DisplayLeaderboard() {
                 className="text-center py-20 md:py-32"
               >
                 <div className="inline-flex items-center justify-center w-20 h-20 md:w-28 md:h-28 rounded-full bg-white/5 mb-6">
-                  <Star className="w-10 h-10 md:w-14 md:h-14 text-[#C8A951]/40" />
+                  <Star className="w-10 h-10 md:w-14 md:h-14 text-[#966700]/40" />
                 </div>
                 <p className="text-2xl md:text-4xl font-bold text-white/30 tracking-wide">
                   AWAITING RESULTS
@@ -333,7 +333,7 @@ export default function DisplayLeaderboard() {
             ) : (
               <div className="space-y-2 md:space-y-3">
                 {/* Column headers (desktop) */}
-                <div className="hidden md:flex items-center gap-6 px-8 py-2 text-xs text-[#F7F2E7]/30 uppercase tracking-widest font-medium">
+                <div className="hidden md:flex items-center gap-6 px-8 py-2 text-xs text-[#F4F5F7]/30 uppercase tracking-widest font-medium">
                   <div className="w-28 text-center">Rank</div>
                   <div className="flex-1">Participant</div>
                   {activeRound === 1 && (

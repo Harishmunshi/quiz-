@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  ArrowLeft,
   CheckCircle2,
   Hourglass,
   Loader2,
@@ -12,6 +13,8 @@ import {
   XCircle,
 } from 'lucide-react';
 import SequenceBuilder from '@/components/round2/SequenceBuilder';
+import LiveLeaderboard, { type BoardEntry } from '@/components/round2/LiveLeaderboard';
+import QuestionStage, { themeForQuestion } from '@/components/round2/QuestionStage';
 import { formatSeconds } from '@/lib/round2/live';
 import { useCountdown, useLiveRound2 } from '@/lib/round2/useLiveRound2';
 import { loadParticipant, saveParticipant, type StoredParticipant } from '@/lib/round2/session';
@@ -41,6 +44,10 @@ export default function Round2Page() {
     total: number;
     totalTimeMs: number;
   } | null>(null);
+  // Top of the board, shown to the student after each reveal. Same data and the
+  // same component the hall's projector is running, so a student watching their
+  // phone sees the identical overtake the room just reacted to.
+  const [board, setBoard] = useState<BoardEntry[]>([]);
 
   useEffect(() => {
     setParticipant(loadParticipant());
@@ -75,12 +82,8 @@ export default function Round2Page() {
         const res = await fetch('/api/round2/live/leaderboard', { cache: 'no-store' });
         const json = await res.json();
         if (!json.success || cancelled) return;
-        const rows = json.data as Array<{
-          participantId: string;
-          rank: number;
-          score: number;
-          totalTimeMs: number;
-        }>;
+        const rows = json.data as BoardEntry[];
+        setBoard(rows.slice(0, 10));
         const mine = rows.find((r) => r.participantId === participant.id);
         if (mine) {
           setStanding({
@@ -144,23 +147,60 @@ export default function Round2Page() {
           submittedOrder: placed,
         }),
       });
-      const json = await res.json();
-      if (json.success) {
+      // Read the body defensively. A rejection carries a real reason — "Time's
+      // up", "this question is no longer on screen" — and the student needs to
+      // see that reason, not a generic failure. Previously any hiccup parsing
+      // the response fell through to the catch and reported a network problem,
+      // which sent people to check their wifi while the server was in fact
+      // telling them something specific and true.
+      let json: {
+        success?: boolean;
+        error?: string;
+        code?: string;
+        data?: { submittedOrder: string[]; responseTimeMs: number };
+      } | null = null;
+      try {
+        json = await res.json();
+      } catch {
+        json = null;
+      }
+
+      if (json?.success && json.data) {
         patch((prev) => ({
           ...prev,
           myAnswer: {
-            submittedOrder: json.data.submittedOrder,
-            responseTimeMs: json.data.responseTimeMs,
+            submittedOrder: json!.data!.submittedOrder,
+            responseTimeMs: json!.data!.responseTimeMs,
             isCorrect: null,
             correctPositions: null,
           },
         }));
-      } else {
-        setSubmitError(json.error ?? 'Could not record your answer');
-        refresh();
+        return;
       }
-    } catch {
-      setSubmitError('Network error — your answer was not saved. Try again.');
+
+      // Plain-language versions of the reasons the server can refuse, so a
+      // student is never left guessing why their tap did nothing.
+      const BY_CODE: Record<string, string> = {
+        TOO_LATE: "Time's up for this question — the quiz master has to open the next one.",
+        NOT_OPEN: 'This question is closed. Wait for the quiz master to open the next one.',
+        STALE_QUESTION: 'The quiz master has moved on. This screen is about to catch up.',
+        ALREADY_ANSWERED: 'You have already answered this question.',
+        NO_OPEN_TIME: 'This question has not been started properly. Tell the quiz master.',
+      };
+
+      setSubmitError(
+        (json?.code && BY_CODE[json.code]) ||
+          json?.error ||
+          `Your answer was not saved (error ${res.status}). Try again.`
+      );
+      // Pull fresh state so the screen stops offering a submission the server
+      // will refuse again.
+      refresh();
+    } catch (error) {
+      // Only a genuine transport failure reaches here — the request never got
+      // a response at all.
+      console.error('Round 2 submission failed:', error);
+      setSubmitError('Could not reach the server — your answer was not saved. Try again.');
     } finally {
       setSubmitting(false);
     }
@@ -176,7 +216,7 @@ export default function Round2Page() {
     return (
       <Shell>
         <div className="flex flex-1 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#8A6A1C]" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#966700]" />
         </div>
       </Shell>
     );
@@ -202,10 +242,10 @@ export default function Round2Page() {
       <Shell>
         <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
           <XCircle className="mb-6 h-14 w-14 text-[#B3261E]" />
-          <h2 className="text-2xl font-bold tracking-tight text-[#063B2D]">
+          <h2 className="text-2xl font-bold tracking-tight text-[#0A0D14]">
             Removed from this round
           </h2>
-          <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#5A6B5E]">
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#5B6472]">
             The quiz master has removed you from Round 2. Please speak to them if
             you think this is a mistake.
           </p>
@@ -218,15 +258,15 @@ export default function Round2Page() {
     return (
       <Shell>
         <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-          <Trophy className="mb-6 h-14 w-14 text-[#8A6A1C]/50" />
-          <h2 className="text-2xl font-bold tracking-tight text-[#063B2D]">
+          <Trophy className="mb-6 h-14 w-14 text-[#966700]/50" />
+          <h2 className="text-2xl font-bold tracking-tight text-[#0A0D14]">
             Not in Round 2
           </h2>
-          <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#5A6B5E]">
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#5B6472]">
             Round 2 is for the top scorers from Round 1. If the quiz master has
             not announced the cut yet, keep this page open — it updates on its own.
           </p>
-          <p className="mt-6 font-mono text-xs text-[#5A6B5E]/70">
+          <p className="mt-6 font-mono text-xs text-[#5B6472]/70">
             {participant.name} · {participant.participantCode}
           </p>
         </div>
@@ -245,11 +285,11 @@ export default function Round2Page() {
             }}
             className="w-full max-w-sm text-center"
           >
-            <Lock className="mx-auto mb-5 h-12 w-12 text-[#8A6A1C]" />
-            <h2 className="text-2xl font-bold tracking-tight text-[#063B2D]">
+            <Lock className="mx-auto mb-5 h-12 w-12 text-[#966700]" />
+            <h2 className="text-2xl font-bold tracking-tight text-[#0A0D14]">
               You&apos;re in Round 2
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-[#5A6B5E]">
+            <p className="mt-3 text-sm leading-relaxed text-[#5B6472]">
               Enter the 4-digit code shown on the screen at the front of the hall.
             </p>
 
@@ -260,7 +300,7 @@ export default function Round2Page() {
             )}
 
             {!live?.pinIsSet && (
-              <p className="mt-5 rounded-xl border border-[#C8A951]/50 bg-[#C8A951]/15 px-3.5 py-2.5 text-sm text-[#6B5314]">
+              <p className="mt-5 rounded-xl border border-[#FFB000]/50 bg-[#FFB000]/15 px-3.5 py-2.5 text-sm text-[#7C5A00]">
                 The quiz master has not shown the code yet. Keep this page open.
               </p>
             )}
@@ -271,18 +311,18 @@ export default function Round2Page() {
               inputMode="numeric"
               autoComplete="off"
               placeholder="0000"
-              className="my-6 w-full rounded-xl border border-[#D4C5A9] bg-white/80 px-3.5 py-4 text-center font-mono text-3xl tracking-[0.4em] text-[#063B2D] outline-none focus:border-[#C8A951]"
+              className="my-6 w-full rounded-xl border border-[#D7DAE1] bg-white/80 px-3.5 py-4 text-center font-mono text-3xl tracking-[0.4em] text-[#0A0D14] outline-none focus:border-[#FFB000]"
             />
 
             <button
               type="submit"
               disabled={joining || pin.length !== 4}
-              className="flex w-full items-center justify-center rounded-xl bg-[#063B2D] py-4 text-base font-bold text-[#F7F2E7] transition-colors hover:bg-[#0A5E3F] disabled:opacity-45"
+              className="flex w-full items-center justify-center rounded-xl bg-[#0A0D14] py-4 text-base font-bold text-[#F4F5F7] transition-colors hover:bg-[#1C2230] disabled:opacity-45"
             >
               {joining ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Join the round'}
             </button>
 
-            <p className="mt-5 font-mono text-xs text-[#5A6B5E]/70">
+            <p className="mt-5 font-mono text-xs text-[#5B6472]/70">
               {participant.name} · {participant.participantCode}
             </p>
           </form>
@@ -292,26 +332,37 @@ export default function Round2Page() {
   }
 
   return (
-    <Shell>
+    <Shell questionNumber={live?.currentQuestionNumber ?? 0} exit={false}>
       {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-[#C8A951]/20 bg-[#F7F2E7]/85 backdrop-blur-md">
+      <header className="sticky top-0 z-20 border-b border-[#FFB000]/20 bg-[#F4F5F7]/70 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
+          {/* A way out — but never while a question is open, since leaving
+              mid-question forfeits it. */}
+          {state !== 'open' && (
+            <a
+              href="/"
+              aria-label="Back to the main site"
+              className="flex shrink-0 items-center justify-center rounded-xl border border-[#FFB000]/35 bg-white/70 p-2 text-[#0A0D14] transition-colors hover:bg-white"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </a>
+          )}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-[#063B2D]">
+            <p className="truncate text-sm font-semibold text-[#0A0D14]">
               {participant.name}
             </p>
-            <p className="truncate text-[11px] text-[#5A6B5E]/80">
+            <p className="truncate text-[11px] text-[#5B6472]/80">
               {participant.schoolName} · {participant.participantCode}
             </p>
           </div>
 
           {!connected && (
-            <span className="flex items-center gap-1.5 rounded-full bg-[#C8A951]/20 px-2.5 py-1 text-[11px] font-semibold text-[#8A6A1C]">
+            <span className="flex items-center gap-1.5 rounded-full bg-[#FFB000]/20 px-2.5 py-1 text-[11px] font-semibold text-[#966700]">
               <WifiOff className="h-3 w-3" /> Reconnecting
             </span>
           )}
 
-          <span className="shrink-0 rounded-full border border-[#C8A951]/30 px-3 py-1 font-mono text-xs tabular-nums text-[#8A6A1C]">
+          <span className="shrink-0 rounded-full border border-[#FFB000]/30 px-3 py-1 font-mono text-xs tabular-nums text-[#966700]">
             {live && live.currentQuestionNumber > 0
               ? `${live.currentQuestionNumber} / ${live.totalQuestions}`
               : 'ROUND 2'}
@@ -322,7 +373,7 @@ export default function Round2Page() {
         {state === 'open' && remainingMs !== null && q && (
           <div className="h-[3px] w-full bg-white/60">
             <div
-              className="h-full bg-gradient-to-r from-[#C8A951] to-[#e8d18a]"
+              className="h-full bg-gradient-to-r from-[#FFB000] to-[#FFE66D]"
               style={{
                 width: `${(remainingMs / (q.timeLimitSec * 1000)) * 100}%`,
                 transition: 'none',
@@ -341,14 +392,14 @@ export default function Round2Page() {
                 <motion.div
                   animate={{ scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }}
                   transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                  className="mb-7 rounded-full border border-[#C8A951]/25 p-6"
+                  className="mb-7 rounded-full border border-[#FFB000]/25 p-6"
                 >
-                  <Hourglass className="h-10 w-10 text-[#8A6A1C]" />
+                  <Hourglass className="h-10 w-10 text-[#966700]" />
                 </motion.div>
-                <h2 className="text-2xl font-bold tracking-tight text-[#063B2D]">
+                <h2 className="text-2xl font-bold tracking-tight text-[#0A0D14]">
                   You&apos;re in
                 </h2>
-                <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#5A6B5E]">
+                <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#5B6472]">
                   Keep this page open. The next question appears the moment the
                   quiz master releases it.
                 </p>
@@ -364,7 +415,7 @@ export default function Round2Page() {
                 <div className="mb-6 flex items-baseline justify-between">
                   <span
                     className={`font-mono text-4xl font-bold tabular-nums tracking-tight ${
-                      remainingMs < 15000 ? 'text-[#B3261E]' : 'text-[#8A6A1C]'
+                      remainingMs < 15000 ? 'text-[#B3261E]' : 'text-[#966700]'
                     }`}
                   >
                     {Math.floor(remainingMs / 1000)}
@@ -372,7 +423,7 @@ export default function Round2Page() {
                       .{String(Math.floor((remainingMs % 1000) / 10)).padStart(2, '0')}
                     </span>
                   </span>
-                  <span className="font-mono text-xs tabular-nums text-[#5A6B5E]/70">
+                  <span className="font-mono text-xs tabular-nums text-[#5B6472]/70">
                     {live?.answerCount ?? 0} submitted
                   </span>
                 </div>
@@ -395,14 +446,14 @@ export default function Round2Page() {
 
               {/* Submit bar */}
               {!locked ? (
-                <div className="sticky bottom-0 z-10 -mx-4 mt-6 border-t border-[#C8A951]/20 bg-[#F7F2E7]/90 px-4 py-4 backdrop-blur-md">
+                <div className="sticky bottom-0 z-10 -mx-4 mt-6 border-t border-[#FFB000]/20 bg-[#F4F5F7]/90 px-4 py-4 backdrop-blur-md">
                   <button
                     onClick={submit}
                     disabled={!complete || submitting}
                     className={`flex w-full items-center justify-center gap-2 rounded-xl py-4 text-base font-bold transition-all ${
                       complete
-                        ? 'bg-[#C8A951] text-[#063B2D] active:scale-[0.98] hover:bg-[#d9bd6b]'
-                        : 'cursor-not-allowed bg-white/60 text-[#5A6B5E]/70'
+                        ? 'bg-[#FFB000] text-[#0A0D14] active:scale-[0.98] hover:bg-[#FFC33D]'
+                        : 'cursor-not-allowed bg-white/60 text-[#5B6472]/70'
                     }`}
                   >
                     {submitting ? (
@@ -416,7 +467,7 @@ export default function Round2Page() {
                       `Place all ${q.itemCount} items`
                     )}
                   </button>
-                  <p className="mt-2 text-center text-[11px] text-[#5A6B5E]/70">
+                  <p className="mt-2 text-center text-[11px] text-[#5B6472]/70">
                     You get one submission. It cannot be changed.
                   </p>
                 </div>
@@ -424,7 +475,7 @@ export default function Round2Page() {
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-[#C8A951]/40 bg-[#C8A951]/10 px-4 py-4 text-sm font-semibold text-[#8A6A1C]"
+                  className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-[#FFB000]/40 bg-[#FFB000]/10 px-4 py-4 text-sm font-semibold text-[#966700]"
                 >
                   <Lock className="h-4 w-4" />
                   Locked in at {formatSeconds(live!.myAnswer!.responseTimeMs)}
@@ -440,19 +491,19 @@ export default function Round2Page() {
                 <motion.div
                   animate={{ rotate: [0, -6, 6, 0] }}
                   transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-                  className="mb-7 rounded-full border border-[#C8A951]/25 p-6"
+                  className="mb-7 rounded-full border border-[#FFB000]/25 p-6"
                 >
-                  <Lock className="h-10 w-10 text-[#8A6A1C]" />
+                  <Lock className="h-10 w-10 text-[#966700]" />
                 </motion.div>
-                <h2 className="text-2xl font-bold tracking-tight text-[#063B2D]">
+                <h2 className="text-2xl font-bold tracking-tight text-[#0A0D14]">
                   Submissions closed
                 </h2>
-                <p className="mt-3 text-sm text-[#5A6B5E]">
+                <p className="mt-3 text-sm text-[#5B6472]">
                   {locked
                     ? `Your answer is in — ${formatSeconds(live!.myAnswer!.responseTimeMs)}`
                     : 'You did not submit this one.'}
                 </p>
-                <p className="mt-1 text-xs text-[#5A6B5E]/70">Waiting for the reveal…</p>
+                <p className="mt-1 text-xs text-[#5B6472]/70">Waiting for the reveal…</p>
               </div>
             </Fade>
           )}
@@ -464,29 +515,29 @@ export default function Round2Page() {
                 <motion.div
                   initial={{ scale: 0.94, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  transition={{ type: 'spring' as const, stiffness: 300, damping: 20 }}
                   className={`mb-6 flex flex-col items-center rounded-2xl border p-6 text-center ${
                     live.myAnswer.isCorrect
-                      ? 'border-[#0A7D52]/50 bg-[#0A7D52]/10'
+                      ? 'border-[#1A7D70]/50 bg-[#1A7D70]/10'
                       : 'border-[#B3261E]/35 bg-[#B3261E]/07'
                   }`}
                 >
                   {live.myAnswer.isCorrect ? (
-                    <CheckCircle2 className="mb-3 h-11 w-11 text-[#0A7D52]" />
+                    <CheckCircle2 className="mb-3 h-11 w-11 text-[#1A7D70]" />
                   ) : (
                     <XCircle className="mb-3 h-11 w-11 text-[#B3261E]" />
                   )}
-                  <p className="text-2xl font-bold tracking-tight text-[#063B2D]">
+                  <p className="text-2xl font-bold tracking-tight text-[#0A0D14]">
                     {live.myAnswer.isCorrect ? 'Perfect sequence' : 'Not quite'}
                   </p>
-                  <p className="mt-2 font-mono text-xs tabular-nums text-[#5A6B5E]">
+                  <p className="mt-2 font-mono text-xs tabular-nums text-[#5B6472]">
                     {live.myAnswer.correctPositions ?? 0} / {q.itemCount} in place ·{' '}
                     {formatSeconds(live.myAnswer.responseTimeMs)}
                   </p>
                 </motion.div>
               ) : (
-                <div className="mb-6 rounded-2xl border border-[#D4C5A9] bg-white/60 p-6 text-center">
-                  <p className="text-base font-semibold text-[#5A6B5E]">
+                <div className="mb-6 rounded-2xl border border-[#D7DAE1] bg-white/60 p-6 text-center">
+                  <p className="text-base font-semibold text-[#5B6472]">
                     No answer recorded
                   </p>
                 </div>
@@ -495,7 +546,7 @@ export default function Round2Page() {
               {/* Their sequence, diffed against the key */}
               {live?.myAnswer && live.correctOrder && (
                 <div className="mb-6">
-                  <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#5A6B5E]/80">
+                  <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#5B6472]/80">
                     Your answer
                   </h3>
                   <SequenceBuilder
@@ -509,8 +560,8 @@ export default function Round2Page() {
               )}
 
               {live?.correctOrder && (
-                <div className="mb-6 rounded-2xl border border-[#0A7D52]/35 bg-[#0A7D52]/08 p-4">
-                  <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0A7D52]">
+                <div className="mb-6 rounded-2xl border border-[#1A7D70]/35 bg-[#1A7D70]/08 p-4">
+                  <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1A7D70]">
                     Correct sequence
                   </h3>
                   <ol className="space-y-1">
@@ -518,10 +569,10 @@ export default function Round2Page() {
                       const item = q.items.find((it) => it.key === key);
                       return (
                         <li key={key} className="flex items-baseline gap-3">
-                          <span className="w-5 shrink-0 text-right font-mono text-[11px] tabular-nums text-[#0A7D52]/70">
+                          <span className="w-5 shrink-0 text-right font-mono text-[11px] tabular-nums text-[#1A7D70]/70">
                             {i + 1}
                           </span>
-                          <span className="text-sm text-[#063B2D]">
+                          <span className="text-sm text-[#0A0D14]">
                             {item?.en ?? key}
                           </span>
                         </li>
@@ -532,10 +583,10 @@ export default function Round2Page() {
               )}
 
               {standing && (
-                <div className="rounded-2xl border border-[#C8A951]/25 bg-white/60 p-5">
+                <div className="rounded-2xl border border-[#FFB000]/25 bg-white/60 p-5">
                   <div className="mb-4 flex items-center gap-2">
-                    <Trophy className="h-4 w-4 text-[#8A6A1C]" />
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8A6A1C]">
+                    <Trophy className="h-4 w-4 text-[#966700]" />
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#966700]">
                       Your position
                     </p>
                   </div>
@@ -551,7 +602,22 @@ export default function Round2Page() {
                 </div>
               )}
 
-              <p className="mt-6 text-center text-xs text-[#5A6B5E]/70">
+              {board.length > 0 && (
+                <div className="mt-6 rounded-2xl border border-[#FFB000]/25 bg-white/55 p-4">
+                  <div className="mb-3 flex items-baseline gap-2">
+                    <Trophy className="h-4 w-4 text-[#966700]" />
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#966700]">
+                      Leaderboard
+                    </p>
+                    <span className="ml-auto font-mono text-[10px] tracking-[0.2em] text-[#5B6472]/70">
+                      TOP {board.length}
+                    </span>
+                  </div>
+                  <LiveLeaderboard entries={board} highlightId={participant?.id ?? null} />
+                </div>
+              )}
+
+              <p className="mt-6 text-center text-xs text-[#5B6472]/70">
                 Waiting for the next question…
               </p>
             </Fade>
@@ -564,14 +630,35 @@ export default function Round2Page() {
 
 // ── Pieces ───────────────────────────────────────────────────────────────
 
-function Shell({ children }: { children: React.ReactNode }) {
+/**
+ * The page frame. `questionNumber` drives the per-question backdrop, so the
+ * student's phone shifts to the same accent the projector is showing.
+ */
+function Shell({
+  children,
+  questionNumber = 0,
+  exit = true,
+}: {
+  children: React.ReactNode;
+  questionNumber?: number;
+  /** The live question view draws its own header link, so it opts out. */
+  exit?: boolean;
+}) {
   return (
-    <main
-      className="flex min-h-screen flex-col"
-      style={{ background: 'linear-gradient(180deg, #F7F2E7 0%, #EEE3CC 100%)' }}
-    >
-      {children}
-    </main>
+    <QuestionStage questionNumber={questionNumber} full>
+      <main className="flex min-h-screen flex-col">
+        {exit && (
+          <a
+            href="/"
+            className="absolute left-4 top-4 z-40 flex items-center gap-1.5 rounded-xl border border-[#FFB000]/35 bg-white/70 px-2.5 py-1.5 text-sm font-semibold text-[#0A0D14] transition-colors hover:bg-white"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Main site
+          </a>
+        )}
+        {children}
+      </main>
+    </QuestionStage>
   );
 }
 
@@ -588,22 +675,32 @@ function Fade({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * The question's own rule and label take the accent of that question's stage,
+ * so the header, the backdrop and the projector all agree. It is the small
+ * detail that makes each question feel like its own moment rather than the
+ * same screen with different words in it.
+ */
 function QuestionHead({
   q,
 }: {
   q: { questionNumber: number; titleEnglish: string; titleSecondary: string | null; promptEnglish: string; promptSecondary: string | null };
 }) {
+  const theme = themeForQuestion(q.questionNumber);
   return (
-    <div className="mb-6 border-l-2 border-[#C8A951] pl-4">
-      <p className="mb-1.5 font-mono text-[11px] uppercase tracking-[0.28em] text-[#8A6A1C]/80">
+    <div className="mb-6 border-l-2 pl-4" style={{ borderColor: theme.accent }}>
+      <p
+        className="mb-1.5 font-mono text-[11px] uppercase tracking-[0.28em]"
+        style={{ color: theme.ink }}
+      >
         Question {String(q.questionNumber).padStart(2, '0')}
       </p>
-      <h2 className="text-xl font-bold leading-snug tracking-tight text-[#063B2D]">
+      <h2 className="text-xl font-bold leading-snug tracking-tight text-[#0A0D14]">
         {q.titleEnglish}
       </h2>
-      <p className="mt-2 text-sm leading-relaxed text-[#5A6B5E]">{q.promptEnglish}</p>
+      <p className="mt-2 text-sm leading-relaxed text-[#5B6472]">{q.promptEnglish}</p>
       {q.promptSecondary && (
-        <p className="mt-1.5 text-sm leading-relaxed text-[#5A6B5E]/80">
+        <p className="mt-1.5 text-sm leading-relaxed text-[#5B6472]/80">
           {q.promptSecondary}
         </p>
       )}
@@ -614,9 +711,9 @@ function QuestionHead({
 function Stat({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-[#5A6B5E]/70">{label}</p>
-      <p className="mt-1 font-mono text-lg font-bold tabular-nums text-[#8A6A1C]">{value}</p>
-      <p className="text-[10px] text-[#5A6B5E]/60">{sub}</p>
+      <p className="text-[10px] uppercase tracking-wider text-[#5B6472]/70">{label}</p>
+      <p className="mt-1 font-mono text-lg font-bold tabular-nums text-[#966700]">{value}</p>
+      <p className="text-[10px] text-[#5B6472]/60">{sub}</p>
     </div>
   );
 }
@@ -673,8 +770,13 @@ function JoinForm({ onJoined }: { onJoined: (p: StoredParticipant) => void }) {
         schoolName: d.participant.schoolName,
         language: d.participant.language === 'gujarati' ? 'gujarati' : 'english',
       });
-    } catch {
-      setErr('Network error \u2014 check your connection and try again');
+    } catch (error) {
+      // Not necessarily the network. This catch also swallows any exception
+      // thrown while reading the response, and reporting that as a connection
+      // problem sends people to check their wifi over a code fault. Log the
+      // real cause so it is visible in the console during an event.
+      console.error('Round 2 sign-in failed:', error);
+      setErr('Could not sign you in. Try again \u2014 if it keeps failing, tell the quiz master.');
     } finally {
       setBusy(false);
     }
@@ -686,13 +788,13 @@ function JoinForm({ onJoined }: { onJoined: (p: StoredParticipant) => void }) {
         <div className="mb-8 flex flex-col items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={SCHOOL_LOGO_URL} alt="" className="mb-4 h-20 w-20 object-contain" />
-          <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[#8A6A1C]">
+          <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[#966700]">
             Round 02
           </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-[#063B2D]">
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-[#0A0D14]">
             Enter your code
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-[#5A6B5E]">
+          <p className="mt-2 text-sm leading-relaxed text-[#5B6472]">
             Use the participant code from Round 1 so we continue with your score.
           </p>
         </div>
@@ -703,7 +805,7 @@ function JoinForm({ onJoined }: { onJoined: (p: StoredParticipant) => void }) {
           </p>
         )}
         {info && (
-          <p className="mb-4 rounded-xl border border-[#C8A951]/50 bg-[#C8A951]/15 px-3.5 py-2.5 text-sm text-[#6B5314]">
+          <p className="mb-4 rounded-xl border border-[#FFB000]/50 bg-[#FFB000]/15 px-3.5 py-2.5 text-sm text-[#7C5A00]">
             {info}
           </p>
         )}
@@ -716,18 +818,18 @@ function JoinForm({ onJoined }: { onJoined: (p: StoredParticipant) => void }) {
           placeholder="MES0001"
           autoCapitalize="characters"
           autoComplete="off"
-          className="mb-6 w-full rounded-xl border border-[#D4C5A9] bg-white/80 px-3.5 py-3 text-center font-mono text-xl tracking-[0.2em] text-[#063B2D] outline-none transition-colors placeholder:text-[#5A6B5E]/40 focus:border-[#C8A951]"
+          className="mb-6 w-full rounded-xl border border-[#D7DAE1] bg-white/80 px-3.5 py-3 text-center font-mono text-xl tracking-[0.2em] text-[#0A0D14] outline-none transition-colors placeholder:text-[#5B6472]/40 focus:border-[#FFB000]"
         />
 
         <button
           type="submit"
           disabled={busy}
-          className="flex w-full items-center justify-center rounded-xl bg-[#063B2D] py-4 text-base font-bold text-[#F7F2E7] transition-colors hover:bg-[#0A5E3F] disabled:opacity-60"
+          className="flex w-full items-center justify-center rounded-xl bg-[#0A0D14] py-4 text-base font-bold text-[#F4F5F7] transition-colors hover:bg-[#1C2230] disabled:opacity-60"
         >
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Continue'}
         </button>
 
-        <p className="mt-4 text-center text-xs leading-relaxed text-[#5A6B5E]/80">
+        <p className="mt-4 text-center text-xs leading-relaxed text-[#5B6472]/80">
           Round 2 is only for students who sat Round 1. If you have not done
           Round 1 yet, go back to the home page and start there.
         </p>
@@ -738,7 +840,7 @@ function JoinForm({ onJoined }: { onJoined: (p: StoredParticipant) => void }) {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5A6B5E]/80">
+    <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5B6472]/80">
       {children}
     </span>
   );

@@ -75,15 +75,15 @@ export default function Round2Result() {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.2 }}
+                transition={{ type: 'spring' as const, stiffness: 200, damping: 12, delay: 0.2 }}
                 className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4"
                 style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)' }}
               >
-                <CheckCircle2 className="w-10 h-10" style={{ color: '#22c55e' }} />
+                <CheckCircle2 className="w-10 h-10" style={{ color: '#2DD4BF' }} />
               </motion.div>
               <motion.h1
                 className="text-3xl sm:text-4xl font-black tracking-wide"
-                style={{ color: '#22c55e' }}
+                style={{ color: '#2DD4BF' }}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4 }}
@@ -96,7 +96,7 @@ export default function Round2Result() {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.2 }}
+                transition={{ type: 'spring' as const, stiffness: 200, damping: 12, delay: 0.2 }}
                 className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4"
                 style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
               >
@@ -144,14 +144,14 @@ export default function Round2Result() {
             <CardContent className="p-6 sm:p-8">
               {/* Speed Icon + Round badge */}
               <div className="flex items-center justify-center gap-2 mb-6">
-                <Zap className="w-4 h-4" style={{ color: '#C8A951' }} />
+                <Zap className="w-4 h-4" style={{ color: '#966700' }} />
                 <span
                   className="text-xs font-semibold tracking-widest uppercase"
                   style={{ color: 'rgba(200, 169, 81, 0.8)' }}
                 >
                   Round 02 — Speed Challenge
                 </span>
-                <Zap className="w-4 h-4" style={{ color: '#C8A951' }} />
+                <Zap className="w-4 h-4" style={{ color: '#966700' }} />
               </div>
 
               {/* Time Display */}
@@ -162,7 +162,7 @@ export default function Round2Result() {
                   transition={{ delay: 0.6 }}
                   className="flex flex-col items-center"
                 >
-                  <Timer className="w-5 h-5 mb-2" style={{ color: '#C8A951' }} />
+                  <Timer className="w-5 h-5 mb-2" style={{ color: '#966700' }} />
                   <p
                     className="text-xs font-medium mb-1"
                     style={{ color: 'rgba(247, 242, 231, 0.5)' }}
@@ -172,7 +172,7 @@ export default function Round2Result() {
                   <p
                     className="text-4xl sm:text-5xl font-black tabular-nums timer-glow"
                     style={{
-                      color: isCorrect ? '#C8A951' : 'rgba(247, 242, 231, 0.7)',
+                      color: isCorrect ? '#FFB000' : 'rgba(247, 242, 231, 0.7)',
                     }}
                   >
                     {formatTimerMicroseconds(isCorrect ? finalTimeMs : serverElapsedMs)}
@@ -201,10 +201,10 @@ export default function Round2Result() {
               >
                 {isCorrect ? (
                   <>
-                    <CheckCircle2 className="w-5 h-5" style={{ color: '#22c55e' }} />
+                    <CheckCircle2 className="w-5 h-5" style={{ color: '#2DD4BF' }} />
                     <span
                       className="text-sm font-medium"
-                      style={{ color: '#22c55e' }}
+                      style={{ color: '#2DD4BF' }}
                     >
                       Your result has been recorded
                     </span>
@@ -238,8 +238,8 @@ export default function Round2Result() {
             onClick={handleLeaderboard}
             className="w-full h-12 text-sm font-semibold rounded-xl"
             style={{
-              backgroundColor: '#C8A951',
-              color: '#071A2B',
+              backgroundColor: '#FFB000',
+              color: '#0A0D14',
             }}
           >
             <BarChart3 className="w-4 h-4" />
@@ -253,7 +253,7 @@ export default function Round2Result() {
               className="w-full h-11 text-sm font-medium rounded-xl"
               style={{
                 borderColor: 'rgba(200, 169, 81, 0.3)',
-                color: '#C8A951',
+                color: '#966700',
                 backgroundColor: 'rgba(200, 169, 81, 0.08)',
               }}
             >
@@ -284,11 +284,11 @@ export default function Round2Result() {
           transition={{ duration: 1, delay: 1.3 }}
           className="flex justify-center mt-6"
         >
-          <Star className="w-4 h-4 mx-1" style={{ color: '#C8A951' }} />
-          <Star className="w-3 h-3 mx-1 mt-0.5" style={{ color: '#C8A951' }} />
-          <Star className="w-5 h-5 mx-1" style={{ color: '#C8A951' }} />
-          <Star className="w-3 h-3 mx-1 mt-0.5" style={{ color: '#C8A951' }} />
-          <Star className="w-4 h-4 mx-1" style={{ color: '#C8A951' }} />
+          <Star className="w-4 h-4 mx-1" style={{ color: '#966700' }} />
+          <Star className="w-3 h-3 mx-1 mt-0.5" style={{ color: '#966700' }} />
+          <Star className="w-5 h-5 mx-1" style={{ color: '#966700' }} />
+          <Star className="w-3 h-3 mx-1 mt-0.5" style={{ color: '#966700' }} />
+          <Star className="w-4 h-4 mx-1" style={{ color: '#966700' }} />
         </motion.div>
       </motion.div>
     </div>

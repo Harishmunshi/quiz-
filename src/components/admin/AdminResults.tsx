@@ -36,13 +36,13 @@ export default function AdminResults() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F2E7] islamic-pattern">
+    <div className="min-h-screen bg-[#F4F5F7] islamic-pattern">
       <div className="max-w-6xl mx-auto p-4 md:p-8">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" onClick={goBack} className="text-[#063B2D]">
+          <Button variant="ghost" onClick={goBack} className="text-[#0A0D14]">
             <ArrowLeft className="w-4 h-4 mr-2" /> Back
           </Button>
-          <h1 className="text-2xl md:text-3xl font-bold text-[#063B2D]">Results</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#0A0D14]">Results</h1>
         </div>
 
         <Tabs defaultValue="round1">
@@ -59,15 +59,15 @@ export default function AdminResults() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Round 1 Results</CardTitle>
-                <Button onClick={() => exportCSV(1)} className="bg-[#063B2D] text-[#F7F2E7]">
+                <Button onClick={() => exportCSV(1)} className="bg-[#0A0D14] text-[#F4F5F7]">
                   <Download className="w-4 h-4 mr-2" /> Export CSV
                 </Button>
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="text-center py-8 text-[#5A6B5E]">Loading...</div>
+                  <div className="text-center py-8 text-[#5B6472]">Loading...</div>
                 ) : round1Data.length === 0 ? (
-                  <div className="text-center py-8 text-[#5A6B5E]">
+                  <div className="text-center py-8 text-[#5B6472]">
                     <Trophy className="w-12 h-12 mx-auto mb-2 opacity-30" />
                     <p className="font-semibold">NO RESULTS YET</p>
                     <p className="text-sm">Waiting for participants to complete Round 1.</p>
@@ -76,7 +76,7 @@ export default function AdminResults() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-[#D4C5A9]">
+                        <tr className="border-b border-[#D7DAE1]">
                           <th className="text-left py-3 px-2">Rank</th>
                           <th className="text-left py-3 px-2">Name</th>
                           <th className="text-left py-3 px-2 hidden md:table-cell">Class</th>
@@ -91,15 +91,15 @@ export default function AdminResults() {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.05 }}
-                            className={`border-b border-[#D4C5A9]/50 ${i === 0 ? 'bg-[#C8A951]/10' : ''}`}
+                            className={`border-b border-[#D7DAE1]/50 ${i === 0 ? 'bg-[#FFB000]/10' : ''}`}
                           >
                             <td className="py-3 px-2 font-bold">
-                              {i === 0 ? <Badge className="bg-[#C8A951] text-[#063B2D]">#{i + 1}</Badge> : `#${i + 1}`}
+                              {i === 0 ? <Badge className="bg-[#FFB000] text-[#0A0D14]">#{i + 1}</Badge> : `#${i + 1}`}
                             </td>
                             <td className="py-3 px-2 font-medium">{entry.participantName as string}</td>
-                            <td className="py-3 px-2 hidden md:table-cell text-[#5A6B5E]">{entry.className as string} - {entry.division as string}</td>
-                            <td className="py-3 px-2 font-bold text-[#063B2D]">{entry.score as number}/{entry.totalQuestions as number}</td>
-                            <td className="py-3 px-2 hidden sm:table-cell text-[#5A6B5E]">{formatCompletionTime(entry.completionTimeMs as number)}</td>
+                            <td className="py-3 px-2 hidden md:table-cell text-[#5B6472]">{entry.className as string} - {entry.division as string}</td>
+                            <td className="py-3 px-2 font-bold text-[#0A0D14]">{entry.score as number}/{entry.totalQuestions as number}</td>
+                            <td className="py-3 px-2 hidden sm:table-cell text-[#5B6472]">{formatCompletionTime(entry.completionTimeMs as number)}</td>
                           </motion.tr>
                         ))}
                       </tbody>
@@ -114,15 +114,15 @@ export default function AdminResults() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Round 2 Results</CardTitle>
-                <Button onClick={() => exportCSV(2)} className="bg-[#071A2B] text-[#F7F2E7]">
+                <Button onClick={() => exportCSV(2)} className="bg-[#0A0D14] text-[#F4F5F7]">
                   <Download className="w-4 h-4 mr-2" /> Export CSV
                 </Button>
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="text-center py-8 text-[#5A6B5E]">Loading...</div>
+                  <div className="text-center py-8 text-[#5B6472]">Loading...</div>
                 ) : round2Data.length === 0 ? (
-                  <div className="text-center py-8 text-[#5A6B5E]">
+                  <div className="text-center py-8 text-[#5B6472]">
                     <Zap className="w-12 h-12 mx-auto mb-2 opacity-30" />
                     <p className="font-semibold">NO RESULTS YET</p>
                     <p className="text-sm">Waiting for participants to complete Round 2.</p>
@@ -131,7 +131,7 @@ export default function AdminResults() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-[#D4C5A9]">
+                        <tr className="border-b border-[#D7DAE1]">
                           <th className="text-left py-3 px-2">Rank</th>
                           <th className="text-left py-3 px-2">Name</th>
                           <th className="text-left py-3 px-2 hidden md:table-cell">Class</th>
@@ -145,14 +145,14 @@ export default function AdminResults() {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.05 }}
-                            className={`border-b border-[#D4C5A9]/50 ${i === 0 ? 'bg-[#C8A951]/10' : ''}`}
+                            className={`border-b border-[#D7DAE1]/50 ${i === 0 ? 'bg-[#FFB000]/10' : ''}`}
                           >
                             <td className="py-3 px-2 font-bold">
-                              {i === 0 ? <Badge className="bg-[#C8A951] text-[#063B2D]">#{i + 1}</Badge> : `#${i + 1}`}
+                              {i === 0 ? <Badge className="bg-[#FFB000] text-[#0A0D14]">#{i + 1}</Badge> : `#${i + 1}`}
                             </td>
                             <td className="py-3 px-2 font-medium">{entry.participantName as string}</td>
-                            <td className="py-3 px-2 hidden md:table-cell text-[#5A6B5E]">{entry.className as string} - {entry.division as string}</td>
-                            <td className="py-3 px-2 font-mono font-bold text-[#C8A951]">{formatTimerDisplay(entry.finalTimeMs as number)}</td>
+                            <td className="py-3 px-2 hidden md:table-cell text-[#5B6472]">{entry.className as string} - {entry.division as string}</td>
+                            <td className="py-3 px-2 font-mono font-bold text-[#966700]">{formatTimerDisplay(entry.finalTimeMs as number)}</td>
                           </motion.tr>
                         ))}
                       </tbody>

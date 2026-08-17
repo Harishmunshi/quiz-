@@ -45,7 +45,7 @@ const rowVariants = {
   visible: {
     opacity: 1,
     x: 0,
-    transition: { type: 'spring', stiffness: 300, damping: 24 },
+    transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
   },
   exit: {
     opacity: 0,
@@ -59,7 +59,7 @@ const emptyVariants = {
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { type: 'spring', stiffness: 200, damping: 20 },
+    transition: { type: 'spring' as const, stiffness: 200, damping: 20 },
   },
 };
 
@@ -205,7 +205,7 @@ function LiveProgressStrip({
           className="h-full bg-emerald-deep"
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
-          transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+          transition={{ type: 'spring' as const, stiffness: 100, damping: 20 }}
         />
       </div>
       <span className="text-xs font-bold text-emerald-deep tabular-nums w-10 text-right">
@@ -468,6 +468,14 @@ function Round2Table({ entries }: { entries: Round2LeaderboardEntry[] }) {
 // ── Main Component ──────────────────────────────────────────────
 interface LeaderboardViewProps {
   round: 1 | 2;
+  /**
+   * What Back does. Defaults to the in-page router used at `/`.
+   *
+   * `/leaderboard` renders this same component on its own URL, where the store's
+   * navigate() would swap a view nobody is looking at and leave the address bar
+   * where it was — a Back button that visibly does nothing.
+   */
+  onBack?: () => void;
 }
 
 interface Stats {
@@ -479,7 +487,7 @@ interface Stats {
 const BASE_POLL_MS = 4000;
 const MAX_POLL_MS = 30000;
 
-export default function LeaderboardView({ round: initialRound }: LeaderboardViewProps) {
+export default function LeaderboardView({ round: initialRound, onBack }: LeaderboardViewProps) {
   const [activeTab, setActiveTab] = useState<string>(`round${initialRound}`);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -563,7 +571,8 @@ export default function LeaderboardView({ round: initialRound }: LeaderboardView
   }, [fetchData, error]);
 
   const handleBack = () => {
-    navigate('landing');
+    if (onBack) onBack();
+    else navigate('landing');
   };
 
   const handleManualRefresh = () => {

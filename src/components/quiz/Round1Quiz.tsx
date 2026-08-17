@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useAppStore } from '@/lib/store';
+import OrnateStage from '@/components/quiz/OrnateStage';
 import { ChevronLeft, ChevronRight, Send, Clock, AlertCircle, Loader2, BookOpen } from 'lucide-react';
 import type { QuizQuestion } from '@/types/competition';
 
@@ -225,7 +226,7 @@ export default function Round1Quiz() {
     return (
       <div
         className="min-h-screen flex items-center justify-center p-4"
-        style={{ background: 'linear-gradient(160deg, #063B2D 0%, #071A2B 60%, #0a2340 100%)' }}
+        style={{ background: 'linear-gradient(160deg, #0A0D14 0%, #0A0D14 60%, #141A26 100%)' }}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -236,9 +237,9 @@ export default function Round1Quiz() {
             className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center"
             style={{ backgroundColor: 'rgba(200, 169, 81, 0.15)' }}
           >
-            <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#C8A951' }} />
+            <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#966700' }} />
           </div>
-          <p className="text-lg font-medium" style={{ color: '#F7F2E7' }}>
+          <p className="text-lg font-medium" style={{ color: '#F4F5F7' }}>
             Preparing your quiz…
           </p>
           <p className="text-sm mt-2" style={{ color: 'rgba(247, 242, 231, 0.6)' }}>
@@ -254,7 +255,7 @@ export default function Round1Quiz() {
     return (
       <div
         className="min-h-screen flex items-center justify-center p-4"
-        style={{ background: 'linear-gradient(160deg, #063B2D 0%, #071A2B 60%, #0a2340 100%)' }}
+        style={{ background: 'linear-gradient(160deg, #0A0D14 0%, #0A0D14 60%, #141A26 100%)' }}
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -275,7 +276,7 @@ export default function Round1Quiz() {
               >
                 <AlertCircle className="w-7 h-7 text-red-400" />
               </div>
-              <h2 className="text-xl font-semibold mb-2" style={{ color: '#F7F2E7' }}>
+              <h2 className="text-xl font-semibold mb-2" style={{ color: '#F4F5F7' }}>
                 {error.includes('closed') ? 'Round Closed' : 'Error'}
               </h2>
               <p className="text-sm mb-6" style={{ color: 'rgba(247, 242, 231, 0.7)' }}>
@@ -285,8 +286,8 @@ export default function Round1Quiz() {
                 onClick={() => navigate('landing')}
                 className="w-full h-11 text-sm font-medium"
                 style={{
-                  backgroundColor: '#C8A951',
-                  color: '#071A2B',
+                  backgroundColor: '#FFB000',
+                  color: '#0A0D14',
                 }}
               >
                 Back to Home
@@ -300,13 +301,10 @@ export default function Round1Quiz() {
 
   // ── Main Quiz UI ───────────────────────────────────────────
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ background: 'linear-gradient(160deg, #063B2D 0%, #071A2B 60%, #0a2340 100%)' }}
-    >
-      {/* Header with Timer */}
-      <header className="sticky top-0 z-10 px-4 pt-4 pb-2 sm:px-6 sm:pt-6">
-        <div className="max-w-2xl mx-auto">
+    <OrnateStage
+      questionNumber={currentQuestionIndex + 1}
+      header={
+        <>
           {/* Timer Bar */}
           {quizTimeLimit > 0 && (
             <motion.div
@@ -327,7 +325,7 @@ export default function Round1Quiz() {
                 <Clock
                   className="w-4 h-4"
                   style={{
-                    color: remainingSeconds <= 60 ? '#f87171' : '#C8A951',
+                    color: remainingSeconds <= 60 ? '#f87171' : '#FFB000',
                   }}
                 />\n                <span
                   className="text-sm font-medium"
@@ -341,7 +339,7 @@ export default function Round1Quiz() {
               <span
                 className="text-lg font-bold tabular-nums"
                 style={{
-                  color: remainingSeconds <= 60 ? '#f87171' : '#C8A951',
+                  color: remainingSeconds <= 60 ? '#f87171' : '#FFB000',
                 }}
               >
                 {formatTime(remainingSeconds)}
@@ -361,7 +359,7 @@ export default function Round1Quiz() {
               className="text-xs px-2.5 py-1 rounded-full font-medium"
               style={{
                 backgroundColor: 'rgba(200, 169, 81, 0.15)',
-                color: '#C8A951',
+                color: '#966700',
               }}
             >
               {answeredCount}/{totalQuestions} answered
@@ -375,18 +373,16 @@ export default function Round1Quiz() {
           >
             <motion.div
               className="h-full rounded-full"
-              style={{ backgroundColor: '#C8A951' }}
+              style={{ backgroundColor: '#FFB000' }}
               initial={{ width: 0 }}
               animate={{ width: `${progressPercent}%` }}
               transition={{ duration: 0.4, ease: 'easeOut' }}
             />
           </div>
-        </div>
-      </header>
-
-      {/* Question Card */}
-      <main className="flex-1 flex items-start sm:items-center justify-center px-4 py-4 sm:px-6 sm:py-6">
-        <div className="max-w-2xl w-full">
+        </>
+      }
+    >
+      <div className="w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentQuestionIndex}
@@ -398,9 +394,9 @@ export default function Round1Quiz() {
               <Card
                 className="border-0 shadow-2xl overflow-hidden"
                 style={{
-                  backgroundColor: 'rgba(7, 26, 43, 0.85)',
-                  backdropFilter: 'blur(16px)',
-                  borderColor: 'rgba(200, 169, 81, 0.12)',
+                  background: 'linear-gradient(180deg, #FBF7EC 0%, #F3EBD9 100%)',
+                  boxShadow:
+                    '0 0 0 1px rgba(227,192,92,0.55), 0 0 0 5px rgba(0,0,0,0.30), 0 30px 70px -24px rgba(0,0,0,0.8)',
                 }}
               >
                 <CardContent className="p-5 sm:p-8">
@@ -409,22 +405,22 @@ export default function Round1Quiz() {
                     <div
                       className="flex items-center justify-center w-9 h-9 rounded-lg text-sm font-bold shrink-0"
                       style={{
-                        backgroundColor: 'rgba(200, 169, 81, 0.15)',
-                        color: '#C8A951',
+                        background: 'linear-gradient(180deg, #F0D98A 0%, #D9B24C 100%)',
+                        color: '#3B2E08',
                       }}
                     >
                       {currentQuestion?.questionNumber}
                     </div>
                     <BookOpen
                       className="w-4 h-4 shrink-0"
-                      style={{ color: 'rgba(200, 169, 81, 0.5)' }}
+                      style={{ color: 'rgba(154, 118, 28, 0.55)' }}
                     />
                   </div>
 
                   {/* Question Text */}
                   <h2
-                    className="text-base sm:text-lg font-semibold leading-relaxed mb-6"
-                    style={{ color: '#F7F2E7' }}
+                    className="mb-6 text-lg leading-relaxed font-semibold sm:text-xl"
+                    style={{ color: '#17130B' }}
                   >
                     {currentQuestion?.questionText}
                   </h2>
@@ -447,34 +443,31 @@ export default function Round1Quiz() {
                           }
                           className="w-full flex items-center gap-3 sm:gap-4 rounded-xl px-4 py-3.5 sm:px-5 sm:py-4 text-left transition-all duration-200 cursor-pointer"
                           style={{
-                            backgroundColor: isSelected
-                              ? 'rgba(200, 169, 81, 0.2)'
-                              : 'rgba(247, 242, 231, 0.05)',
+                            background: isSelected
+                              ? 'linear-gradient(180deg, #3A2C10 0%, #241A08 100%)'
+                              : 'linear-gradient(180deg, #2A2116 0%, #1B150D 100%)',
                             border: isSelected
-                              ? '2px solid rgba(200, 169, 81, 0.6)'
-                              : '2px solid rgba(247, 242, 231, 0.08)',
+                              ? '2px solid #E3C05C'
+                              : '2px solid rgba(227,192,92,0.28)',
+                            boxShadow: isSelected
+                              ? '0 6px 20px -8px rgba(227,192,92,0.6)'
+                              : 'none',
                           }}
                         >
                           <span
                             className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-sm font-bold shrink-0 transition-colors duration-200"
                             style={{
-                              backgroundColor: isSelected
-                                ? '#C8A951'
-                                : 'rgba(247, 242, 231, 0.1)',
-                              color: isSelected
-                                ? '#071A2B'
-                                : 'rgba(247, 242, 231, 0.7)',
+                              background: isSelected
+                                ? 'linear-gradient(180deg, #F5E3A8 0%, #E3C05C 100%)'
+                                : 'linear-gradient(180deg, #EFE6CE 0%, #D8CBA6 100%)',
+                              color: '#2A1F07',
                             }}
                           >
                             {key}
                           </span>
                           <span
-                            className="text-sm sm:text-base leading-relaxed"
-                            style={{
-                              color: isSelected
-                                ? '#F7F2E7'
-                                : 'rgba(247, 242, 231, 0.8)',
-                            }}
+                            className="text-base leading-relaxed sm:text-lg"
+                            style={{ color: isSelected ? '#FBF3DC' : '#EFE6D2' }}
                           >
                             {currentQuestion?.options[key]}
                           </span>
@@ -496,7 +489,7 @@ export default function Round1Quiz() {
               className="h-11 px-5 text-sm font-medium rounded-xl"
               style={{
                 borderColor: 'rgba(200, 169, 81, 0.3)',
-                color: '#C8A951',
+                color: '#966700',
                 backgroundColor: 'rgba(200, 169, 81, 0.05)',
               }}
             >
@@ -512,8 +505,8 @@ export default function Round1Quiz() {
                 style={{
                   backgroundColor: isSubmitting
                     ? 'rgba(200, 169, 81, 0.5)'
-                    : '#C8A951',
-                  color: '#071A2B',
+                    : '#FFB000',
+                  color: '#0A0D14',
                 }}
               >
                 {isSubmitting ? (
@@ -534,7 +527,7 @@ export default function Round1Quiz() {
                 className="h-11 px-5 text-sm font-medium rounded-xl"
                 style={{
                   backgroundColor: 'rgba(200, 169, 81, 0.15)',
-                  color: '#C8A951',
+                  color: '#966700',
                   border: '1px solid rgba(200, 169, 81, 0.3)',
                 }}
               >
@@ -543,8 +536,7 @@ export default function Round1Quiz() {
               </Button>
             )}
           </div>
-        </div>
-      </main>
+      </div>
 
       {/* Submit All Banner (when on non-last question) */}
       {currentQuestionIndex < totalQuestions - 1 && answeredCount === totalQuestions && (
@@ -561,8 +553,8 @@ export default function Round1Quiz() {
               style={{
                 backgroundColor: isSubmitting
                   ? 'rgba(200, 169, 81, 0.5)'
-                  : '#C8A951',
-                color: '#071A2B',
+                  : '#FFB000',
+                color: '#0A0D14',
               }}
             >
               {isSubmitting ? (
@@ -580,6 +572,6 @@ export default function Round1Quiz() {
           </div>
         </motion.div>
       )}
-    </div>
+    </OrnateStage>
   );
 }

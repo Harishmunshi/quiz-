@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
+import { getSettings } from '@/lib/round2/settingsCache';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
     }
     const { participantId, pin } = parsed.data;
 
-    const settings = await db.competitionSettings.findFirst();
+    const settings = await getSettings();
     if (!settings) {
       return NextResponse.json(
         { success: false, error: 'Competition not configured' },

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
+import { getSettings } from '@/lib/round2/settingsCache';
 import { gradeOrder, parseItems, parseOrder, validateSubmission } from '@/lib/round2/live';
 
 export const dynamic = 'force-dynamic';
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
 
     const { participantId, questionId, submittedOrder } = parsed.data;
 
-    const settings = await db.competitionSettings.findFirst();
+    const settings = await getSettings();
     if (!settings) {
       return NextResponse.json(
         { success: false, error: 'Competition not configured' },
@@ -62,9 +63,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const question = await db.round2LiveQuestion.findFirst({
-      where: { questionNumber: settings.round2CurrentQuestion, isActive: true },
-    });
+    // These two are independent, and the database is a network hop away. Run
+    // them together: on a submission burst — thirty students tapping within the
+    // same second — one saved round trip per request is the difference between
+    // the answer landing instantly and landing noticeably late.
+    const [question, participant] = await Promise.all([
+      db.round2LiveQuestion.findFirst({
+        where: { questionNumber: settings.round2CurrentQuestion, isActive: true },
+      }),
+      db.participant.findUnique({ where: { id: participantId } }),
+    ]);
 
     if (!question) {
       return NextResponse.json(
@@ -82,7 +90,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const participant = await db.participant.findUnique({ where: { id: participantId } });
     if (!participant) {
       return NextResponse.json(
         { success: false, error: 'Participant not found — please rejoin', code: 'NO_PARTICIPANT' },

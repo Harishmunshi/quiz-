@@ -23,7 +23,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 280, damping: 22 },
+    transition: { type: 'spring' as const, stiffness: 280, damping: 22 },
   },
 };
 
@@ -95,19 +95,6 @@ export default function AdminLogin() {
         initial="hidden"
         animate="visible"
       >
-        {/* Back button */}
-        <motion.div variants={itemVariants} className="mb-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBack}
-            className="gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Competition
-          </Button>
-        </motion.div>
-
         {/* Login Card */}
         <motion.div variants={itemVariants}>
           <Card className="border-border/60 shadow-xl overflow-hidden">
@@ -119,7 +106,7 @@ export default function AdminLogin() {
                 className="mx-auto w-16 h-16 rounded-2xl bg-emerald-deep flex items-center justify-center mb-4 gold-glow"
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
+                transition={{ type: 'spring' as const, stiffness: 200, damping: 15, delay: 0.2 }}
               >
                 <Shield className="w-8 h-8 text-gold-accent" />
               </motion.div>

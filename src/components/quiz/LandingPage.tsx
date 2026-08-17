@@ -32,7 +32,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 260, damping: 20 },
+    transition: { type: 'spring' as const, stiffness: 260, damping: 20 },
   },
 };
 
@@ -123,19 +123,19 @@ export default function LandingPage() {
   return (
     <div
       className="islamic-pattern min-h-screen flex flex-col items-center justify-between px-4 sm:px-6 py-8 sm:py-12 relative overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #F7F2E7 0%, #EEE3CC 100%)' }}
+      style={{ background: 'linear-gradient(180deg, #F4F5F7 0%, #E9EBEF 100%)' }}
     >
       {/* Decorative corner geometry */}
-      <div className="pointer-events-none absolute top-0 left-0 w-40 h-40 sm:w-56 sm:h-56 opacity-20">
+      <div className="pointer-events-none absolute top-0 left-0 w-40 h-40 sm:w-56 sm:h-56 opacity-30">
         <svg viewBox="0 0 200 200" className="w-full h-full">
-          <polygon points="0,0 200,0 0,200" fill="#063B2D" />
-          <polygon points="0,0 120,0 0,120" fill="#C8A951" opacity="0.4" />
+          <polygon points="0,0 200,0 0,200" fill="#2DD4BF" opacity="0.55" />
+          <polygon points="0,0 120,0 0,120" fill="#FFB000" opacity="0.75" />
         </svg>
       </div>
-      <div className="pointer-events-none absolute bottom-0 right-0 w-40 h-40 sm:w-56 sm:h-56 opacity-20 rotate-180">
+      <div className="pointer-events-none absolute bottom-0 right-0 w-40 h-40 sm:w-56 sm:h-56 opacity-30 rotate-180">
         <svg viewBox="0 0 200 200" className="w-full h-full">
-          <polygon points="0,0 200,0 0,200" fill="#063B2D" />
-          <polygon points="0,0 120,0 0,120" fill="#C8A951" opacity="0.4" />
+          <polygon points="0,0 200,0 0,200" fill="#2DD4BF" opacity="0.55" />
+          <polygon points="0,0 120,0 0,120" fill="#FFB000" opacity="0.75" />
         </svg>
       </div>
 
@@ -251,9 +251,9 @@ export default function LandingPage() {
             disabled={!round1Open && !loading && !fetchError}
             className="group relative w-full h-16 sm:h-20 text-lg sm:text-2xl font-extrabold uppercase tracking-wider overflow-hidden rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              background: 'linear-gradient(135deg, #063B2D 0%, #0A8A66 100%)',
-              color: '#C8A951',
-              boxShadow: '0 10px 30px -10px rgba(6, 59, 45, 0.6), 0 0 0 2px #C8A951 inset',
+              background: '#FFB000',
+              color: '#0A0D14',
+              boxShadow: '0 12px 32px -12px rgba(255, 176, 0, 0.75)',
             }}
           >
             <span className="relative z-10 flex items-center justify-center gap-2 sm:gap-3">
@@ -262,7 +262,7 @@ export default function LandingPage() {
             </span>
             <span
               className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ background: 'linear-gradient(135deg, #0A8A66 0%, #063B2D 100%)' }}
+              style={{ background: '#FFC33D' }}
             />
           </Button>
           <p className="text-center text-xs sm:text-sm text-navy-deep/60 mt-3 font-medium">
@@ -272,17 +272,25 @@ export default function LandingPage() {
           </p>
         </motion.div>
 
-        {/* Round 2 link (small, distinct) */}
-        <motion.button
-          variants={itemVariants}
-          type="button"
-          onClick={() => {
-            window.location.href = '/round2';
-          }}
-          className="text-xs sm:text-sm text-navy-deep/50 hover:text-gold-accent transition-colors font-medium underline underline-offset-4 decoration-navy-deep/20 hover:decoration-gold-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm mt-2"
-        >
-          Round 2 — Live Round →
-        </motion.button>
+        {/* Secondary destinations.
+            The leaderboard used to be reachable only from the admin dashboard
+            or by knowing the #/round1-leaderboard hash, so to a student it did
+            not exist. Both of these are real URLs, so they survive a refresh
+            and can be shared or opened on the projector directly. */}
+        <motion.div variants={itemVariants} className="flex flex-col items-center gap-2 mt-2 sm:flex-row sm:gap-5">
+          <a
+            href="/round2"
+            className="text-xs sm:text-sm text-navy-deep/50 hover:text-gold-accent transition-colors font-medium underline underline-offset-4 decoration-navy-deep/20 hover:decoration-gold-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+          >
+            Round 2 — Live Round →
+          </a>
+          <a
+            href="/leaderboard"
+            className="text-xs sm:text-sm text-navy-deep/50 hover:text-gold-accent transition-colors font-medium underline underline-offset-4 decoration-navy-deep/20 hover:decoration-gold-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+          >
+            Leaderboard →
+          </a>
+        </motion.div>
       </motion.div>
 
       {/* Bottom footer */}

@@ -6,20 +6,34 @@ import type { OrderItem, Round2State } from './live';
 /**
  * Adaptive polling for the Round 2 live state.
  *
- * Cadence is deliberately uneven:
- *   - 800ms while a question is open or being locked/revealed, so a student
- *     never sits on a stale screen during the part that matters
- *   - 2500ms while idle, so a hall of phones waiting between questions isn't
- *     hammering the database for no reason
+ * REVISION POLLING
+ * Screens poll `/tick`, not `/state`. The tick is one cached settings read plus
+ * one indexed COUNT, and it answers a single question: has anything changed?
+ * Only when its `rev` string differs does the client pull the full state, which
+ * is several queries and the entire question body.
+ *
+ * The effect during a live round: thirty phones polling twice a second cost
+ * thirty cheap counts per second instead of a hundred and fifty real queries,
+ * and the expensive fetch happens at the handful of moments per question when
+ * the quiz master actually presses something. Cheaper AND faster — which is why
+ * the fast interval could come down from 800ms to 500ms.
+ *
+ * Cadence:
+ *   - 500ms while a question is open or being locked/revealed
+ *   - 2000ms while idle
  *   - paused entirely when the tab is hidden
+ *   - a full resync every 10s regardless, so a change the revision cannot see
+ *     (an admin disqualifying someone mid-round) still lands quickly
  *
  * Requests never overlap: a slow response on weak wifi cannot pile up into a
  * queue that then applies out of order. `refresh()` is exposed so a screen can
  * pull immediately after an action instead of waiting for the next tick.
  */
 
-const FAST_MS = 800;
-const SLOW_MS = 2500;
+const FAST_MS = 500;
+const SLOW_MS = 2000;
+/** Belt-and-braces full refetch, catching anything `rev` does not cover. */
+const RESYNC_MS = 10_000;
 
 export interface LiveQuestion {
   id: string;
@@ -80,7 +94,24 @@ export function useLiveRound2(participantId?: string | null) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stateRef = useRef<Round2State>('idle');
   const failures = useRef(0);
+  const rev = useRef<string | null>(null);
+  const lastFull = useRef(0);
 
+  const onFailure = useCallback(() => {
+    failures.current += 1;
+    // One dropped request on school wifi is normal; only tell the student
+    // something is wrong once it's clearly not recovering.
+    if (failures.current >= 3) setConnected(false);
+  }, []);
+
+  const onSuccess = useCallback((serverNow: string) => {
+    clockOffset.current = new Date(serverNow).getTime() - Date.now();
+    setError(null);
+    setConnected(true);
+    failures.current = 0;
+  }, []);
+
+  /** Pull the whole payload. Used on mount, on a revision change, and on resync. */
   const fetchState = useCallback(async () => {
     if (inFlight.current) return;
     inFlight.current = true;
@@ -89,43 +120,76 @@ export function useLiveRound2(participantId?: string | null) {
       const res = await fetch(`/api/round2/live/state${qs}`, { cache: 'no-store' });
       const json = await res.json();
       if (json.success) {
-        clockOffset.current = new Date(json.data.serverNow).getTime() - Date.now();
         stateRef.current = json.data.state;
+        lastFull.current = Date.now();
         setLive(json.data as LiveState);
-        setError(null);
-        setConnected(true);
-        failures.current = 0;
+        onSuccess(json.data.serverNow);
       } else {
         setError(json.error ?? 'Could not reach the competition server');
       }
     } catch {
-      failures.current += 1;
-      // One dropped request on school wifi is normal; only tell the student
-      // something is wrong once it's clearly not recovering.
-      if (failures.current >= 3) setConnected(false);
+      onFailure();
     } finally {
       inFlight.current = false;
     }
-  }, [participantId]);
+  }, [participantId, onSuccess, onFailure]);
+
+  /**
+   * The cheap poll. Escalates to a full fetch only when the revision moves,
+   * when the periodic resync is due, or when we have no state at all yet.
+   */
+  const poll = useCallback(async () => {
+    if (inFlight.current) return;
+    try {
+      const res = await fetch('/api/round2/live/tick', { cache: 'no-store' });
+      const json = await res.json();
+      if (!json.success) {
+        setError(json.error ?? 'Could not reach the competition server');
+        return;
+      }
+
+      onSuccess(json.data.serverNow);
+
+      const changed = rev.current !== json.data.rev;
+      rev.current = json.data.rev;
+
+      if (changed || !live || Date.now() - lastFull.current > RESYNC_MS) {
+        await fetchState();
+        return;
+      }
+
+      // Nothing structural moved. Fold in the one number that does move
+      // continuously, without paying for the full payload.
+      setLive((prev) =>
+        prev && prev.answerCount !== json.data.answerCount
+          ? { ...prev, answerCount: json.data.answerCount }
+          : prev
+      );
+    } catch {
+      onFailure();
+    }
+  }, [fetchState, live, onSuccess, onFailure]);
+
+  const pollRef = useRef(poll);
+  pollRef.current = poll;
 
   useEffect(() => {
     let cancelled = false;
 
     const schedule = () => {
       if (cancelled) return;
-      const s = stateRef.current;
-      const delay = s === 'idle' ? SLOW_MS : FAST_MS;
+      const delay = stateRef.current === 'idle' ? SLOW_MS : FAST_MS;
       timer.current = setTimeout(tick, delay);
     };
 
     const tick = async () => {
-      if (document.visibilityState === 'visible') await fetchState();
+      if (document.visibilityState === 'visible') await pollRef.current();
       schedule();
     };
 
     // Coming back to the tab should feel instant, not "wait for the next tick".
     const onVisible = () => {
-      if (document.visibilityState === 'visible') fetchState();
+      if (document.visibilityState === 'visible') pollRef.current();
     };
 
     fetchState();
@@ -145,6 +209,8 @@ export function useLiveRound2(participantId?: string | null) {
     connected,
     clockOffset,
     refresh: fetchState,
+    /** The current server revision — screens use it to know when to refetch. */
+    revision: rev,
     /** Apply a local change immediately rather than waiting for the next poll. */
     patch: (fn: (prev: LiveState) => LiveState) =>
       setLive((prev) => (prev ? fn(prev) : prev)),

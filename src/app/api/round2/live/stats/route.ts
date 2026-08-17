@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getSettings } from '@/lib/round2/settingsCache';
 import { requireAdmin } from '@/lib/auth/admin';
 import { parseItems, parseOrder } from '@/lib/round2/live';
 
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const settings = await db.competitionSettings.findFirst();
+    const settings = await getSettings();
     if (!settings) {
       return NextResponse.json(
         { success: false, error: 'Competition not configured' },

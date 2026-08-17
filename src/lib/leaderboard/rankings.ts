@@ -60,7 +60,13 @@ export function detectRankChanges(
   previous: Round1LeaderboardEntry[] | Round2LeaderboardEntry[],
   current: Round1LeaderboardEntry[] | Round2LeaderboardEntry[]
 ): { newEntryIds: string[]; rankChangedIds: string[]; newFirstId?: string } {
-  const prevMap = new Map(previous.map((e) => [e.participantId, e.rank]));
+  // Typed explicitly: mapping over the union of two entry array types widens
+  // the tuple to any[][], which none of Map's constructor overloads accept.
+  const prevMap = new Map<string, number>(
+    (previous as Array<{ participantId: string; rank: number }>).map(
+      (e) => [e.participantId, e.rank] as const
+    )
+  );
   const newEntryIds: string[] = [];
   const rankChangedIds: string[] = [];
   let newFirstId: string | undefined;

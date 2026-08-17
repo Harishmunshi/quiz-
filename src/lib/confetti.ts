@@ -5,10 +5,10 @@
 // Round 2 victory. Respects `prefers-reduced-motion`.
 
 const COLORS = [
-  '#C8A951', // gold
-  '#F7F2E7', // ivory
-  '#063B2D', // emerald
-  '#0A8A66', // emerald light
+  '#FFB000', // gold
+  '#F4F5F7', // ivory
+  '#0A0D14', // emerald
+  '#2DD4BF', // emerald light
   '#1B3A8A', // navy
 ];
 

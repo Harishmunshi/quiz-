@@ -8,6 +8,12 @@ interface AppState {
   previousView: AppView | null;
   navigate: (view: AppView) => void;
   goBack: () => void;
+  /**
+   * Set the view WITHOUT recording history. Used when the browser's Back or
+   * Forward button drives the change — the history entry already exists, and
+   * re-recording it would fight the browser for control of the stack.
+   */
+  restoreView: (view: AppView) => void;
 
   // Auth
   isAdmin: boolean;
@@ -74,6 +80,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (prev) set({ currentView: prev, previousView: 'landing' });
     else set({ currentView: 'landing' });
   },
+  restoreView: (view) => set({ currentView: view }),
 
   // Auth
   isAdmin: false,

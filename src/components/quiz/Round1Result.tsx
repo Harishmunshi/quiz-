@@ -69,7 +69,7 @@ export default function Round1Result() {
     <div
       className="min-h-screen flex items-center justify-center p-4"
       style={{
-        background: 'linear-gradient(160deg, #063B2D 0%, #071A2B 60%, #0a2340 100%)',
+        background: 'linear-gradient(160deg, #0A0D14 0%, #0A0D14 60%, #141A26 100%)',
       }}
     >
       <motion.div
@@ -89,11 +89,11 @@ export default function Round1Result() {
             className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-4"
             style={{ backgroundColor: 'rgba(200, 169, 81, 0.15)' }}
           >
-            <CheckCircle2 className="w-7 h-7" style={{ color: '#C8A951' }} />
+            <CheckCircle2 className="w-7 h-7" style={{ color: '#966700' }} />
           </div>
           <h1
             className="text-2xl sm:text-3xl font-bold tracking-wide"
-            style={{ color: '#F7F2E7' }}
+            style={{ color: '#F4F5F7' }}
           >
             SUBMISSION RECORDED
           </h1>
@@ -142,7 +142,7 @@ export default function Round1Result() {
                       cy="90"
                       r="80"
                       fill="none"
-                      stroke="#C8A951"
+                      stroke="#FFB000"
                       strokeWidth="8"
                       strokeLinecap="round"
                       strokeDasharray={circumference}
@@ -158,7 +158,7 @@ export default function Round1Result() {
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.4, delay: 0.8 }}
                       className="text-4xl sm:text-5xl font-bold"
-                      style={{ color: '#C8A951' }}
+                      style={{ color: '#966700' }}
                     >
                       {correctAnswers}<span
                         className="text-xl sm:text-2xl font-medium"
@@ -202,7 +202,7 @@ export default function Round1Result() {
                   <CheckCircle2 className="w-5 h-5" style={{ color: '#4ade80' }} />
                   <span
                     className="text-xl sm:text-2xl font-bold"
-                    style={{ color: '#F7F2E7' }}
+                    style={{ color: '#F4F5F7' }}
                   >
                     {correctAnswers}
                   </span>
@@ -228,7 +228,7 @@ export default function Round1Result() {
                   <XCircle className="w-5 h-5" style={{ color: '#f87171' }} />
                   <span
                     className="text-xl sm:text-2xl font-bold"
-                    style={{ color: '#F7F2E7' }}
+                    style={{ color: '#F4F5F7' }}
                   >
                     {incorrectAnswers}
                   </span>
@@ -251,10 +251,10 @@ export default function Round1Result() {
                     border: '1px solid rgba(200, 169, 81, 0.1)',
                   }}
                 >
-                  <Timer className="w-5 h-5" style={{ color: '#C8A951' }} />
+                  <Timer className="w-5 h-5" style={{ color: '#966700' }} />
                   <span
                     className="text-lg sm:text-xl font-bold"
-                    style={{ color: '#F7F2E7' }}
+                    style={{ color: '#F4F5F7' }}
                   >
                     {formatTime(completionTimeMs)}
                   </span>
@@ -281,8 +281,8 @@ export default function Round1Result() {
             onClick={handleLeaderboard}
             className="w-full h-12 text-sm font-semibold rounded-xl"
             style={{
-              backgroundColor: '#C8A951',
-              color: '#071A2B',
+              backgroundColor: '#FFB000',
+              color: '#0A0D14',
             }}
           >
             <BarChart3 className="w-4 h-4" />
@@ -311,11 +311,11 @@ export default function Round1Result() {
           transition={{ duration: 1, delay: 1.5 }}
           className="flex justify-center mt-6"
         >
-          <Star className="w-4 h-4 mx-1" style={{ color: '#C8A951' }} />
-          <Star className="w-3 h-3 mx-1 mt-0.5" style={{ color: '#C8A951' }} />
-          <Star className="w-5 h-5 mx-1" style={{ color: '#C8A951' }} />
-          <Star className="w-3 h-3 mx-1 mt-0.5" style={{ color: '#C8A951' }} />
-          <Star className="w-4 h-4 mx-1" style={{ color: '#C8A951' }} />
+          <Star className="w-4 h-4 mx-1" style={{ color: '#966700' }} />
+          <Star className="w-3 h-3 mx-1 mt-0.5" style={{ color: '#966700' }} />
+          <Star className="w-5 h-5 mx-1" style={{ color: '#966700' }} />
+          <Star className="w-3 h-3 mx-1 mt-0.5" style={{ color: '#966700' }} />
+          <Star className="w-4 h-4 mx-1" style={{ color: '#966700' }} />
         </motion.div>
       </motion.div>
     </div>

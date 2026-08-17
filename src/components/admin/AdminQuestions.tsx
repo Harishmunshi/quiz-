@@ -339,7 +339,7 @@ function QuestionFormDialog({
             onClick={handleSubmit}
             disabled={isLoading}
             className="h-9"
-            style={{ backgroundColor: '#C8A951', color: '#071A2B' }}
+            style={{ backgroundColor: '#FFB000', color: '#0A0D14' }}
           >
             {isLoading ? (
               <>
@@ -492,7 +492,7 @@ export default function AdminQuestions() {
 
   // ── Render ─────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F7F2E7' }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F4F5F7' }}>
       {/* Header */}
       <header className="sticky top-0 z-10 px-4 pt-4 pb-2 sm:px-6 sm:pt-6">
         <div className="max-w-5xl mx-auto">
@@ -501,7 +501,7 @@ export default function AdminQuestions() {
               variant="ghost"
               onClick={goBack}
               className="h-9 gap-2 text-sm"
-              style={{ color: '#063B2D' }}
+              style={{ color: '#0A0D14' }}
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -509,7 +509,7 @@ export default function AdminQuestions() {
             <Button
               onClick={openAddDialog}
               className="h-9 gap-2 text-sm font-medium"
-              style={{ backgroundColor: '#C8A951', color: '#071A2B' }}
+              style={{ backgroundColor: '#FFB000', color: '#0A0D14' }}
             >
               <Plus className="w-4 h-4" />
               Add Question
@@ -520,7 +520,7 @@ export default function AdminQuestions() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-xl sm:text-2xl font-bold" style={{ color: '#063B2D' }}>
+            <h1 className="text-xl sm:text-2xl font-bold" style={{ color: '#0A0D14' }}>
               Manage Questions
             </h1>
             <p className="text-sm mt-1" style={{ color: 'rgba(6, 59, 45, 0.6)' }}>
@@ -556,7 +556,7 @@ export default function AdminQuestions() {
           {/* Loading */}
           {isLoading && (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#C8A951' }} />
+              <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#966700' }} />
             </div>
           )}
 
@@ -571,9 +571,9 @@ export default function AdminQuestions() {
                 className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: 'rgba(200, 169, 81, 0.1)' }}
               >
-                <BookOpen className="w-8 h-8" style={{ color: '#C8A951' }} />
+                <BookOpen className="w-8 h-8" style={{ color: '#966700' }} />
               </div>
-              <h3 className="text-lg font-semibold mb-1" style={{ color: '#063B2D' }}>
+              <h3 className="text-lg font-semibold mb-1" style={{ color: '#0A0D14' }}>
                 No questions yet
               </h3>
               <p className="text-sm mb-4" style={{ color: 'rgba(6, 59, 45, 0.6)' }}>
@@ -582,7 +582,7 @@ export default function AdminQuestions() {
               <Button
                 onClick={openAddDialog}
                 className="h-10 gap-2 text-sm font-medium"
-                style={{ backgroundColor: '#C8A951', color: '#071A2B' }}
+                style={{ backgroundColor: '#FFB000', color: '#0A0D14' }}
               >
                 <Plus className="w-4 h-4" />
                 Add Question
@@ -662,7 +662,7 @@ export default function AdminQuestions() {
                                     className="inline-flex items-center justify-center w-7 h-7 rounded-md text-xs font-bold"
                                     style={{
                                       backgroundColor: 'rgba(200, 169, 81, 0.12)',
-                                      color: '#C8A951',
+                                      color: '#966700',
                                     }}
                                   >
                                     {q.questionNumber}
@@ -671,7 +671,7 @@ export default function AdminQuestions() {
                                 <td className="px-4 py-3">
                                   <p
                                     className="text-sm leading-snug line-clamp-2"
-                                    style={{ color: '#063B2D' }}
+                                    style={{ color: '#0A0D14' }}
                                   >
                                     {q.englishQuestion}
                                   </p>
@@ -682,7 +682,7 @@ export default function AdminQuestions() {
                                       className="inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold"
                                       style={{
                                         backgroundColor: 'rgba(6, 59, 45, 0.1)',
-                                        color: '#063B2D',
+                                        color: '#0A0D14',
                                       }}
                                     >
                                       {q.correctOption}
@@ -701,7 +701,7 @@ export default function AdminQuestions() {
                                     className="text-xs font-medium"
                                     style={{
                                       borderColor: q.round === 1 ? 'rgba(6, 59, 45, 0.2)' : 'rgba(7, 26, 43, 0.3)',
-                                      color: q.round === 1 ? '#063B2D' : '#071A2B',
+                                      color: q.round === 1 ? '#0A0D14' : '#0A0D14',
                                     }}
                                   >
                                     R{q.round}
@@ -713,7 +713,7 @@ export default function AdminQuestions() {
                                       className="text-xs font-medium"
                                       style={{
                                         backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                                        color: '#16a34a',
+                                        color: '#1A7D70',
                                         border: '1px solid rgba(34, 197, 94, 0.2)',
                                       }}
                                     >
@@ -736,7 +736,7 @@ export default function AdminQuestions() {
                                       onClick={() => openEditDialog(q)}
                                       className="h-8 w-8 p-0"
                                     >
-                                      <Pencil className="w-3.5 h-3.5" style={{ color: '#C8A951' }} />
+                                      <Pencil className="w-3.5 h-3.5" style={{ color: '#966700' }} />
                                     </Button>
                                     <Button
                                       variant="ghost"
@@ -779,7 +779,7 @@ export default function AdminQuestions() {
                               className="flex items-center justify-center w-8 h-8 rounded-lg text-xs font-bold shrink-0"
                               style={{
                                 backgroundColor: 'rgba(200, 169, 81, 0.12)',
-                                color: '#C8A951',
+                                color: '#966700',
                               }}
                             >
                               {q.questionNumber}
@@ -790,7 +790,7 @@ export default function AdminQuestions() {
                                 className="text-[10px] px-1.5 py-0"
                                 style={{
                                   borderColor: q.round === 1 ? 'rgba(6, 59, 45, 0.2)' : 'rgba(7, 26, 43, 0.3)',
-                                  color: q.round === 1 ? '#063B2D' : '#071A2B',
+                                  color: q.round === 1 ? '#0A0D14' : '#0A0D14',
                                 }}
                               >
                                 R{q.round}
@@ -800,7 +800,7 @@ export default function AdminQuestions() {
                                   className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded"
                                   style={{
                                     backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                                    color: '#16a34a',
+                                    color: '#1A7D70',
                                   }}
                                 >
                                   <CheckCircle2 className="w-2.5 h-2.5" />
@@ -827,7 +827,7 @@ export default function AdminQuestions() {
                               onClick={() => openEditDialog(q)}
                               className="h-8 w-8 p-0"
                             >
-                              <Pencil className="w-3.5 h-3.5" style={{ color: '#C8A951' }} />
+                              <Pencil className="w-3.5 h-3.5" style={{ color: '#966700' }} />
                             </Button>
                             <Button
                               variant="ghost"
@@ -842,7 +842,7 @@ export default function AdminQuestions() {
 
                         <p
                           className="text-sm leading-snug mb-2 line-clamp-2"
-                          style={{ color: '#063B2D' }}
+                          style={{ color: '#0A0D14' }}
                         >
                           {q.englishQuestion}
                         </p>
@@ -857,7 +857,7 @@ export default function AdminQuestions() {
                             className="inline-flex items-center justify-center w-5 h-5 rounded text-[10px] font-bold shrink-0"
                             style={{
                               backgroundColor: 'rgba(6, 59, 45, 0.1)',
-                              color: '#063B2D',
+                              color: '#0A0D14',
                             }}
                           >
                             {q.correctOption}

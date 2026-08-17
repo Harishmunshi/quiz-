@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getSettings } from '@/lib/round2/settingsCache';
 import {
   parseItems,
   parseOrder,
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const participantId = searchParams.get('participantId');
 
-    const settings = await db.competitionSettings.findFirst();
+    const settings = await getSettings();
     if (!settings) {
       return NextResponse.json(
         { success: false, error: 'Competition not configured' },
@@ -53,7 +54,17 @@ export async function GET(request: Request) {
     const state = (settings.round2QuestionState || 'idle') as Round2State;
     const currentNumber = settings.round2CurrentQuestion || 0;
 
-    const totalQuestions = await db.round2LiveQuestion.count({ where: { isActive: true } });
+    // Independent of each other and of everything below — issued together so
+    // the route costs one network round trip instead of two.
+    const [totalQuestions, me] = await Promise.all([
+      db.round2LiveQuestion.count({ where: { isActive: true } }),
+      participantId
+        ? db.participant.findUnique({
+            where: { id: participantId },
+            select: { round2Eligible: true, round2JoinedAt: true, disqualified: true },
+          })
+        : Promise.resolve(null),
+    ]);
 
     // Entry gate for this participant. Computed server-side so the student page
     // renders the right door without having to guess.
@@ -74,10 +85,6 @@ export async function GET(request: Request) {
     };
 
     if (participantId) {
-      const me = await db.participant.findUnique({
-        where: { id: participantId },
-        select: { round2Eligible: true, round2JoinedAt: true, disqualified: true },
-      });
       if (me) {
         gate.qualified = me.round2Eligible;
         gate.joined = Boolean(me.round2JoinedAt);

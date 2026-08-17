@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAppStore } from '@/lib/store';
+import { useViewHistory } from '@/lib/useViewHistory';
+import AppNav from '@/components/nav/AppNav';
 import LandingPage from '@/components/quiz/LandingPage';
 import RegistrationForm from '@/components/quiz/RegistrationForm';
 import Round1Quiz from '@/components/quiz/Round1Quiz';
@@ -26,6 +28,11 @@ const LEADERBOARD_POLL_MS = 4000;
 
 export default function HomePage() {
   const { currentView, setCompetitionSettings, setRealtimeStatus } = useAppStore();
+
+  // Browser Back/Forward, deep links and refresh-in-place. See useViewHistory
+  // for why a single-URL app needs this explicitly.
+  useViewHistory();
+
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Fetch competition settings on mount
@@ -111,7 +118,9 @@ export default function HomePage() {
   };
 
   return (
-    <AnimatePresence mode="wait">
+    <>
+      <AppNav />
+      <AnimatePresence mode="wait">
       <motion.div
         key={currentView}
         initial={{ opacity: 0, y: 8 }}
@@ -121,7 +130,8 @@ export default function HomePage() {
         className="min-h-screen"
       >
         {renderView()}
-      </motion.div>
-    </AnimatePresence>
+        </motion.div>
+      </AnimatePresence>
+    </>
   );
 }
