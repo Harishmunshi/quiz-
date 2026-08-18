@@ -13,36 +13,19 @@ const answerSchema = z.object({
   submittedOrder: z.array(z.string().min(1)).min(1, 'Place the items before submitting'),
 });
 
+// Small allowance for network latency so a student who tapped just before the
+// buzzer isn't punished for their connection.
+const LATE_GRACE_MS = 1500;
+
 /**
  * POST /api/round2/live/answer
  *
- * One shot per student per question — for ANY question that has been opened and
- * has not had its answer revealed, whatever is currently on the board.
- *
- * WHAT CHANGED AND WHY
- * This used to accept a submission only if the round-wide state was 'open' AND
- * the submitted questionId matched settings.round2CurrentQuestion. Three gates
- * enforced it: a state check, a lookup pinned to the current question number,
- * and a STALE_QUESTION id comparison. Together they meant exactly one question
- * was ever answerable, and only while the quiz master held it open. A student
- * who had not yet submitted Q1 could never submit it once Q2 opened. Locking or
- * revealing shut everyone out of everything.
- *
- * Now the question is resolved from the id the client sent, and the only thing
- * that closes it is its own revealedAt — because once the correct sequence is on
- * the projector, accepting an answer is indefensible. Everything else that
- * mattered is untouched:
- *
- *   1. responseTimeMs is still server-measured, now from that question's own
- *      openedAt, so a tampered device clock still buys nothing.
- *   2. The sequence must still be a genuine permutation of the question's items.
- *   3. The unique index on (participantId, questionId) still makes a second
- *      answer physically impossible, even from two tabs racing.
- *   4. Disqualification, the Round 1 cut and the PIN are still enforced here,
- *      not just at the door.
- *
- * A late answer is accepted and charged the elapsed time honestly, which costs
- * the student on the cumulative-time tiebreak rather than costing them the mark.
+ * One shot per student per question. Four independent guards:
+ *   1. The server checks state === 'open'; submissions outside the window bounce.
+ *   2. responseTimeMs is derived from round2QuestionOpenedAt on the server.
+ *   3. The sequence must be a genuine permutation of the question's own items.
+ *   4. A unique index on (participantId, questionId) makes a second answer
+ *      physically impossible, even from two tabs racing each other.
  *
  * The response deliberately does NOT reveal whether the sequence was right.
  */
@@ -66,48 +49,43 @@ export async function POST(request: Request) {
       );
     }
 
-    // Resolve the question the student actually answered, not whichever one the
-    // board happens to be showing. This is the change that lets Q1 be submitted
-    // while Q2 is up.
-    //
-    // These two reads are independent and the database is a network hop away, so
-    // they go together: on a burst — thirty students tapping within the same
-    // second — one saved round trip per request is the difference between the
-    // answer landing instantly and landing noticeably late.
+    if (settings.round2QuestionState !== 'open') {
+      return NextResponse.json(
+        { success: false, error: 'Submissions are closed for this question', code: 'NOT_OPEN' },
+        { status: 409 }
+      );
+    }
+
+    if (!settings.round2QuestionOpenedAt) {
+      return NextResponse.json(
+        { success: false, error: 'Question has no open time', code: 'NO_OPEN_TIME' },
+        { status: 409 }
+      );
+    }
+
+    // These two are independent, and the database is a network hop away. Run
+    // them together: on a submission burst — thirty students tapping within the
+    // same second — one saved round trip per request is the difference between
+    // the answer landing instantly and landing noticeably late.
     const [question, participant] = await Promise.all([
-      db.round2LiveQuestion.findFirst({ where: { id: questionId, isActive: true } }),
+      db.round2LiveQuestion.findFirst({
+        where: { questionNumber: settings.round2CurrentQuestion, isActive: true },
+      }),
       db.participant.findUnique({ where: { id: participantId } }),
     ]);
 
     if (!question) {
       return NextResponse.json(
-        { success: false, error: 'That question is not part of Round 2', code: 'NO_QUESTION' },
+        { success: false, error: 'No live question', code: 'NO_QUESTION' },
         { status: 404 }
       );
     }
 
-    // A question nobody has started yet is not answerable — otherwise a student
-    // could read ahead and bank an answer before the hall has even seen it.
-    if (!question.openedAt) {
+    // Reject a submission aimed at a different question than the one on screen.
+    // Catches a stale tab that missed the move to the next question.
+    if (question.id !== questionId) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'That question has not been started yet',
-          code: 'NOT_STARTED',
-        },
-        { status: 409 }
-      );
-    }
-
-    // The one gate that still closes a question. Once its answer key is on the
-    // projector, an answer means nothing.
-    if (question.revealedAt) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'The answer to this question has already been shown',
-          code: 'ALREADY_REVEALED',
-        },
+        { success: false, error: 'This question is no longer on screen', code: 'STALE_QUESTION' },
         { status: 409 }
       );
     }
@@ -150,24 +128,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Measured from THIS question's own start line, server-side, so a tampered
-    // device clock still buys nothing and Q1's time is Q1's time even if Q2 has
-    // since opened.
     const now = Date.now();
-    const openedAt = new Date(question.openedAt).getTime();
+    const openedAt = new Date(settings.round2QuestionOpenedAt).getTime();
     const responseTimeMs = Math.max(0, now - openedAt);
 
-    // Late answers are accepted but score nothing.
-    //
-    // The old code returned TOO_LATE past the countdown and refused the write
-    // outright, which is what made a question unanswerable the moment its window
-    // elapsed — the single biggest source of "my submit button did nothing"
-    // during a round. The submission now always lands and is always graded, so
-    // the student finds out whether they were right and their attempt is on
-    // record; it simply earns no marks. That keeps the countdown meaningful
-    // without the button appearing broken.
+    // Enforce the countdown server-side too, so a student who freezes their JS
+    // timer still can't submit after time is up.
     const windowSec = question.timeLimitSec || settings.round2QuestionSeconds;
-    const late = windowSec > 0 && responseTimeMs > windowSec * 1000;
+    if (windowSec > 0 && responseTimeMs > windowSec * 1000 + LATE_GRACE_MS) {
+      return NextResponse.json(
+        { success: false, error: "Time's up for this question", code: 'TOO_LATE' },
+        { status: 409 }
+      );
+    }
 
     const correct = parseOrder(question.correctOrder);
     const { isCorrect, correctPositions } = gradeOrder(submittedOrder, correct);
@@ -182,11 +155,7 @@ export async function POST(request: Request) {
           submittedOrder: JSON.stringify(submittedOrder),
           isCorrect,
           correctPositions,
-          // Right but late still scores zero. isCorrect stays truthful so the
-          // reveal can tell them they had the sequence, and `late` is what
-          // explains the zero.
-          marks: isCorrect && !late ? question.marks : 0,
-          late,
+          marks: isCorrect ? question.marks : 0,
           responseTimeMs,
           isTest: settings.isTestMode,
         },
@@ -203,11 +172,8 @@ export async function POST(request: Request) {
           data: {
             locked: true,
             alreadyAnswered: true,
-            questionId: question.id,
-            questionNumber: question.questionNumber,
             submittedOrder: parseOrder(existing?.submittedOrder),
             responseTimeMs: existing?.responseTimeMs ?? responseTimeMs,
-            late: false,
           },
         });
       }
@@ -216,15 +182,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      data: {
-        locked: true,
-        alreadyAnswered: false,
-        questionId: question.id,
-        questionNumber: question.questionNumber,
-        submittedOrder,
-        responseTimeMs,
-        late,
-      },
+      data: { locked: true, alreadyAnswered: false, submittedOrder, responseTimeMs },
     });
   } catch (error) {
     console.error('Error recording Round 2 live answer:', error);

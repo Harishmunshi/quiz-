@@ -49,14 +49,6 @@ export default function Round2Page() {
   // phone sees the identical overtake the room just reacted to.
   const [board, setBoard] = useState<BoardEntry[]>([]);
 
-  // Which question this student is looking at. Independent of the board.
-  //
-  // Round 2 used to render whatever `live.question` said, so the screen followed
-  // the quiz master and a student who had not finished Q1 lost access to it the
-  // instant Q2 opened. The student now chooses, and the board only decides the
-  // default.
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
   useEffect(() => {
     setParticipant(loadParticipant());
     setCheckedStorage(true);
@@ -64,41 +56,15 @@ export default function Round2Page() {
 
   const { live, connected, clockOffset, refresh, patch } = useLiveRound2(participant?.id);
 
-  const questions = live?.questions ?? [];
+  const q = live?.question ?? null;
   const state = live?.state ?? 'idle';
-
-  // Follow the board until the student picks something, then stay put — being
-  // yanked onto another question mid-drag is exactly what this change removes.
-  const q = useMemo(() => {
-    if (selectedId) {
-      const chosen = questions.find((x) => x.id === selectedId);
-      if (chosen) return chosen;
-    }
-    // Prefer the board's question; fall back to the first one still answerable
-    // so a student who joins late lands somewhere useful rather than on a
-    // finished question.
-    return (
-      questions.find((x) => x.questionNumber === live?.currentQuestionNumber) ??
-      questions.find((x) => x.answerable) ??
-      questions[questions.length - 1] ??
-      null
-    );
-  }, [selectedId, questions, live?.currentQuestionNumber]);
-
-  // Per-question, from the selected question's own record — not the round-wide
-  // state, which describes only whatever the board is showing.
-  const myAnswer = q?.myAnswer ?? null;
-  const locked = Boolean(myAnswer);
-  const revealed = Boolean(q?.revealedAt);
-  const answerable = Boolean(q?.answerable);
-  const correctOrder = q?.correctOrder ?? null;
+  const locked = Boolean(live?.myAnswer);
 
   const remainingMs = useCountdown(
-    q?.openedAt ?? null,
+    live?.openedAt ?? null,
     q?.timeLimitSec ?? live?.questionSeconds ?? 0,
     clockOffset,
-    // Only count down while the question is genuinely still open to this student.
-    answerable
+    state === 'open'
   );
 
   // Clear the working sequence whenever a different question comes on screen.
@@ -165,10 +131,7 @@ export default function Round2Page() {
   const complete = q ? placed.length === q.itemCount : false;
 
   const submit = async () => {
-    // Gated on THIS question being answerable, not on the round-wide state.
-    // `state !== 'open'` was the client half of the bug: even after the server
-    // accepted out-of-order submissions, this line still refused to send them.
-    if (!participant || !q || !answerable || locked || !complete) return;
+    if (!participant || !q || state !== 'open' || locked || !complete) return;
     setSubmitting(true);
     setSubmitError(null);
 
@@ -194,7 +157,7 @@ export default function Round2Page() {
         success?: boolean;
         error?: string;
         code?: string;
-        data?: { submittedOrder: string[]; responseTimeMs: number; late?: boolean };
+        data?: { submittedOrder: string[]; responseTimeMs: number };
       } | null = null;
       try {
         json = await res.json();
@@ -203,24 +166,14 @@ export default function Round2Page() {
       }
 
       if (json?.success && json.data) {
-        const answered = {
-          submittedOrder: json.data.submittedOrder,
-          responseTimeMs: json.data.responseTimeMs,
-          isCorrect: null,
-          correctPositions: null,
-          // Straight from the server's own timing decision — the client must not
-          // second-guess whether it was late.
-          late: Boolean(json.data.late),
-        };
-        // Attach the answer to the question it belongs to, not to a single
-        // top-level slot — with several questions in play at once, one shared
-        // myAnswer would make every other question look answered too.
         patch((prev) => ({
           ...prev,
-          myAnswer: prev.question?.id === q.id ? answered : prev.myAnswer,
-          questions: prev.questions.map((x) =>
-            x.id === q.id ? { ...x, myAnswer: answered, answerable: false } : x
-          ),
+          myAnswer: {
+            submittedOrder: json!.data!.submittedOrder,
+            responseTimeMs: json!.data!.responseTimeMs,
+            isCorrect: null,
+            correctPositions: null,
+          },
         }));
         return;
       }
@@ -228,14 +181,11 @@ export default function Round2Page() {
       // Plain-language versions of the reasons the server can refuse, so a
       // student is never left guessing why their tap did nothing.
       const BY_CODE: Record<string, string> = {
-        ALREADY_REVEALED:
-          'The answer to this question has already been shown, so it can no longer be submitted.',
-        NOT_STARTED: 'This question has not been started yet.',
+        TOO_LATE: "Time's up for this question — the quiz master has to open the next one.",
+        NOT_OPEN: 'This question is closed. Wait for the quiz master to open the next one.',
+        STALE_QUESTION: 'The quiz master has moved on. This screen is about to catch up.',
         ALREADY_ANSWERED: 'You have already answered this question.',
-        DISQUALIFIED: 'You have been removed from this round.',
-        NOT_QUALIFIED: 'You are not in Round 2.',
-        NOT_JOINED: 'Enter the PIN shown on screen to join the round first.',
-        INVALID_SEQUENCE: 'That sequence was not accepted — place every item once.',
+        NO_OPEN_TIME: 'This question has not been started properly. Tell the quiz master.',
       };
 
       setSubmitError(
@@ -257,8 +207,8 @@ export default function Round2Page() {
   };
 
   const displayOrder = useMemo(
-    () => (locked ? (myAnswer?.submittedOrder ?? []) : placed),
-    [locked, myAnswer?.submittedOrder, placed]
+    () => (locked ? (live?.myAnswer?.submittedOrder ?? []) : placed),
+    [locked, live?.myAnswer?.submittedOrder, placed]
   );
 
   // ── Gates ───────────────────────────────────────────────────────────
@@ -386,16 +336,17 @@ export default function Round2Page() {
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-[#FFB000]/20 bg-[#F4F5F7]/70 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
-          {/* Always available now. Leaving no longer forfeits anything: the
-              question stays answerable until its answer is revealed, so hiding
-              the only way out was costing students more than it protected. */}
-          <a
-            href="/"
-            aria-label="Back to the main site"
-            className="flex shrink-0 items-center justify-center rounded-xl border border-[#FFB000]/35 bg-white/70 p-2 text-[#0A0D14] transition-colors hover:bg-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </a>
+          {/* A way out — but never while a question is open, since leaving
+              mid-question forfeits it. */}
+          {state !== 'open' && (
+            <a
+              href="/"
+              aria-label="Back to the main site"
+              className="flex shrink-0 items-center justify-center rounded-xl border border-[#FFB000]/35 bg-white/70 p-2 text-[#0A0D14] transition-colors hover:bg-white"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </a>
+          )}
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-[#0A0D14]">
               {participant.name}
@@ -418,56 +369,8 @@ export default function Round2Page() {
           </span>
         </div>
 
-        {/* Question switcher. This is the visible half of "any question, any
-            time": one chip per started question, showing at a glance which are
-            answered, which are still open to this student, and which are done.
-            Tapping one loads it — including going back to Q1 while Q2 is up. */}
-        {questions.length > 0 && (
-          <div className="mx-auto flex max-w-2xl gap-1.5 overflow-x-auto px-4 pb-2.5">
-            {questions.map((item) => {
-              const isCurrent = item.id === q?.id;
-              const done = Boolean(item.myAnswer);
-              const shut = Boolean(item.revealedAt);
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setSelectedId(item.id)}
-                  aria-current={isCurrent}
-                  title={
-                    done
-                      ? `Question ${item.questionNumber} — answered`
-                      : shut
-                        ? `Question ${item.questionNumber} — closed, you did not answer`
-                        : `Question ${item.questionNumber} — open, tap to answer`
-                  }
-                  className={[
-                    'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-all',
-                    isCurrent
-                      ? 'border-[#0A0D14] bg-[#0A0D14] text-[#F4F5F7]'
-                      : done
-                        ? 'border-[#1A7D70]/45 bg-[#1A7D70]/12 text-[#1A7D70]'
-                        : shut
-                          ? 'border-[#D7DAE1] bg-white/50 text-[#5B6472]/60'
-                          : 'border-[#FFB000]/60 bg-[#FFB000]/15 text-[#7C5A00]',
-                  ].join(' ')}
-                >
-                  Q{item.questionNumber}
-                  {done ? (
-                    <CheckCircle2 className="h-3 w-3" />
-                  ) : shut ? (
-                    <XCircle className="h-3 w-3" />
-                  ) : (
-                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
         {/* Hairline countdown — the only motion in the header */}
-        {answerable && remainingMs !== null && q && (
+        {state === 'open' && remainingMs !== null && q && (
           <div className="h-[3px] w-full bg-white/60">
             <div
               className="h-full bg-gradient-to-r from-[#FFB000] to-[#FFE66D]"
@@ -483,10 +386,7 @@ export default function Round2Page() {
       <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
         <AnimatePresence mode="wait">
           {/* ── Waiting ─────────────────────────────────────────────── */}
-          {/* Only when there is genuinely nothing to work on. Previously this
-              also swallowed `state === 'idle'`, so a student with an unanswered
-              open question was shown "waiting" and could not reach it. */}
-          {!q && (
+          {(state === 'idle' || !q) && (
             <Fade key="idle">
               <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
                 <motion.div
@@ -507,12 +407,8 @@ export default function Round2Page() {
             </Fade>
           )}
 
-          {/* ── Answering ───────────────────────────────────────────── */}
-          {/* Driven by this question being answerable, or already answered but
-              not yet revealed — so a student who has locked in still sees their
-              sequence rather than being thrown to a "closed" screen because the
-              board moved on. */}
-          {q && !revealed && (
+          {/* ── Question open ───────────────────────────────────────── */}
+          {state === 'open' && q && (
             <Fade key={`open-${q.id}`}>
               {/* Timer */}
               {remainingMs !== null && (
@@ -528,22 +424,12 @@ export default function Round2Page() {
                     </span>
                   </span>
                   <span className="font-mono text-xs tabular-nums text-[#5B6472]/70">
-                    {q.answerCount ?? 0} submitted
+                    {live?.answerCount ?? 0} submitted
                   </span>
                 </div>
               )}
 
               <QuestionHead q={q} />
-
-              {/* The countdown having run out no longer blocks anything — say so,
-                  rather than leaving a student to discover it by tapping. */}
-              {remainingMs === 0 && !locked && (
-                <p className="mb-5 rounded-xl border border-[#FFB000]/50 bg-[#FFB000]/12 px-4 py-3 text-sm text-[#7C5A00]">
-                  The time for this question has run out, but you can still submit
-                  it until the answer is shown. Your recorded time will be longer,
-                  which only matters if scores are tied.
-                </p>
-              )}
 
               <SequenceBuilder
                 items={q.items}
@@ -592,72 +478,62 @@ export default function Round2Page() {
                   className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-[#FFB000]/40 bg-[#FFB000]/10 px-4 py-4 text-sm font-semibold text-[#966700]"
                 >
                   <Lock className="h-4 w-4" />
-                  Locked in at {formatSeconds(myAnswer!.responseTimeMs)}
+                  Locked in at {formatSeconds(live!.myAnswer!.responseTimeMs)}
                 </motion.div>
-              )}
-
-              {/* Nudge towards anything else still outstanding, so a student who
-                  has just locked in knows there is more they can do rather than
-                  sitting on a finished question waiting to be told. */}
-              {locked && (live?.answerableCount ?? 0) > 0 && (
-                <p className="mt-4 text-center text-xs text-[#5B6472]">
-                  You still have {live!.answerableCount} question
-                  {live!.answerableCount === 1 ? '' : 's'} you can answer — tap it
-                  above.
-                </p>
               )}
             </Fade>
           )}
 
+          {/* ── Locked ──────────────────────────────────────────────── */}
+          {state === 'locked' && q && (
+            <Fade key="locked">
+              <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+                <motion.div
+                  animate={{ rotate: [0, -6, 6, 0] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                  className="mb-7 rounded-full border border-[#FFB000]/25 p-6"
+                >
+                  <Lock className="h-10 w-10 text-[#966700]" />
+                </motion.div>
+                <h2 className="text-2xl font-bold tracking-tight text-[#0A0D14]">
+                  Submissions closed
+                </h2>
+                <p className="mt-3 text-sm text-[#5B6472]">
+                  {locked
+                    ? `Your answer is in — ${formatSeconds(live!.myAnswer!.responseTimeMs)}`
+                    : 'You did not submit this one.'}
+                </p>
+                <p className="mt-1 text-xs text-[#5B6472]/70">Waiting for the reveal…</p>
+              </div>
+            </Fade>
+          )}
+
           {/* ── Revealed ────────────────────────────────────────────── */}
-          {/* This question's own reveal. The round-wide state describes only the
-              question the board is showing, so keying off it meant selecting a
-              finished Q1 while Q2 was open rendered nothing at all. */}
-          {q && revealed && (
+          {state === 'revealed' && q && (
             <Fade key={`revealed-${q.id}`}>
-              {myAnswer ? (
+              {live?.myAnswer ? (
                 <motion.div
                   initial={{ scale: 0.94, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: 'spring' as const, stiffness: 300, damping: 20 }}
                   className={`mb-6 flex flex-col items-center rounded-2xl border p-6 text-center ${
-                    myAnswer.isCorrect && !myAnswer.late
+                    live.myAnswer.isCorrect
                       ? 'border-[#1A7D70]/50 bg-[#1A7D70]/10'
-                      : myAnswer.late
-                        ? 'border-[#FFB000]/55 bg-[#FFB000]/12'
-                        : 'border-[#B3261E]/35 bg-[#B3261E]/07'
+                      : 'border-[#B3261E]/35 bg-[#B3261E]/07'
                   }`}
                 >
-                  {myAnswer.isCorrect && !myAnswer.late ? (
+                  {live.myAnswer.isCorrect ? (
                     <CheckCircle2 className="mb-3 h-11 w-11 text-[#1A7D70]" />
-                  ) : myAnswer.late ? (
-                    <Hourglass className="mb-3 h-11 w-11 text-[#966700]" />
                   ) : (
                     <XCircle className="mb-3 h-11 w-11 text-[#B3261E]" />
                   )}
                   <p className="text-2xl font-bold tracking-tight text-[#0A0D14]">
-                    {/* A late answer that was right is neither "perfect" nor
-                        "not quite" — telling a student they were wrong when
-                        their sequence was correct is the kind of thing they
-                        argue about afterwards, rightly. */}
-                    {myAnswer.late
-                      ? myAnswer.isCorrect
-                        ? 'Correct, but out of time'
-                        : 'Out of time'
-                      : myAnswer.isCorrect
-                        ? 'Perfect sequence'
-                        : 'Not quite'}
+                    {live.myAnswer.isCorrect ? 'Perfect sequence' : 'Not quite'}
                   </p>
                   <p className="mt-2 font-mono text-xs tabular-nums text-[#5B6472]">
-                    {myAnswer.correctPositions ?? 0} / {q.itemCount} in place ·{' '}
-                    {formatSeconds(myAnswer.responseTimeMs)}
+                    {live.myAnswer.correctPositions ?? 0} / {q.itemCount} in place ·{' '}
+                    {formatSeconds(live.myAnswer.responseTimeMs)}
                   </p>
-                  {myAnswer.late && (
-                    <p className="mt-3 max-w-xs text-xs leading-relaxed text-[#7C5A00]">
-                      This came in after the {q.timeLimitSec}s limit, so it scores
-                      no marks. It is still on record.
-                    </p>
-                  )}
                 </motion.div>
               ) : (
                 <div className="mb-6 rounded-2xl border border-[#D7DAE1] bg-white/60 p-6 text-center">
@@ -668,28 +544,28 @@ export default function Round2Page() {
               )}
 
               {/* Their sequence, diffed against the key */}
-              {myAnswer && correctOrder && (
+              {live?.myAnswer && live.correctOrder && (
                 <div className="mb-6">
                   <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#5B6472]/80">
                     Your answer
                   </h3>
                   <SequenceBuilder
                     items={q.items}
-                    placed={myAnswer.submittedOrder}
+                    placed={live.myAnswer.submittedOrder}
                     onChange={() => {}}
                     disabled
-                    correctOrder={correctOrder}
+                    correctOrder={live.correctOrder}
                   />
                 </div>
               )}
 
-              {correctOrder && (
+              {live?.correctOrder && (
                 <div className="mb-6 rounded-2xl border border-[#1A7D70]/35 bg-[#1A7D70]/08 p-4">
                   <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1A7D70]">
                     Correct sequence
                   </h3>
                   <ol className="space-y-1">
-                    {correctOrder.map((key, i) => {
+                    {live.correctOrder.map((key, i) => {
                       const item = q.items.find((it) => it.key === key);
                       return (
                         <li key={key} className="flex items-baseline gap-3">

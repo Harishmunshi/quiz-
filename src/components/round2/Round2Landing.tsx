@@ -80,18 +80,14 @@ export default function Round2Landing() {
     if (competitionSettings?.round2Mode !== 'free') {
       if (participant) {
         try {
-          // Must match StoredParticipant in lib/round2/session.ts. It previously
-          // wrote className and division — dropped from registration and now
-          // always null — while omitting schoolName, which /round2 renders in its
-          // header. The result was "undefined · MES0001" above every question.
           window.localStorage.setItem(
             'mes-quiz-participant',
             JSON.stringify({
               id: participant.id,
               participantCode: participant.participantCode,
               name: participant.name,
-              schoolName:
-                participant.schoolName ?? 'M.E.S. English Medium School',
+              className: participant.className,
+              division: participant.division,
               language: participant.language,
             })
           );

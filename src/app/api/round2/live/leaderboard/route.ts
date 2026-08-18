@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { getSettings } from '@/lib/round2/settingsCache';
 import {
   rankLiveEntries,
+  scoredQuestionCount,
   missedQuestionPenaltyMs,
   type Round2State,
   type LiveLeaderboardEntry,
@@ -67,55 +68,27 @@ export async function GET(request: Request) {
 
     const isTest = settings.isTestMode;
     const state = (settings.round2QuestionState || 'idle') as Round2State;
+    const scored = scoredQuestionCount(settings.round2CurrentQuestion || 0, state);
     const penaltyMs = missedQuestionPenaltyMs(settings.round2QuestionSeconds);
     const requireQualify = settings.round2RequireQualify;
 
-    // Which questions are finished, by their OWN reveal.
-    //
-    // This used to be `questionNumber <= scoredQuestionCount(current, state)` —
-    // a position on a number line, which was only meaningful while exactly one
-    // question could be open at a time. Now that Q1 stays answerable after Q2
-    // opens, questions do not finish in order, so "finished" has to be asked of
-    // each question individually. A question still accepting answers must stay
-    // out of the standings, or every student would carry a missed-question
-    // penalty for work they are still allowed to do.
-    const revealed = await db.round2LiveQuestion.findMany({
-      where: { isActive: true, revealedAt: { not: null } },
-      orderBy: { revealedAt: 'asc' },
-      select: { id: true, questionNumber: true },
-    });
-
-    const revealedIds = revealed.map((q) => q.id);
-    const scored = revealed.length;
-    // The most recently revealed question drives the board's overtake animation.
-    const latestId = revealedIds.length ? revealedIds[revealedIds.length - 1] : null;
-    const priorIds = revealedIds.slice(0, -1);
-
-    // Prisma cannot interpolate an empty array into `IN ()`, and an empty set is
-    // the normal state before the first reveal.
-    const noneRevealed = revealedIds.length === 0;
-    const noPrior = priorIds.length === 0;
-
     // Conditional aggregation gives current AND previous standings in one pass.
-    // The filters key off the revealed question IDs rather than a number range,
-    // so a question that is still open contributes nothing regardless of where
-    // it sits in the running order.
     const rows = await db.$queryRaw<Row[]>`
       SELECT
         p.id,
         p."participantCode",
         p.name,
         p."schoolName",
-        COALESCE(SUM(a.marks)            FILTER (WHERE NOT ${noneRevealed}::boolean AND a."questionId" = ANY(${revealedIds}::text[])), 0) AS "score",
-        COUNT(a.id)                      FILTER (WHERE NOT ${noneRevealed}::boolean AND a."questionId" = ANY(${revealedIds}::text[]) AND a."isCorrect") AS "correctAnswers",
-        COUNT(a.id)                      FILTER (WHERE NOT ${noneRevealed}::boolean AND a."questionId" = ANY(${revealedIds}::text[])) AS "answeredCount",
-        COALESCE(SUM(a."responseTimeMs") FILTER (WHERE NOT ${noneRevealed}::boolean AND a."questionId" = ANY(${revealedIds}::text[])), 0) AS "totalTimeMs",
-        COALESCE(SUM(a.marks)            FILTER (WHERE NOT ${noPrior}::boolean AND a."questionId" = ANY(${priorIds}::text[])), 0) AS "prevScore",
-        COUNT(a.id)                      FILTER (WHERE NOT ${noPrior}::boolean AND a."questionId" = ANY(${priorIds}::text[])) AS "prevAnsweredCount",
-        COALESCE(SUM(a."responseTimeMs") FILTER (WHERE NOT ${noPrior}::boolean AND a."questionId" = ANY(${priorIds}::text[])), 0) AS "prevTotalTimeMs",
-        MAX(CASE WHEN a."questionId" = ${latestId} THEN (CASE WHEN a."isCorrect" THEN 1 ELSE 0 END) END) AS "lastCorrect",
-        MAX(CASE WHEN a."questionId" = ${latestId} THEN a."responseTimeMs" END)   AS "lastTimeMs",
-        MAX(CASE WHEN a."questionId" = ${latestId} THEN a."correctPositions" END) AS "lastPositions"
+        COALESCE(SUM(a.marks)            FILTER (WHERE a."questionNumber" <= ${scored}), 0) AS "score",
+        COUNT(a.id)                      FILTER (WHERE a."questionNumber" <= ${scored} AND a."isCorrect") AS "correctAnswers",
+        COUNT(a.id)                      FILTER (WHERE a."questionNumber" <= ${scored}) AS "answeredCount",
+        COALESCE(SUM(a."responseTimeMs") FILTER (WHERE a."questionNumber" <= ${scored}), 0) AS "totalTimeMs",
+        COALESCE(SUM(a.marks)            FILTER (WHERE a."questionNumber" <  ${scored}), 0) AS "prevScore",
+        COUNT(a.id)                      FILTER (WHERE a."questionNumber" <  ${scored}) AS "prevAnsweredCount",
+        COALESCE(SUM(a."responseTimeMs") FILTER (WHERE a."questionNumber" <  ${scored}), 0) AS "prevTotalTimeMs",
+        MAX(CASE WHEN a."questionNumber" = ${scored} THEN (CASE WHEN a."isCorrect" THEN 1 ELSE 0 END) END) AS "lastCorrect",
+        MAX(CASE WHEN a."questionNumber" = ${scored} THEN a."responseTimeMs" END)   AS "lastTimeMs",
+        MAX(CASE WHEN a."questionNumber" = ${scored} THEN a."correctPositions" END) AS "lastPositions"
       FROM "Participant" p
       LEFT JOIN "Round2LiveAnswer" a
         ON a."participantId" = p.id AND a."isTest" = ${isTest}

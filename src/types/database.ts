@@ -43,19 +43,10 @@ export interface CompetitionSettings {
 export interface Participant {
   id: string;
   participantCode: string;
-  /** Not unique. Several students genuinely share a name; participantCode is
-   *  what distinguishes them. */
   name: string;
-  /** Collected at registration in place of class + division. */
-  schoolName: string;
-  /** Nullable in the database since school name replaced them — typing these as
-   *  plain strings is what let the projector render "null — null" for every
-   *  recent participant. */
-  className: string | null;
-  division: string | null;
+  className: string;
+  division: string;
   language: Language;
-  round2Eligible?: boolean;
-  disqualified?: boolean;
   isTest: boolean;
   createdAt: string;
 }

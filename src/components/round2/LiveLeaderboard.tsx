@@ -27,8 +27,6 @@ export interface BoardEntry {
   rank: number;
   participantId: string;
   participantName: string;
-  /** Unique; the name is not. This is what distinguishes two same-named students. */
-  participantCode: string;
   schoolName: string;
   score: number;
   correctAnswers: number;
@@ -159,11 +157,7 @@ export default function LiveLeaderboard({
                     big ? 'text-sm lg:text-base' : 'text-[11px]',
                   ].join(' ')}
                 >
-                  {/* Code first, then school. Students genuinely share names —
-                      three "Harish Munshi" rows on the hall screen with nothing
-                      to separate them is not a readable result. */}
-                  <span className="font-mono tracking-wide">{e.participantCode}</span>
-                  {e.schoolName ? ` · ${e.schoolName}` : ''}
+                  {e.schoolName}
                 </p>
               </div>
 

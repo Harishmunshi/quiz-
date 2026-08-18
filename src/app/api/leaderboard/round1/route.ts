@@ -14,27 +14,13 @@ export async function GET() {
     const attempts = await db.round1Attempt.findMany({
       where: { status: 'submitted', isTest },
       include: { participant: true },
-      // `id` last is not decoration: score, time and submittedAt can all tie
-      // (two students finishing the same paper in the same millisecond is rare,
-      // but seeded test data ties constantly). Without a unique final key
-      // Postgres is free to return tied rows in any order, so ranks reshuffled
-      // between polls and the board jittered. `id` makes the sort total.
-      orderBy: [
-        { score: 'desc' },
-        { completionTimeMs: 'asc' },
-        { submittedAt: 'asc' },
-        { id: 'asc' },
-      ],
+      orderBy: [{ score: 'desc' }, { completionTimeMs: 'asc' }, { submittedAt: 'asc' }],
     });
 
     const entries = attempts.map((a, index) => ({
       rank: index + 1,
       participantId: a.participantId,
       participantName: a.participant.name,
-      // Names are not unique — several students share one, which is allowed.
-      // The code is what tells them apart on the board.
-      participantCode: a.participant.participantCode,
-      schoolName: a.participant.schoolName,
       className: a.participant.className,
       division: a.participant.division,
       language: a.participant.language,

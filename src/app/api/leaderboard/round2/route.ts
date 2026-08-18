@@ -14,19 +14,13 @@ export async function GET() {
     const attempts = await db.round2Attempt.findMany({
       where: { status: 'correct', isTest, finalTimeMs: { not: null } },
       include: { participant: true },
-      // `id` last so tied rows have a stable order and ranks stop reshuffling
-      // between polls. See the Round 1 route for the full reasoning.
-      orderBy: [{ finalTimeMs: 'asc' }, { submittedAt: 'asc' }, { id: 'asc' }],
+      orderBy: [{ finalTimeMs: 'asc' }, { submittedAt: 'asc' }],
     });
 
     const entries = attempts.map((a, index) => ({
       rank: index + 1,
       participantId: a.participantId,
       participantName: a.participant.name,
-      // Names repeat; codes do not. Without this the board cannot distinguish
-      // two students who share a name.
-      participantCode: a.participant.participantCode,
-      schoolName: a.participant.schoolName,
       className: a.participant.className,
       division: a.participant.division,
       finalTimeMs: a.finalTimeMs ?? 0,
