@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -130,8 +130,28 @@ export default function Round2Page() {
 
   const complete = q ? placed.length === q.itemCount : false;
 
-  const submit = async () => {
-    if (!participant || !q || state !== 'open' || locked || !complete) return;
+  /**
+   * The sequence to send, padded to a full permutation.
+   *
+   * The server validates that a submission contains every item exactly once, so
+   * a half-finished sequence cannot be sent as-is. Anything the student has not
+   * placed is appended in tray order. Scoring is all-or-nothing, so a padded
+   * sequence is marked wrong exactly as an unfinished one should be — the point
+   * is that the attempt is RECORDED rather than lost.
+   */
+  const fullOrder = (from: string[]): string[] => {
+    if (!q) return from;
+    const used = new Set(from);
+    return [...from, ...q.items.map((i) => i.key).filter((k) => !used.has(k))];
+  };
+
+  const submit = async (order?: string[]) => {
+    const sequence = fullOrder(order ?? placed);
+    // A manual submit still requires a complete sequence — the button is only
+    // enabled when it is. `order` is passed by the auto-submit below, which is
+    // allowed to send a partial (padded) one.
+    if (!participant || !q || state !== 'open' || locked) return;
+    if (!order && !complete) return;
     setSubmitting(true);
     setSubmitError(null);
 
@@ -144,7 +164,7 @@ export default function Round2Page() {
         body: JSON.stringify({
           participantId: participant.id,
           questionId: q.id,
-          submittedOrder: placed,
+          submittedOrder: sequence,
         }),
       });
       // Read the body defensively. A rejection carries a real reason — "Time's
@@ -205,6 +225,48 @@ export default function Round2Page() {
       setSubmitting(false);
     }
   };
+
+  /**
+   * Send whatever the student has when the clock runs out.
+   *
+   * Without this, running out of time meant losing the answer completely: the
+   * work stayed in the browser, nothing reached the server, and the student was
+   * charged the full missed-question penalty for a sequence they had actually
+   * built. That is the single biggest way answers went missing.
+   *
+   * Fired with ~1.8s still on the clock, not at zero. The server rejects a
+   * submission more than 1.5s past the deadline (LATE_GRACE_MS), so the request
+   * has to be in flight before then — the margin covers a slow school-wifi round
+   * trip. The cost is the last two seconds of the window, which is why the
+   * countdown turns red and says so.
+   *
+   * `autoFired` is keyed on the question id so this runs at most once per
+   * question and never re-fires on a re-render or a poll.
+   *
+   * LIMIT: this is the student's own browser. If their phone is locked or the
+   * tab is in the background the countdown is not running, so nothing is sent.
+   * It rescues the common case — the student staring at a nearly-finished
+   * sequence — not a phone in a pocket.
+   */
+  const AUTO_SUBMIT_AT_MS = 1800;
+  const autoFired = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!q || state !== 'open' || locked || submitting) return;
+    if (remainingMs === null || remainingMs > AUTO_SUBMIT_AT_MS) return;
+    // Nothing placed at all is a genuine non-attempt; inventing a sequence for
+    // them would be indistinguishable from one they built themselves.
+    if (placed.length === 0) return;
+    if (autoFired.current === q.id) return;
+
+    autoFired.current = q.id;
+    void submit(placed);
+  }, [remainingMs, q, state, locked, submitting, placed]);
+
+  // Let a fresh question arm the auto-submit again.
+  useEffect(() => {
+    if (q && autoFired.current !== q.id) autoFired.current = null;
+  }, [q?.id]);
 
   const displayOrder = useMemo(
     () => (locked ? (live?.myAnswer?.submittedOrder ?? []) : placed),
@@ -448,7 +510,7 @@ export default function Round2Page() {
               {!locked ? (
                 <div className="sticky bottom-0 z-10 -mx-4 mt-6 border-t border-[#FFB000]/20 bg-[#F4F5F7]/90 px-4 py-4 backdrop-blur-md">
                   <button
-                    onClick={submit}
+                    onClick={() => submit()}
                     disabled={!complete || submitting}
                     className={`flex w-full items-center justify-center gap-2 rounded-xl py-4 text-base font-bold transition-all ${
                       complete
@@ -468,7 +530,9 @@ export default function Round2Page() {
                     )}
                   </button>
                   <p className="mt-2 text-center text-[11px] text-[#5B6472]/70">
-                    You get one submission. It cannot be changed.
+                    {placed.length > 0
+                      ? 'One submission, and it cannot be changed. If time runs out, whatever you have placed is sent automatically.'
+                      : 'You get one submission. It cannot be changed.'}
                   </p>
                 </div>
               ) : (
