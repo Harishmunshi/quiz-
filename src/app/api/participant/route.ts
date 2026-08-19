@@ -69,13 +69,100 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Competition has ended' }, { status: 403 });
     }
 
+    // Codes are issued by the school and typed in by the student, so this is a
+    // sign-in as much as a registration. Normalised to upper case: a student who
+    // types mes0007 is the same person as MES0007, and letting those become two
+    // rows would split their score across two entries on the board.
+    const typedCode = parsed.data.participantCode?.trim().toUpperCase();
+
     const row = {
-      name: parsed.data.name,
+      // The name is no longer asked for. It falls back to the code so every
+      // downstream screen that still prints a name has something to print.
+      name: parsed.data.name?.trim() || typedCode || 'Student',
       schoolName: parsed.data.schoolName,
       language: parsed.data.language,
       isTest: settings.isTestMode,
     };
 
+    if (typedCode) {
+      const existing = await db.participant.findUnique({
+        where: { participantCode: typedCode },
+      });
+
+      // Known code: sign them back in rather than refusing. A student who
+      // reloads, switches phone, or comes back for Round 2 must land on the
+      // same participant — creating a second one would strand their Round 1
+      // result and make them permanently unqualifiable.
+      if (existing) {
+        if (existing.disqualified) {
+          return NextResponse.json(
+            { success: false, error: 'You have been removed from this competition', code: 'DISQUALIFIED' },
+            { status: 403 }
+          );
+        }
+        // Let them correct a school typed wrong the first time.
+        const refreshed =
+          existing.schoolName === parsed.data.schoolName
+            ? existing
+            : await db.participant.update({
+                where: { id: existing.id },
+                data: { schoolName: parsed.data.schoolName },
+              });
+
+        return NextResponse.json({
+          success: true,
+          returning: true,
+          participant: {
+            id: refreshed.id,
+            participantCode: refreshed.participantCode,
+            name: refreshed.name,
+            schoolName: refreshed.schoolName,
+            language: refreshed.language,
+          },
+        });
+      }
+
+      try {
+        const created = await db.participant.create({
+          data: { participantCode: typedCode, ...row },
+        });
+        return NextResponse.json({
+          success: true,
+          returning: false,
+          participant: {
+            id: created.id,
+            participantCode: created.participantCode,
+            name: created.name,
+            schoolName: created.schoolName,
+            language: created.language,
+          },
+        });
+      } catch (err) {
+        // Two students submitting the same new code in the same instant: the
+        // UNIQUE index arbitrates, and the loser is simply signed in to the row
+        // the winner created.
+        if ((err as { code?: string })?.code === 'P2002') {
+          const now = await db.participant.findUnique({ where: { participantCode: typedCode } });
+          if (now) {
+            return NextResponse.json({
+              success: true,
+              returning: true,
+              participant: {
+                id: now.id,
+                participantCode: now.participantCode,
+                name: now.name,
+                schoolName: now.schoolName,
+                language: now.language,
+              },
+            });
+          }
+        }
+        throw err;
+      }
+    }
+
+    // No code supplied — fall back to issuing one (older clients, and the
+    // sequence path from migration 006).
     const sequenced = await nextParticipantCode();
 
     let participant;

@@ -14,13 +14,15 @@ export async function GET() {
     const attempts = await db.round2Attempt.findMany({
       where: { status: 'correct', isTest, finalTimeMs: { not: null } },
       include: { participant: true },
-      orderBy: [{ finalTimeMs: 'asc' }, { submittedAt: 'asc' }],
+      orderBy: [{ finalTimeMs: 'asc' }, { submittedAt: 'asc' }, { id: 'asc' }],
     });
 
     const entries = attempts.map((a, index) => ({
       rank: index + 1,
       participantId: a.participantId,
       participantName: a.participant.name,
+      participantCode: a.participant.participantCode,
+      schoolName: a.participant.schoolName,
       className: a.participant.className,
       division: a.participant.division,
       finalTimeMs: a.finalTimeMs ?? 0,

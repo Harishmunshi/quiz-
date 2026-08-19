@@ -47,8 +47,9 @@ const fieldVariants = {
 
 // ── Types ──────────────────────────────────────────────────────
 interface FieldError {
-  name?: string;
+  participantCode?: string;
   schoolName?: string;
+  name?: string;
 }
 
 // ── Main Component ─────────────────────────────────────────────
@@ -60,7 +61,7 @@ export default function RegistrationForm() {
   const competitionSettings = useAppStore((s) => s.competitionSettings);
 
   // Form state
-  const [name, setName] = useState('');
+  const [participantCode, setParticipantCode] = useState('');
   const [schoolName, setSchoolName] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldError>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
@@ -76,7 +77,7 @@ export default function RegistrationForm() {
   // Validate fields with Zod
   function validateFields(): boolean {
     const result = registerParticipantSchema.safeParse({
-      name,
+      participantCode,
       schoolName,
       language: selectedLanguage,
     });
@@ -114,7 +115,7 @@ export default function RegistrationForm() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name,
+            participantCode,
             schoolName,
             language: selectedLanguage,
           }),
@@ -148,7 +149,7 @@ export default function RegistrationForm() {
         setSubmitting(false);
       }
     },
-    [name, schoolName, selectedLanguage, isRound1Available, setParticipant, navigate]
+    [participantCode, schoolName, selectedLanguage, isRound1Available, setParticipant, navigate]
   );
 
   return (
@@ -235,34 +236,36 @@ export default function RegistrationForm() {
                 animate="visible"
                 className="space-y-2"
               >
-                <Label htmlFor="reg-name" className="text-navy-deep font-semibold text-sm">
+                <Label htmlFor="reg-code" className="text-navy-deep font-semibold text-sm">
                   <UserCircle className="size-4 mr-1.5 text-emerald-deep" />
-                  Full Name
+                  Student Code
                 </Label>
                 <Input
-                  id="reg-name"
+                  id="reg-code"
                   type="text"
-                  placeholder="Enter your full name"
-                  value={name}
+                  placeholder="e.g. MES0001"
+                  value={participantCode}
                   onChange={(e) => {
-                    setName(e.target.value);
-                    if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: undefined }));
+                    // Upper-cased as they type: mes0007 and MES0007 must not
+                    // become two competitors with a split score.
+                    setParticipantCode(e.target.value.toUpperCase());
+                    if (fieldErrors.participantCode) setFieldErrors((prev) => ({ ...prev, participantCode: undefined }));
                   }}
                   disabled={submitting || !isRound1Available}
                   className={`bg-white ${
-                    fieldErrors.name
+                    fieldErrors.participantCode
                       ? 'border-destructive focus-visible:ring-destructive/20'
                       : 'focus-visible:border-emerald-deep'
                   }`}
-                  autoComplete="name"
+                  autoComplete="off" autoCapitalize="characters"
                 />
-                {fieldErrors.name && (
+                {fieldErrors.participantCode && (
                   <motion.p
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="text-xs text-destructive font-medium"
                   >
-                    {fieldErrors.name}
+                    {fieldErrors.participantCode}
                   </motion.p>
                 )}
               </motion.div>

@@ -3,9 +3,25 @@ import { z } from 'zod';
 // ============================================================
 // PARTICIPANT VALIDATION
 // ============================================================
+/**
+ * Round 1 sign-in.
+ *
+ * Students identify by a code their school issues them, not by typing a name.
+ * Names are not unique — the live data has three "Harish Munshi" — so a name was
+ * never an identifier, and on an inter-school board the school plus the code is
+ * what actually distinguishes competitors.
+ *
+ * `name` is kept optional purely so an older client posting a name still works.
+ */
 export const registerParticipantSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
+  participantCode: z
+    .string()
+    .trim()
+    .min(3, 'Enter your student code')
+    .max(32, 'That code is too long')
+    .regex(/^[A-Za-z0-9_-]+$/, 'Use letters and numbers only'),
   schoolName: z.string().min(2, 'School name is required').max(150, 'School name is too long'),
+  name: z.string().max(100, 'Name is too long').optional(),
   language: z.enum(['english', 'gujarati']),
 });
 

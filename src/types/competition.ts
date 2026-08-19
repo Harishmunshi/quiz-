@@ -93,6 +93,12 @@ export interface Round1LeaderboardEntry {
   rank: number;
   participantId: string;
   participantName: string;
+  /**
+   * Names are NOT unique — several students genuinely share one, which is
+   * allowed. The code is the only thing on the board that tells them apart.
+   */
+  participantCode: string;
+  schoolName: string;
   className: string;
   division: string;
   language: Language;
@@ -107,6 +113,9 @@ export interface Round2LeaderboardEntry {
   rank: number;
   participantId: string;
   participantName: string;
+  /** See Round1LeaderboardEntry — names repeat, codes do not. */
+  participantCode: string;
+  schoolName: string;
   className: string;
   division: string;
   finalTimeMs: number;
@@ -183,11 +192,28 @@ export type RealtimeEvent =
 // ============================================================
 // ROUND 1 QUIZ STATE
 // ============================================================
+/**
+ * A question as the quiz screen holds it — in BOTH languages.
+ *
+ * These used to be flattened to one language when the paper was fetched, which
+ * is why the language could not be changed once the quiz had started: the other
+ * language was simply not in memory, and re-fetching mid-attempt would have
+ * meant re-reading the paper. Keeping both costs nothing (thirty questions) and
+ * makes the toggle a render-time choice.
+ */
 export interface QuizQuestion {
   id: string;
   questionNumber: number;
+  /** Primary language. `gujarati` is the historic key; the content is Hindi. */
   questionText: string;
+  questionTextSecondary: string;
   options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  optionsSecondary: {
     A: string;
     B: string;
     C: string;

@@ -301,8 +301,8 @@ function Round1Table({ entries }: { entries: Round1LeaderboardEntry[] }) {
             <TableHeader>
               <TableRow className="bg-emerald-deep hover:bg-emerald-deep">
                 <TableHead className="text-ivory-warm font-semibold text-center w-16">Rank</TableHead>
-                <TableHead className="text-ivory-warm font-semibold">Name</TableHead>
-                <TableHead className="text-ivory-warm font-semibold text-center hidden sm:table-cell">Class</TableHead>
+                <TableHead className="text-ivory-warm font-semibold">School</TableHead>
+                <TableHead className="text-ivory-warm font-semibold text-center hidden sm:table-cell">Student</TableHead>
                 <TableHead className="text-ivory-warm font-semibold text-center">Score</TableHead>
                 <TableHead className="text-ivory-warm font-semibold text-right hidden md:table-cell">Time</TableHead>
               </TableRow>
@@ -327,17 +327,20 @@ function Round1Table({ entries }: { entries: Round1LeaderboardEntry[] }) {
                       <RankBadge rank={entry.rank} />
                     </TableCell>
                     <TableCell className="font-semibold text-foreground py-3">
+                      {/* School leads, code underneath in small type. This is an
+                          inter-school competition, and several students share a
+                          name — the code is what tells them apart. */}
                       <div className="flex flex-col">
                         <span className={entry.rank === 1 ? 'text-gold-accent' : ''}>
-                          {entry.participantName}
+                          {entry.schoolName || entry.participantName}
                         </span>
-                        <span className="text-xs text-muted-foreground sm:hidden">
-                          {entry.className} · {entry.division}
+                        <span className="font-mono text-[11px] tracking-wide text-muted-foreground">
+                          {entry.participantCode}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell className="text-center text-muted-foreground hidden sm:table-cell py-3">
-                      {entry.className}
+                      {entry.participantName}
                     </TableCell>
                     <TableCell className="text-center font-bold py-3">
                       <span
@@ -405,8 +408,8 @@ function Round2Table({ entries }: { entries: Round2LeaderboardEntry[] }) {
             <TableHeader>
               <TableRow className="bg-navy-deep hover:bg-navy-deep">
                 <TableHead className="text-gold-light font-semibold text-center w-16">Rank</TableHead>
-                <TableHead className="text-gold-light font-semibold">Name</TableHead>
-                <TableHead className="text-gold-light font-semibold text-center hidden sm:table-cell">Class</TableHead>
+                <TableHead className="text-gold-light font-semibold">School</TableHead>
+                <TableHead className="text-gold-light font-semibold text-center hidden sm:table-cell">Student</TableHead>
                 <TableHead className="text-gold-light font-semibold text-right">Time (μs)</TableHead>
               </TableRow>
             </TableHeader>
@@ -430,17 +433,20 @@ function Round2Table({ entries }: { entries: Round2LeaderboardEntry[] }) {
                       <RankBadge rank={entry.rank} />
                     </TableCell>
                     <TableCell className="font-semibold text-foreground py-3">
+                      {/* School leads, code underneath in small type. This is an
+                          inter-school competition, and several students share a
+                          name — the code is what tells them apart. */}
                       <div className="flex flex-col">
                         <span className={entry.rank === 1 ? 'text-gold-accent' : ''}>
-                          {entry.participantName}
+                          {entry.schoolName || entry.participantName}
                         </span>
-                        <span className="text-xs text-muted-foreground sm:hidden">
-                          {entry.className} · {entry.division}
+                        <span className="font-mono text-[11px] tracking-wide text-muted-foreground">
+                          {entry.participantCode}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell className="text-center text-muted-foreground hidden sm:table-cell py-3">
-                      {entry.className}
+                      {entry.participantName}
                     </TableCell>
                     <TableCell className="text-right font-mono font-bold py-3">
                       <span

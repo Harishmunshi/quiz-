@@ -38,6 +38,7 @@ export default function Round1Quiz() {
     competitionSettings,
     participant,
     selectedLanguage,
+    setSelectedLanguage,
     setQuizQuestions,
     setAttemptId,
     setCurrentQuestionIndex,
@@ -127,20 +128,26 @@ export default function Round1Quiz() {
         const questionsData = await questionsRes.json();
         const rawQuestions: ApiQuestion[] = questionsData.data;
 
-        // 4. Transform questions based on selected language
-        const lang = selectedLanguage;
+        // 4. Keep BOTH languages. Which one is shown is decided at render time,
+        //    so a student can switch mid-paper without losing their answers or
+        //    re-reading the questions. Flattening to one here is what previously
+        //    made the choice permanent for the whole attempt.
         const transformed: QuizQuestion[] = rawQuestions.map((q) => ({
           id: q.id,
           questionNumber: q.questionNumber,
-          questionText:
-            lang === 'english'
-              ? q.englishQuestion
-              : q.gujaratiQuestion,
+          questionText: q.englishQuestion,
+          questionTextSecondary: q.gujaratiQuestion,
           options: {
-            A: lang === 'english' ? q.optionAEnglish : q.optionAGujarati,
-            B: lang === 'english' ? q.optionBEnglish : q.optionBGujarati,
-            C: lang === 'english' ? q.optionCEnglish : q.optionCGujarati,
-            D: lang === 'english' ? q.optionDEnglish : q.optionDGujarati,
+            A: q.optionAEnglish,
+            B: q.optionBEnglish,
+            C: q.optionCEnglish,
+            D: q.optionDEnglish,
+          },
+          optionsSecondary: {
+            A: q.optionAGujarati,
+            B: q.optionBGujarati,
+            C: q.optionCGujarati,
+            D: q.optionDGujarati,
           },
         }));
 
@@ -159,7 +166,10 @@ export default function Round1Quiz() {
     initQuiz();
   }, [
     participant,
-    selectedLanguage,
+    // selectedLanguage is deliberately NOT a dependency. Both languages are
+    // fetched once and the toggle only changes which is rendered; leaving it
+    // here would re-run initQuiz on every switch, which calls /round1/start
+    // again and would restart the student’s attempt mid-paper.
     setQuizQuestions,
     setAttemptId,
     setCurrentQuestionIndex,
@@ -415,14 +425,51 @@ export default function Round1Quiz() {
                       className="w-4 h-4 shrink-0"
                       style={{ color: 'rgba(154, 118, 28, 0.55)' }}
                     />
+
+                    {/* Language toggle.
+                        Sits on the question card rather than in a settings menu
+                        because the moment a student needs it is the moment they
+                        cannot read the question in front of them. Switching only
+                        changes what is displayed — answers already given are
+                        keyed by option letter and are untouched. */}
+                    <div
+                      className="ml-auto flex shrink-0 items-center overflow-hidden rounded-lg"
+                      style={{ border: '1px solid rgba(154,118,28,0.35)' }}
+                      role="group"
+                      aria-label="Question language"
+                    >
+                      {(['english', 'gujarati'] as const).map((lang) => {
+                        const active = selectedLanguage === lang;
+                        return (
+                          <button
+                            key={lang}
+                            type="button"
+                            onClick={() => setSelectedLanguage(lang)}
+                            aria-pressed={active}
+                            className="px-2.5 py-1 text-[11px] font-bold transition-colors sm:text-xs"
+                            style={{
+                              background: active
+                                ? 'linear-gradient(180deg, #F0D98A 0%, #D9B24C 100%)'
+                                : 'transparent',
+                              color: active ? '#3B2E08' : 'rgba(154,118,28,0.85)',
+                            }}
+                          >
+                            {lang === 'english' ? 'EN' : 'हिं'}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  {/* Question Text */}
+                  {/* Question Text — reads from whichever language is selected
+                      right now, so the toggle takes effect instantly. */}
                   <h2
                     className="mb-6 text-lg leading-relaxed font-semibold sm:text-xl"
                     style={{ color: '#17130B' }}
                   >
-                    {currentQuestion?.questionText}
+                    {selectedLanguage === 'english'
+                      ? currentQuestion?.questionText
+                      : currentQuestion?.questionTextSecondary}
                   </h2>
 
                   {/* Options */}
@@ -469,7 +516,9 @@ export default function Round1Quiz() {
                             className="text-base leading-relaxed sm:text-lg"
                             style={{ color: isSelected ? '#FBF3DC' : '#EFE6D2' }}
                           >
-                            {currentQuestion?.options[key]}
+                            {selectedLanguage === 'english'
+                              ? currentQuestion?.options[key]
+                              : currentQuestion?.optionsSecondary[key]}
                           </span>
                         </motion.button>
                       );

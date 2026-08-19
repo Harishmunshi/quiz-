@@ -14,13 +14,25 @@ export async function GET() {
     const attempts = await db.round1Attempt.findMany({
       where: { status: 'submitted', isTest },
       include: { participant: true },
-      orderBy: [{ score: 'desc' }, { completionTimeMs: 'asc' }, { submittedAt: 'asc' }],
+      // `id` last so tied rows have a stable order. Without a unique final key
+      // Postgres may return ties in any order, so ranks reshuffled between polls
+      // and the board visibly jittered.
+      orderBy: [
+        { score: 'desc' },
+        { completionTimeMs: 'asc' },
+        { submittedAt: 'asc' },
+        { id: 'asc' },
+      ],
     });
 
     const entries = attempts.map((a, index) => ({
       rank: index + 1,
       participantId: a.participantId,
       participantName: a.participant.name,
+      // The school is what the hall cares about in an inter-school event; the
+      // code is what separates two students from the same school.
+      participantCode: a.participant.participantCode,
+      schoolName: a.participant.schoolName,
       className: a.participant.className,
       division: a.participant.division,
       language: a.participant.language,
