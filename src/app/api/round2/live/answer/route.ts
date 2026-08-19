@@ -155,7 +155,19 @@ export async function POST(request: Request) {
           submittedOrder: JSON.stringify(submittedOrder),
           isCorrect,
           correctPositions,
-          marks: isCorrect ? question.marks : 0,
+          // One mark per item that is in its correct place — 12 items, 12 marks.
+          //
+          // This replaces all-or-nothing scoring, where a single item out of
+          // place scored exactly the same as a blank sheet: zero. With twelve
+          // items to order that made a near-perfect answer worthless and left
+          // most of the hall on nought, which is not a result you can rank.
+          // `correctPositions` was already being computed for the reveal screen;
+          // it is now what counts.
+          //
+          // isCorrect is still recorded, and still means "every position right".
+          // It is what the per-question board sorts on first, so a flawless
+          // sequence still beats an 11/12.
+          marks: correctPositions,
           responseTimeMs,
           isTest: settings.isTestMode,
         },

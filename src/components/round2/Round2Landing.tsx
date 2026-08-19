@@ -215,10 +215,13 @@ export default function Round2Landing() {
               backgroundClip: 'text',
             }}
           >
-            SPEED
+            TARTIB-E
             <br />
-            CHALLENGE
+            WAQIYAAT
           </h1>
+          <p className="mt-3 text-xs sm:text-sm uppercase tracking-[0.3em] text-gold-accent/70">
+            तरतीब-ए-वाक़िआत
+          </p>
         </motion.div>
 
         {/* Subtitle */}
@@ -227,12 +230,13 @@ export default function Round2Landing() {
           className="text-sm sm:text-base md:text-lg text-center max-w-md px-4"
           style={{ color: 'rgba(247, 242, 231, 0.7)' }}
         >
-          Arrange 10–12 items in the correct order. Race against the clock at
+          Arrange 12 events in the correct chronological order. Every item you
+          place in its right position earns
           <span style={{ color: '#966700' }} className="font-bold">
             {' '}
-            microsecond
-          </span>{' '}
-          precision.
+            1 mark out of 12
+          </span>
+          — so a partly correct answer still counts.
         </motion.p>
 
         {/* Mini how-it-works */}

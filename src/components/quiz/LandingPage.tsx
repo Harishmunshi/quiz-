@@ -224,23 +224,26 @@ export default function LandingPage() {
           </div>
         </motion.div>
 
-        {/* Main title */}
+        {/* Main title.
+            "MINBAR" takes the gold, the way "QUIZ" did — the accent line is what
+            makes the three-line stack read as one name rather than three words. */}
         <motion.div variants={itemVariants} className="text-center px-2">
           <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[0.95] tracking-tight">
-            <span className="block text-emerald-deep">ISLAMIC</span>
+            <span className="block text-emerald-deep">MIND</span>
+            <span className="block text-emerald-deep">OVER</span>
             <span className="block text-gold-accent" style={{ textShadow: '0 2px 0 rgba(6,59,45,0.15)' }}>
-              QUIZ
+              MINBAR
             </span>
-            <span className="block text-emerald-deep">COMPETITION</span>
           </h1>
         </motion.div>
 
-        {/* Subtitle */}
+        {/* Subtitle — now names the event rather than describing it, since the
+            title alone no longer says what this is. */}
         <motion.p
           variants={itemVariants}
-          className="text-sm sm:text-base md:text-lg text-navy-deep/75 font-medium text-center max-w-md px-4"
+          className="text-sm sm:text-base md:text-lg text-navy-deep/75 font-semibold text-center max-w-md px-4 uppercase tracking-[0.18em]"
         >
-          Test your knowledge of Islam and race against the clock
+          Inter-School Islamic Quiz Competition
         </motion.p>
 
         {/* Round 1 button (the only CTA) */}

@@ -21,6 +21,10 @@ const controlSchema = z.object({
     'clear-pin',
     'disqualify',   // remove a participant mid-round
     'reinstate',
+    // The emergency question. Held out of the round entirely until the quiz
+    // master needs it — typically to break a tie.
+    'release-emergency',
+    'hide-emergency',
   ]),
   participantId: z.string().optional(),
   qualifyTopN: z.number().int().min(1).max(500).optional(),
@@ -73,7 +77,8 @@ export async function POST(request: Request) {
       select: { questionNumber: true },
     });
 
-    const gateActions = ['reset','settings','qualify','generate-pin','clear-pin','disqualify','reinstate'];
+    const gateActions = ['reset','settings','qualify','generate-pin','clear-pin','disqualify','reinstate',
+                         'release-emergency','hide-emergency'];
     if (questions.length === 0 && !gateActions.includes(action)) {
       return NextResponse.json(
         { success: false, error: 'No active Round 2 questions. Add questions first.' },
@@ -120,6 +125,66 @@ export async function POST(request: Request) {
         return NextResponse.json({
           success: true, data: qualified,
           message: `${ids.length} participant${ids.length === 1 ? '' : 's'} qualified for Round 2`,
+        });
+      }
+
+      case 'release-emergency':
+      case 'hide-emergency': {
+        // The emergency question is held out of the round with isActive=false.
+        //
+        // That single flag is enough because every other part of Round 2 already
+        // filters on it: /state will not send it to a student, the answer route
+        // will not accept it, `next` will not navigate to it, and neither
+        // leaderboard counts it. So a hidden question genuinely does not exist
+        // as far as the hall is concerned — no schema change, and nothing new
+        // that can drift out of sync.
+        const active = action === 'release-emergency';
+
+        // Defaults to the highest-numbered question, which is the emergency one
+        // by convention. Pass questionNumber to nominate a different one.
+        const all = await db.round2LiveQuestion.findMany({
+          orderBy: { questionNumber: 'asc' },
+          select: { questionNumber: true, isActive: true },
+        });
+        if (all.length === 0) {
+          return NextResponse.json(
+            { success: false, error: 'No Round 2 questions exist' },
+            { status: 400 }
+          );
+        }
+        const target = questionNumber ?? all[all.length - 1].questionNumber;
+        if (!all.some((q) => q.questionNumber === target)) {
+          return NextResponse.json(
+            { success: false, error: `Question ${target} does not exist in Round 2` },
+            { status: 400 }
+          );
+        }
+
+        await db.round2LiveQuestion.updateMany({
+          where: { questionNumber: target },
+          data: { isActive: active },
+        });
+
+        // Hiding the question the board is currently showing would leave the
+        // hall staring at something that no longer exists. Step back to idle.
+        if (!active && current === target) {
+          update.round2CurrentQuestion = 0;
+          update.round2QuestionState = 'idle';
+          update.round2QuestionOpenedAt = null;
+          update.round2QuestionLockedAt = null;
+        }
+
+        const after = await db.competitionSettings.update({
+          where: { id: settings.id },
+          data: update,
+        });
+        invalidateSettings();
+        return NextResponse.json({
+          success: true,
+          data: after,
+          message: active
+            ? `Question ${target} released — it is now part of the round`
+            : `Question ${target} hidden — students cannot see or answer it`,
         });
       }
 

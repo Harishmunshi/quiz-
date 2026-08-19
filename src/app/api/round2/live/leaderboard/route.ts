@@ -72,6 +72,101 @@ export async function GET(request: Request) {
     const penaltyMs = missedQuestionPenaltyMs(settings.round2QuestionSeconds);
     const requireQualify = settings.round2RequireQualify;
 
+    /**
+     * ?question=N — standings for ONE question, ranked on its own.
+     *
+     * Round 2 is run as separate contests rather than an aggregate: Q1 has a
+     * winner and Q2 has a winner, and adding them together would produce a
+     * third answer nobody asked for. Without the parameter this route still
+     * returns the cumulative board, so the projector and admin screens that
+     * already call it are unaffected.
+     *
+     * Ranked correct-first, then fastest. A wrong sequence is worth nothing, so
+     * every correct answer outranks every incorrect one however quick it was.
+     * Students who did not answer at all are omitted — on a single-question
+     * board there is nothing to say about them.
+     */
+    const questionParam = Number(searchParams.get('question'));
+    if (Number.isFinite(questionParam) && questionParam > 0) {
+      const question = await db.round2LiveQuestion.findFirst({
+        where: { questionNumber: questionParam, isActive: true },
+        select: { id: true, questionNumber: true, titleEnglish: true, marks: true, timeLimitSec: true },
+      });
+
+      if (!question) {
+        return NextResponse.json(
+          { success: false, error: `Question ${questionParam} is not in play` },
+          { status: 404 }
+        );
+      }
+
+      // Most items in the right place first, then fastest. Scoring is per
+      // position now, so ranking on isCorrect alone would flatten everyone who
+      // was not flawless into a single undifferentiated block — an 11/12 and a
+      // 0/12 would be separated only by who answered quicker.
+      const answers = await db.round2LiveAnswer.findMany({
+        where: { questionId: question.id, isTest },
+        orderBy: [{ marks: 'desc' }, { responseTimeMs: 'asc' }, { id: 'asc' }],
+        include: {
+          participant: {
+            select: {
+              id: true,
+              participantCode: true,
+              name: true,
+              schoolName: true,
+              disqualified: true,
+              round2Eligible: true,
+            },
+          },
+        },
+      });
+
+      // Same two exclusions the cumulative board applies, so the two never
+      // disagree about who is competing.
+      const eligible = answers.filter(
+        (a) =>
+          !a.participant.disqualified &&
+          (!requireQualify || a.participant.round2Eligible)
+      );
+
+      let lastRank = 0;
+      let lastKey = '';
+      const data = eligible.map((a, i) => {
+        // Standard competition ranking: identical marks AND time share a rank,
+        // and the next student takes the position after the tie.
+        const key = `${a.marks}|${a.responseTimeMs}`;
+        const rank = key === lastKey ? lastRank : i + 1;
+        lastRank = rank;
+        lastKey = key;
+        return {
+          rank,
+          participantId: a.participant.id,
+          participantCode: a.participant.participantCode,
+          participantName: a.participant.name,
+          schoolName: a.participant.schoolName,
+          isCorrect: a.isCorrect,
+          correctPositions: a.correctPositions,
+          responseTimeMs: a.responseTimeMs,
+          marks: a.marks,
+          answeredAt: a.answeredAt,
+        };
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: limit ? data.slice(0, limit) : data,
+        meta: {
+          mode: 'per-question',
+          questionNumber: question.questionNumber,
+          questionTitle: question.titleEnglish,
+          timeLimitSec: question.timeLimitSec,
+          answered: data.length,
+          correct: data.filter((d) => d.isCorrect).length,
+          isTestMode: isTest,
+        },
+      });
+    }
+
     // Conditional aggregation gives current AND previous standings in one pass.
     const rows = await db.$queryRaw<Row[]>`
       SELECT
