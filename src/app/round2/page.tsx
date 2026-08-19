@@ -849,16 +849,30 @@ function JoinForm({ onJoined }: { onJoined: (p: StoredParticipant) => void }) {
   return (
     <div className="flex flex-1 items-center justify-center px-4 py-12">
       <form onSubmit={submit} className="w-full max-w-sm">
+        {/* The Round 2 landing.
+            This screen is the one students actually reach at /round2 — the
+            Round2Landing component is an in-app hash view that the home page no
+            longer links to, so branding placed there is never seen. */}
         <div className="mb-8 flex flex-col items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={SCHOOL_LOGO_URL} alt="" className="mb-4 h-20 w-20 object-contain" />
+          <img src={SCHOOL_LOGO_URL} alt="" className="mb-4 h-16 w-16 object-contain" />
           <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[#966700]">
             Round 02
           </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-[#0A0D14]">
-            Enter your code
+          <h1 className="mt-2 text-4xl font-black leading-[0.95] tracking-tight text-[#0A0D14] sm:text-5xl">
+            TARTIB-E
+            <br />
+            <span className="text-[#966700]">WAQIYAAT</span>
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-[#5B6472]">
+          <p className="mt-2 text-xs uppercase tracking-[0.3em] text-[#5B6472]/80">
+            तरतीब-ए-वाक़िआत
+          </p>
+          <p className="mt-4 text-sm leading-relaxed text-[#5B6472]">
+            Arrange 12 events in the correct order. Every item in its right place
+            earns <span className="font-bold text-[#966700]">1 mark out of 12</span>.
+          </p>
+          <p className="mt-4 text-sm font-semibold text-[#0A0D14]">Enter your code</p>
+          <p className="mt-1 text-xs leading-relaxed text-[#5B6472]">
             Use the participant code from Round 1 so we continue with your score.
           </p>
         </div>
