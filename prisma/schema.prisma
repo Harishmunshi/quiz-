@@ -103,6 +103,7 @@ model Participant {
   round1Attempts  Round1Attempt[]
   round2Attempts  Round2Attempt[]
   round2LiveAnswers Round2LiveAnswer[]
+  round2LiveStarts  Round2LiveStart[]
 
   @@index([round2Eligible])
   @@index([disqualified])
@@ -262,6 +263,7 @@ model Round2LiveQuestion {
   updatedAt      DateTime @updatedAt
 
   answers        Round2LiveAnswer[]
+  starts         Round2LiveStart[]
 
   @@index([isActive])
 }
@@ -286,6 +288,10 @@ model Round2LiveAnswer {
   // shown on the reveal screen so a student sees how close they were.
   correctPositions Int      @default(0)
   marks            Int      @default(0)
+  // Submitted past the question's time limit. Still graded and shown to the
+  // student, but scores zero. Stored rather than inferred from marks = 0, which
+  // is indistinguishable from an ordinary wrong answer.
+  late             Boolean  @default(false)
   // Measured server-side from settings.round2QuestionOpenedAt.
   // Never trusted from the client.
   responseTimeMs   Int
@@ -300,4 +306,33 @@ model Round2LiveAnswer {
   @@index([questionNumber])
   @@index([isTest])
   @@index([isCorrect])
+}
+
+// ============================================================
+// ROUND 2 — PER-STUDENT QUESTION CLOCK
+// ============================================================
+// Round 2 is self-paced: every question is open for the whole event and each
+// student's timer starts when THEY open it, exactly as Round1Attempt.startedAt
+// works for Round 1.
+//
+// This is the piece the earlier attempt lacked. Timing then came from a single
+// CompetitionSettings.round2QuestionOpenedAt — one clock for the whole hall —
+// which is why only one question could ever be in play: there was nowhere to
+// record when a particular student started a particular question.
+//
+// The unique constraint makes the clock start once. A student who reloads,
+// switches phone or comes back later resumes the same start time rather than
+// being handed a fresh one, so refreshing cannot buy a better time.
+model Round2LiveStart {
+  id            String   @id @default(cuid())
+  participantId String
+  questionId    String
+  startedAt     DateTime @default(now())
+  isTest        Boolean  @default(false)
+
+  participant   Participant        @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  question      Round2LiveQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([participantId, questionId])
+  @@index([questionId])
 }
