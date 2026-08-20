@@ -6,7 +6,7 @@ import { ArrowLeft, CheckCircle2, ChevronRight, Loader2, Lock, Trophy } from 'lu
 import SequenceBuilder from '@/components/round2/SequenceBuilder';
 import QuestionStage from '@/components/round2/QuestionStage';
 import { formatSeconds, type OrderItem } from '@/lib/round2/live';
-import { loadParticipant, saveParticipant, type StoredParticipant } from '@/lib/round2/session';
+import type { StoredParticipant } from '@/lib/round2/session';
 import { SCHOOL_LOGO_URL } from '@/lib/theme';
 
 /**
@@ -64,10 +64,23 @@ export default function Round2QuestionPage({ params }: { params: Promise<{ n: st
   const [error, setError] = useState<string | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
 
+  // Round 2 deliberately remembers NOBODY.
+  //
+  // A whole school shares one or two phones here. Storing the signed-in student
+  // meant the second student to pick up that phone landed already signed in as
+  // the first — same id, same school — and their result was written against
+  // somebody else's ID. Identity lives in React state only, so it dies with the
+  // page and every arrival gets the form.
+  //
+  // Anything a previous student (or Round 1) left in storage is cleared on
+  // sight, otherwise a stale entry from before this change would still leak in.
   useEffect(() => {
-    const p = loadParticipant();
-    setParticipant(p);
-    setPhase(p ? 'ready' : 'signin');
+    try {
+      window.localStorage.removeItem('mes-quiz-participant');
+    } catch {
+      /* private mode — nothing to clear */
+    }
+    setPhase('signin');
   }, []);
 
   // ── The clock ────────────────────────────────────────────────────
@@ -219,7 +232,7 @@ export default function Round2QuestionPage({ params }: { params: Promise<{ n: st
               <div className="mx-auto max-w-sm">
                 <SignIn
                   onSignedIn={(p) => {
-                    saveParticipant(p);
+                    // Kept in memory only — never written to storage.
                     setParticipant(p);
                     setPhase('ready');
                   }}
@@ -230,7 +243,16 @@ export default function Round2QuestionPage({ params }: { params: Promise<{ n: st
             <>
               <Brand heading={heading} />
               <div className="mx-auto max-w-sm">
-                {participant && <Who p={participant} />}
+                {participant && (
+                  <Who
+                    p={participant}
+                    onSwitch={() => {
+                      setParticipant(null);
+                      setError(null);
+                      setPhase('signin');
+                    }}
+                  />
+                )}
                 {error && <Msg tone="error">{error}</Msg>}
                 <button
                   onClick={begin}
@@ -353,6 +375,26 @@ export default function Round2QuestionPage({ params }: { params: Promise<{ n: st
               </motion.div>
               <div className="mx-auto mt-4 max-w-sm">
                 <BoardLink n={questionNumber} />
+                {/* The handover. On a shared phone the result screen is a dead
+                    end otherwise, and the next student would have to be told to
+                    reload the page. */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setParticipant(null);
+                    setQuestion(null);
+                    setResult(null);
+                    setStartedAt(null);
+                    setPlaced([]);
+                    setElapsedMs(0);
+                    setError(null);
+                    autoFired.current = false;
+                    setPhase('signin');
+                  }}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0A0D14] py-3.5 text-sm font-bold text-[#F4F5F7] transition-colors hover:bg-[#1C2230]"
+                >
+                  Next student — hand the phone over
+                </button>
               </div>
             </>
           ) : (
@@ -391,7 +433,7 @@ function Brand({ heading }: { heading: string }) {
   );
 }
 
-function Who({ p }: { p: StoredParticipant }) {
+function Who({ p, onSwitch }: { p: StoredParticipant; onSwitch: () => void }) {
   return (
     <div className="flex items-center gap-2.5 rounded-xl border border-[#FFB000]/30 bg-white/60 px-3.5 py-3">
       <CheckCircle2 className="h-4 w-4 shrink-0 text-[#1A7D70]" />
@@ -399,6 +441,15 @@ function Who({ p }: { p: StoredParticipant }) {
         <p className="truncate text-sm font-bold text-[#0A0D14]">{p.schoolName}</p>
         <p className="truncate font-mono text-[11px] text-[#5B6472]/80">{p.participantCode}</p>
       </div>
+      {/* One phone, a queue of students. Handing over should not require
+          hunting for the browser's reload button. */}
+      <button
+        type="button"
+        onClick={onSwitch}
+        className="shrink-0 rounded-lg border border-[#D7DAE1] bg-white/70 px-2.5 py-1.5 text-[11px] font-bold text-[#5B6472] transition-colors hover:bg-white"
+      >
+        Not you?
+      </button>
     </div>
   );
 }
@@ -442,7 +493,18 @@ function Msg({ children, tone = 'info' }: { children: React.ReactNode; tone?: 'i
  */
 function SignIn({ onSignedIn }: { onSignedIn: (p: StoredParticipant) => void }) {
   const [studentId, setStudentId] = useState('');
+  // Only the SCHOOL is remembered, never the student. Everyone queueing on a
+  // shared phone is from the same school, so this saves retyping it twenty
+  // times, and it is visible and editable if the next person is not.
   const [school, setSchool] = useState('');
+
+  useEffect(() => {
+    try {
+      setSchool(window.localStorage.getItem('mes-round2-school') ?? '');
+    } catch {
+      /* private mode */
+    }
+  }, []);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -468,6 +530,11 @@ function SignIn({ onSignedIn }: { onSignedIn: (p: StoredParticipant) => void }) 
       if (!json.success) {
         setErr(json.error ?? 'Could not sign you in.');
         return;
+      }
+      try {
+        window.localStorage.setItem('mes-round2-school', school.trim());
+      } catch {
+        /* private mode — they just retype it */
       }
       const p = json.participant;
       onSignedIn({
