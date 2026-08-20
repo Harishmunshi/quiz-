@@ -36,7 +36,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.06, delayChildren: 0.1 },
+    transition: { staggerChildren: 0.012, delayChildren: 0 },
   },
 };
 
@@ -67,27 +67,27 @@ const emptyVariants = {
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1) {
     return (
-      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gold-accent text-emerald-deep font-bold text-sm shadow-md">
-        <Star className="w-4 h-4 fill-current" />
+      <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gold-accent text-emerald-deep font-bold text-sm shadow-md">
+        <Star className="w-3 h-3 fill-current" />
       </div>
     );
   }
   if (rank === 2) {
     return (
-      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#C0C0C0] text-emerald-deep font-bold text-sm">
+      <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#C0C0C0] text-emerald-deep font-bold text-sm">
         {rank}
       </div>
     );
   }
   if (rank === 3) {
     return (
-      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#CD7F32] text-white font-bold text-sm">
+      <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#CD7F32] text-white font-bold text-sm">
         {rank}
       </div>
     );
   }
   return (
-    <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted text-muted-foreground font-semibold text-sm">
+    <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground font-semibold text-sm">
       {rank}
     </div>
   );
@@ -323,28 +323,30 @@ function Round1Table({ entries }: { entries: Round1LeaderboardEntry[] }) {
                         : 'hover:bg-muted/50'
                     }`}
                   >
-                    <TableCell className="text-center py-3">
+                    <TableCell className="text-center py-1.5">
                       <RankBadge rank={entry.rank} />
                     </TableCell>
-                    <TableCell className="font-semibold text-foreground py-3">
+                    <TableCell className="font-semibold text-foreground py-1.5">
                       {/* School leads, code underneath in small type. This is an
                           inter-school competition, and several students share a
                           name — the code is what tells them apart. */}
                       <div className="flex flex-col">
-                        <span className={entry.rank === 1 ? 'text-gold-accent' : ''}>
+                        <span
+                          className={`text-[13px] leading-tight ${entry.rank === 1 ? 'text-gold-accent' : ''}`}
+                        >
                           {entry.schoolName || entry.participantName}
                         </span>
-                        <span className="font-mono text-[11px] tracking-wide text-muted-foreground">
+                        <span className="font-mono text-[10px] leading-tight tracking-wide text-muted-foreground">
                           {entry.participantCode}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-center text-muted-foreground hidden sm:table-cell py-3">
+                    <TableCell className="text-center text-muted-foreground hidden sm:table-cell py-1.5">
                       {entry.participantName}
                     </TableCell>
-                    <TableCell className="text-center font-bold py-3">
+                    <TableCell className="text-center font-bold py-1.5">
                       <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-sm ${
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs ${
                           entry.rank === 1
                             ? 'bg-gold-accent text-emerald-deep'
                             : 'bg-emerald-deep/10 text-emerald-deep'
@@ -353,9 +355,9 @@ function Round1Table({ entries }: { entries: Round1LeaderboardEntry[] }) {
                         {entry.correctAnswers}/{entry.totalQuestions}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right text-sm text-muted-foreground hidden md:table-cell py-3">
+                    <TableCell className="text-right text-sm text-muted-foreground hidden md:table-cell py-1.5">
                       <div className="flex items-center justify-end gap-1">
-                        <Clock className="w-3.5 h-3.5" />
+                        <Clock className="w-3 h-3" />
                         {formatCompletionTime(entry.completionTimeMs)}
                       </div>
                     </TableCell>
@@ -429,34 +431,36 @@ function Round2Table({ entries }: { entries: Round2LeaderboardEntry[] }) {
                         : 'hover:bg-muted/50'
                     }`}
                   >
-                    <TableCell className="text-center py-3">
+                    <TableCell className="text-center py-1.5">
                       <RankBadge rank={entry.rank} />
                     </TableCell>
-                    <TableCell className="font-semibold text-foreground py-3">
+                    <TableCell className="font-semibold text-foreground py-1.5">
                       {/* School leads, code underneath in small type. This is an
                           inter-school competition, and several students share a
                           name — the code is what tells them apart. */}
                       <div className="flex flex-col">
-                        <span className={entry.rank === 1 ? 'text-gold-accent' : ''}>
+                        <span
+                          className={`text-[13px] leading-tight ${entry.rank === 1 ? 'text-gold-accent' : ''}`}
+                        >
                           {entry.schoolName || entry.participantName}
                         </span>
-                        <span className="font-mono text-[11px] tracking-wide text-muted-foreground">
+                        <span className="font-mono text-[10px] leading-tight tracking-wide text-muted-foreground">
                           {entry.participantCode}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-center text-muted-foreground hidden sm:table-cell py-3">
+                    <TableCell className="text-center text-muted-foreground hidden sm:table-cell py-1.5">
                       {entry.participantName}
                     </TableCell>
-                    <TableCell className="text-right font-mono font-bold py-3">
+                    <TableCell className="text-right font-mono font-bold py-1.5">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm tabular-nums ${
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs tabular-nums ${
                           entry.rank === 1
                             ? 'bg-gold-accent text-emerald-deep'
                             : 'bg-navy-deep/10 text-navy-deep'
                         }`}
                       >
-                        <Clock className="w-3.5 h-3.5" />
+                        <Clock className="w-3 h-3" />
                         {formatTimerMicroseconds(entry.finalTimeMs)}
                       </span>
                     </TableCell>
