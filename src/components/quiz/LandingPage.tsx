@@ -275,18 +275,16 @@ export default function LandingPage() {
           </p>
         </motion.div>
 
-        {/* Secondary destinations.
-            The leaderboard used to be reachable only from the admin dashboard
-            or by knowing the #/round1-leaderboard hash, so to a student it did
-            not exist. Both of these are real URLs, so they survive a refresh
-            and can be shared or opened on the projector directly. */}
-        <motion.div variants={itemVariants} className="flex flex-col items-center gap-2 mt-2 sm:flex-row sm:gap-5">
-          <a
-            href="/round2"
-            className="text-xs sm:text-sm text-navy-deep/50 hover:text-gold-accent transition-colors font-medium underline underline-offset-4 decoration-navy-deep/20 hover:decoration-gold-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
-          >
-            Round 2 — Live Round →
-          </a>
+        {/* Round 1 only.
+            There is deliberately no Round 2 link here. Round 1 and Round 2 are
+            different groups of students, so offering Round 2 to everyone who
+            lands on this page invites the wrong people into it. Round 2
+            competitors are sent straight to /round2/q/1 and /round2/q/2.
+
+            The leaderboard stays: it was previously reachable only from the
+            admin dashboard or by knowing the #/round1-leaderboard hash, so to a
+            student it did not exist at all. */}
+        <motion.div variants={itemVariants} className="flex flex-col items-center gap-2 mt-2">
           <a
             href="/leaderboard"
             className="text-xs sm:text-sm text-navy-deep/50 hover:text-gold-accent transition-colors font-medium underline underline-offset-4 decoration-navy-deep/20 hover:decoration-gold-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
