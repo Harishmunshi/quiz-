@@ -703,13 +703,39 @@ export default function LeaderboardView({ round: initialRound, onBack }: Leaderb
                   </TabsContent>
 
                   <TabsContent value="round2" className="mt-0">
-                    <motion.div
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
-                    >
-                      <Round2Table entries={round2Leaderboard} />
-                    </motion.div>
+                    {/* Round 2 is scored per question, and this tab cannot show
+                        that. It reads /api/leaderboard/round2, which queries the
+                        retired Round2Attempt table from the old self-paced
+                        challenge — the live round writes to Round2LiveAnswer
+                        instead, so this table was silently always empty.
+
+                        Rather than invent a combined total nobody competes for,
+                        it points at the two real boards. Q1 and Q2 are separate
+                        contests with separate winners. */}
+                    <div className="py-10 px-4 text-center">
+                      <Trophy className="mx-auto mb-4 h-10 w-10 text-gold-accent/50" />
+                      <h3 className="text-lg font-bold text-foreground">
+                        Round 2 is scored per question
+                      </h3>
+                      <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+                        Question 1 and Question 2 are separate contests, each with
+                        its own standings out of 12.
+                      </p>
+                      <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
+                        <a
+                          href="/round2/board?q=1"
+                          className="w-full rounded-xl bg-emerald-deep px-5 py-2.5 text-sm font-bold text-ivory-warm transition-colors hover:bg-emerald-deep/90 sm:w-auto"
+                        >
+                          Question 1 standings →
+                        </a>
+                        <a
+                          href="/round2/board?q=2"
+                          className="w-full rounded-xl bg-emerald-deep px-5 py-2.5 text-sm font-bold text-ivory-warm transition-colors hover:bg-emerald-deep/90 sm:w-auto"
+                        >
+                          Question 2 standings →
+                        </a>
+                      </div>
+                    </div>
                   </TabsContent>
                 </Tabs>
               )}
