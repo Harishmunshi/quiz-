@@ -907,6 +907,29 @@ function JoinForm({ onJoined }: { onJoined: (p: StoredParticipant) => void }) {
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Continue'}
         </button>
 
+        {/* Each question has its own page, its own sign-in and its own board —
+            these are the addresses to put on the projector or in a QR code. */}
+        <div className="mt-6 flex items-center justify-center gap-2">
+          <a
+            href="/round2/q/1"
+            className="flex-1 rounded-xl border border-[#FFB000]/35 bg-white/60 py-2.5 text-center text-xs font-bold text-[#0A0D14] transition-colors hover:bg-white"
+          >
+            Question 1
+          </a>
+          <a
+            href="/round2/q/2"
+            className="flex-1 rounded-xl border border-[#FFB000]/35 bg-white/60 py-2.5 text-center text-xs font-bold text-[#0A0D14] transition-colors hover:bg-white"
+          >
+            Question 2
+          </a>
+          <a
+            href="/round2/board"
+            className="flex-1 rounded-xl border border-[#FFB000]/35 bg-white/60 py-2.5 text-center text-xs font-bold text-[#0A0D14] transition-colors hover:bg-white"
+          >
+            Standings
+          </a>
+        </div>
+
         <p className="mt-4 text-center text-xs leading-relaxed text-[#5B6472]/80">
           Round 2 is only for students who sat Round 1. If you have not done
           Round 1 yet, go back to the home page and start there.
