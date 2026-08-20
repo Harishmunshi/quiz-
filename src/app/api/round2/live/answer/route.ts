@@ -62,6 +62,18 @@ export async function POST(request: Request) {
     }
 
 
+    // The one round-wide state that still stops a submission: the quiz master
+    // has explicitly CLOSED Round 2. That is a deliberate "we are done, freeze
+    // it" act, in the same category as disqualification — unlike the 'locked'
+    // and PIN checks removed earlier, which were incidental configuration that
+    // silently broke Submit.
+    if (settings.round2Status === 'closed') {
+      return NextResponse.json(
+        { success: false, error: 'Round 2 is closed — submissions have finished', code: 'ROUND_CLOSED' },
+        { status: 403 }
+      );
+    }
+
     // Resolve the question the student actually answered, and their own clock
     // on it. Neither depends on what the quiz master has on screen.
     //

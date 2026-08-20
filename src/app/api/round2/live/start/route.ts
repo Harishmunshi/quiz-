@@ -50,6 +50,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (settings.round2Status === 'closed') {
+      return NextResponse.json(
+        { success: false, error: 'Round 2 is closed', code: 'ROUND_CLOSED' },
+        { status: 403 }
+      );
+    }
+
     const [question, participant] = await Promise.all([
       // isActive is what holds the emergency question back: an inactive question
       // cannot be started, so it does not exist as far as students are concerned.
