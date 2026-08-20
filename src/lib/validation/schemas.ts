@@ -14,12 +14,15 @@ import { z } from 'zod';
  * `name` is kept optional purely so an older client posting a name still works.
  */
 export const registerParticipantSchema = z.object({
+  // Anything the school actually prints on a card. Real IDs look like
+  // "M.E.S.B S-1" — dots, spaces and hyphens all carry meaning, and rejecting
+  // them turned a valid ID into an error the student could not resolve.
+  // Normalisation happens server-side, not here.
   participantCode: z
     .string()
     .trim()
-    .min(3, 'Enter your student code')
-    .max(32, 'That code is too long')
-    .regex(/^[A-Za-z0-9_-]+$/, 'Use letters and numbers only'),
+    .min(2, 'Enter your student ID')
+    .max(64, 'That ID is too long'),
   schoolName: z.string().min(2, 'School name is required').max(150, 'School name is too long'),
   name: z.string().max(100, 'Name is too long').optional(),
   language: z.enum(['english', 'gujarati']),

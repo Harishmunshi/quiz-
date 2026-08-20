@@ -574,8 +574,8 @@ function SignIn({ onSignedIn }: { onSignedIn: (p: StoredParticipant) => void }) 
       <input
         required
         value={studentId}
-        onChange={(e) => setStudentId(e.target.value.toUpperCase())}
-        placeholder="e.g. S1042"
+        onChange={(e) => setStudentId(e.target.value)}
+        placeholder="e.g. M.E.S.B S-1"
         autoCapitalize="characters"
         autoComplete="off"
         className="mb-4 w-full rounded-xl border border-[#D7DAE1] bg-white/80 px-3.5 py-3 text-center font-mono text-xl tracking-[0.2em] text-[#0A0D14] outline-none focus:border-[#FFB000]"

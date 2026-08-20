@@ -243,12 +243,13 @@ export default function RegistrationForm() {
                 <Input
                   id="reg-code"
                   type="text"
-                  placeholder="e.g. MES0001"
+                  placeholder="e.g. M.E.S.B S-1"
                   value={participantCode}
                   onChange={(e) => {
-                    // Upper-cased as they type: mes0007 and MES0007 must not
-                    // become two competitors with a split score.
-                    setParticipantCode(e.target.value.toUpperCase());
+                    // Left exactly as typed. The server upper-cases and
+                    // collapses whitespace, so normalising here as well only
+                    // fought the space bar on IDs like "M.E.S.B S-1".
+                    setParticipantCode(e.target.value);
                     if (fieldErrors.participantCode) setFieldErrors((prev) => ({ ...prev, participantCode: undefined }));
                   }}
                   disabled={submitting || !isRound1Available}

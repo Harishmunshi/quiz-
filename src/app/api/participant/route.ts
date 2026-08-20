@@ -69,11 +69,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Competition has ended' }, { status: 403 });
     }
 
-    // Codes are issued by the school and typed in by the student, so this is a
-    // sign-in as much as a registration. Normalised to upper case: a student who
-    // types mes0007 is the same person as MES0007, and letting those become two
-    // rows would split their score across two entries on the board.
-    const typedCode = parsed.data.participantCode?.trim().toUpperCase();
+    // IDs are issued by the school and typed in by the student, so this is a
+    // sign-in as much as a registration. Normalise so the same card typed twice
+    // is the same student.
+    //
+    // Upper-cased, and runs of whitespace collapsed to one space: "M.E.S.B  S-1"
+    // and "m.e.s.b s-1" are one person, not three rows with a split score. The
+    // characters themselves are left alone — dots, spaces and hyphens are part
+    // of real school IDs.
+    const typedCode = parsed.data.participantCode
+      ?.trim()
+      .replace(/\s+/g, ' ')
+      .toUpperCase();
 
     const row = {
       // The name is no longer asked for. It falls back to the code so every
