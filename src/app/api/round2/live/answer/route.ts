@@ -20,14 +20,26 @@ const LATE_GRACE_MS = 1500;
 /**
  * POST /api/round2/live/answer
  *
- * One shot per student per question. Four independent guards:
- *   1. The server checks state === 'open'; submissions outside the window bounce.
- *   2. responseTimeMs is derived from round2QuestionOpenedAt on the server.
- *   3. The sequence must be a genuine permutation of the question's own items.
- *   4. A unique index on (participantId, questionId) makes a second answer
- *      physically impossible, even from two tabs racing each other.
+ * If a student hits Submit, the answer is recorded. That is the whole contract.
  *
- * The response deliberately does NOT reveal whether the sequence was right.
+ * Everything that could refuse a submission for a reason the student could do
+ * nothing about is gone: the round-wide 'open' state, the PIN, the Round 1
+ * qualification check, and TOO_LATE. Each of those had turned Submit into a
+ * button that appeared to do nothing.
+ *
+ * What is left refuses only what cannot be recorded honestly:
+ *   - the question must exist and be active
+ *   - the student must have opened it, so there is a clock to measure from
+ *   - the sequence must be a real permutation of that question's own items
+ *   - the quiz master must not have removed the student
+ *
+ * Two further guarantees are structural rather than checks: responseTimeMs is
+ * computed server-side from that student's own start, and a unique index on
+ * (participantId, questionId) makes a second answer physically impossible even
+ * from two tabs racing.
+ *
+ * The score comes straight back in the response — Round 2 is self-paced, so
+ * there is no reveal to wait for.
  */
 export async function POST(request: Request) {
   try {
@@ -49,12 +61,6 @@ export async function POST(request: Request) {
       );
     }
 
-    if (settings.round2Status === 'locked') {
-      return NextResponse.json(
-        { success: false, error: 'Round 2 is not open', code: 'ROUND_LOCKED' },
-        { status: 403 }
-      );
-    }
 
     // Resolve the question the student actually answered, and their own clock
     // on it. Neither depends on what the quiz master has on screen.
@@ -106,18 +112,17 @@ export async function POST(request: Request) {
         { status: 403 }
       );
     }
-    if (settings.round2RequireQualify && !participant.round2Eligible) {
-      return NextResponse.json(
-        { success: false, error: 'You did not qualify for Round 2', code: 'NOT_QUALIFIED' },
-        { status: 403 }
-      );
-    }
-    if (settings.round2RequirePin && !participant.round2JoinedAt) {
-      return NextResponse.json(
-        { success: false, error: 'Enter the PIN shown on screen to join', code: 'NOT_JOINED' },
-        { status: 403 }
-      );
-    }
+    // No PIN gate and no Round 1 qualification gate.
+    //
+    // Round 2 is a separate competition open to whoever turns up, so neither had
+    // any business standing between a student and their own answer. Both were
+    // settings-driven, which meant a stray flag in the database could silently
+    // start rejecting submissions mid-event with "Enter the PIN shown on screen"
+    // — for a PIN that was never displayed. Deleted rather than defaulted off,
+    // so they cannot come back.
+    //
+    // Disqualification stays: that is the quiz master deliberately removing
+    // someone, not an accident of configuration.
 
     const items = parseItems(question.items);
     const check = validateSubmission(submittedOrder, items);

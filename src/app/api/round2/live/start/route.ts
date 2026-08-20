@@ -50,13 +50,6 @@ export async function POST(request: Request) {
       );
     }
 
-    if (settings.round2Status === 'locked') {
-      return NextResponse.json(
-        { success: false, error: 'Round 2 is not open yet', code: 'ROUND_LOCKED' },
-        { status: 403 }
-      );
-    }
-
     const [question, participant] = await Promise.all([
       // isActive is what holds the emergency question back: an inactive question
       // cannot be started, so it does not exist as far as students are concerned.
@@ -82,12 +75,7 @@ export async function POST(request: Request) {
         { status: 403 }
       );
     }
-    if (settings.round2RequireQualify && !participant.round2Eligible) {
-      return NextResponse.json(
-        { success: false, error: 'You did not qualify for Round 2', code: 'NOT_QUALIFIED' },
-        { status: 403 }
-      );
-    }
+    // No qualification gate: Round 2 does not depend on Round 1.
 
     // Already answered? Say so rather than restarting a clock that can never be
     // used — the answer route would refuse the second submission anyway.
