@@ -12,12 +12,14 @@ import { SCHOOL_LOGO_URL } from '@/lib/theme';
 /**
  * Round 2, one question, self-paced: /round2/q/1, /round2/q/2
  *
- * Works the way Round 1 works, and deliberately not the way Round 2 used to.
- * Every active question is open for the whole event. The student signs in with
- * their code, presses Start, and THEIR clock begins — there is no quiz master
- * releasing questions and no waiting for a reveal. They arrange twelve items,
- * submit, and see 11/12 and their time straight away; the question's board has
- * already updated by the time they look at it.
+ * A competition in its own right, with no tie to Round 1. Anyone who turns up
+ * enters with their school name and student ID — requiring a Round 1 code shut
+ * out exactly the students Round 2 is for.
+ *
+ * Every active question is open for the whole event. The student presses Start,
+ * THEIR clock begins, they arrange twelve items, submit, and see 11/12 and their
+ * time straight away — no quiz master releasing questions, no waiting for a
+ * reveal. The question's board has already updated by the time they look.
  *
  * Q1 and Q2 are unrelated. Separate clocks, separate submissions, separate
  * boards. Nothing here reads the other question's state.
@@ -427,45 +429,57 @@ function Msg({ children, tone = 'info' }: { children: React.ReactNode; tone?: 'i
   );
 }
 
+/**
+ * Round 2 entry: school name and student ID, and you are in.
+ *
+ * Deliberately NOT a Round 1 lookup. Round 2 is a separate competition with a
+ * different set of students, so requiring a code issued during Round 1 shut out
+ * exactly the people it is for. Anyone who turns up can enter.
+ *
+ * The ID doubles as the sign-in: typing an ID already on record resumes that
+ * student rather than creating a second one, so a reload, a flat battery or a
+ * borrowed phone puts them back where they were with their clock intact.
+ */
 function SignIn({ onSignedIn }: { onSignedIn: (p: StoredParticipant) => void }) {
-  const [code, setCode] = useState('');
+  const [studentId, setStudentId] = useState('');
+  const [school, setSchool] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (studentId.trim().length < 3 || school.trim().length < 2) {
+      setErr('Enter your school name and your student ID.');
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch('/api/participant/lookup', {
+      const res = await fetch('/api/participant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({
+          participantCode: studentId.trim(),
+          schoolName: school.trim(),
+          language: 'english',
+        }),
       });
       const json = await res.json();
       if (!json.success) {
-        setErr(
-          json.code === 'NOT_FOUND'
-            ? 'That code was not found. Check it against your Round 1 screen.'
-            : (json.error ?? 'Could not find you')
-        );
+        setErr(json.error ?? 'Could not sign you in.');
         return;
       }
-      const d = json.data;
-      if (d.disqualified) {
-        setErr('You have been removed from this round. Speak to the quiz master.');
-        return;
-      }
+      const p = json.participant;
       onSignedIn({
-        id: d.participant.id,
-        participantCode: d.participant.participantCode,
-        name: d.participant.name,
-        schoolName: d.participant.schoolName,
-        language: d.participant.language === 'gujarati' ? 'gujarati' : 'english',
+        id: p.id,
+        participantCode: p.participantCode,
+        name: p.name,
+        schoolName: p.schoolName,
+        language: p.language === 'gujarati' ? 'gujarati' : 'english',
       });
     } catch (error) {
       console.error('Round 2 sign-in failed:', error);
-      setErr('Could not sign you in. Tell the quiz master if it keeps failing.');
+      setErr('Could not reach the server. Try again.');
     } finally {
       setBusy(false);
     }
@@ -474,25 +488,44 @@ function SignIn({ onSignedIn }: { onSignedIn: (p: StoredParticipant) => void }) 
   return (
     <form onSubmit={submit}>
       {err && <Msg tone="error">{err}</Msg>}
+
       <span className="mb-1.5 mt-3 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5B6472]/80">
-        Student code
+        School name
       </span>
       <input
         required
-        value={code}
-        onChange={(e) => setCode(e.target.value.toUpperCase())}
-        placeholder="MES0001"
+        value={school}
+        onChange={(e) => setSchool(e.target.value)}
+        placeholder="Your school"
+        autoComplete="organization"
+        className="mb-4 w-full rounded-xl border border-[#D7DAE1] bg-white/80 px-3.5 py-3 text-center text-base text-[#0A0D14] outline-none focus:border-[#FFB000]"
+      />
+
+      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5B6472]/80">
+        Student ID
+      </span>
+      <input
+        required
+        value={studentId}
+        onChange={(e) => setStudentId(e.target.value.toUpperCase())}
+        placeholder="e.g. S1042"
         autoCapitalize="characters"
         autoComplete="off"
         className="mb-4 w-full rounded-xl border border-[#D7DAE1] bg-white/80 px-3.5 py-3 text-center font-mono text-xl tracking-[0.2em] text-[#0A0D14] outline-none focus:border-[#FFB000]"
       />
+
       <button
         type="submit"
         disabled={busy}
         className="flex w-full items-center justify-center rounded-xl bg-[#0A0D14] py-4 text-base font-bold text-[#F4F5F7] hover:bg-[#1C2230] disabled:opacity-60"
       >
-        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Sign in'}
+        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Enter Round 2'}
       </button>
+
+      <p className="mt-3 text-center text-[11px] leading-relaxed text-[#5B6472]/80">
+        Round 2 is open to everyone — you do not need to have sat Round 1. Use the
+        same student ID if you come back, so your result stays with you.
+      </p>
     </form>
   );
 }
