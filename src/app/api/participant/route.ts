@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { registerParticipantSchema } from '@/lib/validation/schemas';
+import { canonicalSchool } from '@/lib/schools';
 
 // Always run on request: these endpoints read live competition state and
 // must never be statically rendered or cached by Next.js.
@@ -82,11 +83,18 @@ export async function POST(request: Request) {
       .replace(/\s+/g, ' ')
       .toUpperCase();
 
+    // One school, one spelling. The live data had "M.E.S. English Medium
+    // School", "mes english medium school", "MES ENGLISH MEDIUM SCHOOL", "mes",
+    // "Mes" and "MES" as six separate schools on the projector. Unknown schools
+    // pass through tidied rather than rejected — an inter-school event will
+    // always have one nobody listed.
+    const schoolName = canonicalSchool(parsed.data.schoolName) || parsed.data.schoolName;
+
     const row = {
       // The name is no longer asked for. It falls back to the code so every
       // downstream screen that still prints a name has something to print.
       name: parsed.data.name?.trim() || typedCode || 'Student',
-      schoolName: parsed.data.schoolName,
+      schoolName,
       language: parsed.data.language,
       isTest: settings.isTestMode,
     };
@@ -109,11 +117,11 @@ export async function POST(request: Request) {
         }
         // Let them correct a school typed wrong the first time.
         const refreshed =
-          existing.schoolName === parsed.data.schoolName
+          existing.schoolName === schoolName
             ? existing
             : await db.participant.update({
                 where: { id: existing.id },
-                data: { schoolName: parsed.data.schoolName },
+                data: { schoolName },
               });
 
         return NextResponse.json({

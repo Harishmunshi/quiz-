@@ -7,6 +7,7 @@ import SequenceBuilder from '@/components/round2/SequenceBuilder';
 import QuestionStage from '@/components/round2/QuestionStage';
 import { formatSeconds, type OrderItem } from '@/lib/round2/live';
 import type { StoredParticipant } from '@/lib/round2/session';
+import { SCHOOLS } from '@/lib/schools';
 import { SCHOOL_LOGO_URL } from '@/lib/theme';
 
 /**
@@ -557,16 +558,35 @@ function SignIn({ onSignedIn }: { onSignedIn: (p: StoredParticipant) => void }) 
       {err && <Msg tone="error">{err}</Msg>}
 
       <span className="mb-1.5 mt-3 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5B6472]/80">
-        School name
+        School
       </span>
-      <input
-        required
-        value={school}
-        onChange={(e) => setSchool(e.target.value)}
-        placeholder="Your school"
-        autoComplete="organization"
-        className="mb-4 w-full rounded-xl border border-[#D7DAE1] bg-white/80 px-3.5 py-3 text-center text-base text-[#0A0D14] outline-none focus:border-[#FFB000]"
-      />
+      {/* Picked, not typed. Free text produced one school under six different
+          spellings on the projector, and several students typed their own name
+          into it. "Other" keeps the door open for a school nobody listed. */}
+      <select
+        value={SCHOOLS.some((s) => s.name === school) || school === '' ? school : '__other'}
+        onChange={(e) => setSchool(e.target.value === '__other' ? ' ' : e.target.value)}
+        className="mb-3 w-full rounded-xl border border-[#D7DAE1] bg-white/80 px-3.5 py-3 text-base text-[#0A0D14] outline-none focus:border-[#FFB000]"
+      >
+        <option value="">Choose your school…</option>
+        {SCHOOLS.map((s) => (
+          <option key={s.name} value={s.name}>
+            {s.name}
+          </option>
+        ))}
+        <option value="__other">Other — not listed</option>
+      </select>
+
+      {!SCHOOLS.some((s) => s.name === school) && school !== '' && (
+        <input
+          required
+          value={school.trim()}
+          onChange={(e) => setSchool(e.target.value)}
+          placeholder="Type your school name"
+          autoComplete="organization"
+          className="mb-4 w-full rounded-xl border border-[#D7DAE1] bg-white/80 px-3.5 py-3 text-center text-base text-[#0A0D14] outline-none focus:border-[#FFB000]"
+        />
+      )}
 
       <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5B6472]/80">
         Student ID
