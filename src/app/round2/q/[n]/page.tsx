@@ -2,7 +2,7 @@
 
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, ChevronRight, Loader2, Lock, Trophy } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Loader2, Lock } from 'lucide-react';
 import SequenceBuilder from '@/components/round2/SequenceBuilder';
 import QuestionStage from '@/components/round2/QuestionStage';
 import { formatSeconds, type OrderItem } from '@/lib/round2/live';
@@ -210,15 +210,6 @@ export default function Round2QuestionPage({ params }: { params: Promise<{ n: st
   return (
     <QuestionStage questionNumber={valid ? questionNumber : 0} full>
       <main className="flex min-h-screen flex-col">
-        {phase !== 'answering' && (
-          <a
-            href="/"
-            className="absolute left-4 top-4 z-40 flex items-center gap-1.5 rounded-xl border border-[#FFB000]/35 bg-white/70 px-2.5 py-1.5 text-sm font-semibold text-[#0A0D14] transition-colors hover:bg-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Main site
-          </a>
-        )}
 
         <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
           {!valid ? (
@@ -272,7 +263,6 @@ export default function Round2QuestionPage({ params }: { params: Promise<{ n: st
                 <p className="mt-2 text-center text-[11px] text-[#5B6472]/80">
                   Your timer starts when you press Start.
                 </p>
-                <BoardLink n={questionNumber} />
               </div>
             </>
           ) : phase === 'answering' && question ? (
@@ -374,29 +364,18 @@ export default function Round2QuestionPage({ params }: { params: Promise<{ n: st
                   right position.
                 </p>
               </motion.div>
-              <div className="mx-auto mt-4 max-w-sm">
-                <BoardLink n={questionNumber} />
-                {/* The handover. On a shared phone the result screen is a dead
-                    end otherwise, and the next student would have to be told to
-                    reload the page. */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setParticipant(null);
-                    setQuestion(null);
-                    setResult(null);
-                    setStartedAt(null);
-                    setPlaced([]);
-                    setElapsedMs(0);
-                    setError(null);
-                    autoFired.current = false;
-                    setPhase('signin');
-                  }}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0A0D14] py-3.5 text-sm font-bold text-[#F4F5F7] transition-colors hover:bg-[#1C2230]"
-                >
-                  Next student — hand the phone over
-                </button>
-              </div>
+              {/* Nothing to press. The student sees their score and that is the
+                  end of the screen.
+
+                  There is deliberately no standings link and no handover
+                  button: standings are the quiz master's to show on the
+                  projector, and the page already remembers nobody, so simply
+                  reopening the link gives the next student a blank form. A
+                  button telling students to pass the phone on was answering a
+                  question nobody asked. */}
+              <p className="mx-auto mt-5 max-w-sm text-center text-[11px] leading-relaxed text-[#5B6472]/80">
+                Your answer is recorded. You can close this page.
+              </p>
             </>
           ) : (
             <div className="flex justify-center py-16">
@@ -442,28 +421,17 @@ function Who({ p, onSwitch }: { p: StoredParticipant; onSwitch: () => void }) {
         <p className="truncate text-sm font-bold text-[#0A0D14]">{p.schoolName}</p>
         <p className="truncate font-mono text-[11px] text-[#5B6472]/80">{p.participantCode}</p>
       </div>
-      {/* One phone, a queue of students. Handing over should not require
-          hunting for the browser's reload button. */}
+      {/* Correcting your own typo before the clock starts. A wrong ID would
+          put the result on somebody else's row, and this is the last moment it
+          can be fixed. */}
       <button
         type="button"
         onClick={onSwitch}
         className="shrink-0 rounded-lg border border-[#D7DAE1] bg-white/70 px-2.5 py-1.5 text-[11px] font-bold text-[#5B6472] transition-colors hover:bg-white"
       >
-        Not you?
+        Change
       </button>
     </div>
-  );
-}
-
-function BoardLink({ n }: { n: number }) {
-  return (
-    <a
-      href={`/round2/board?q=${n}`}
-      className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-[#FFB000]/35 bg-white/60 py-3 text-sm font-bold text-[#0A0D14] transition-colors hover:bg-white"
-    >
-      <Trophy className="h-4 w-4 text-[#966700]" />
-      Question {n} standings
-    </a>
   );
 }
 
