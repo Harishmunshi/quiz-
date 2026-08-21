@@ -275,23 +275,12 @@ export default function LandingPage() {
           </p>
         </motion.div>
 
-        {/* Round 1 only.
-            There is deliberately no Round 2 link here. Round 1 and Round 2 are
-            different groups of students, so offering Round 2 to everyone who
-            lands on this page invites the wrong people into it. Round 2
-            competitors are sent straight to /round2/q/1 and /round2/q/2.
-
-            The leaderboard stays: it was previously reachable only from the
-            admin dashboard or by knowing the #/round1-leaderboard hash, so to a
-            student it did not exist at all. */}
-        <motion.div variants={itemVariants} className="flex flex-col items-center gap-2 mt-2">
-          <a
-            href="/leaderboard"
-            className="text-xs sm:text-sm text-navy-deep/50 hover:text-gold-accent transition-colors font-medium underline underline-offset-4 decoration-navy-deep/20 hover:decoration-gold-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
-          >
-            Leaderboard →
-          </a>
-        </motion.div>
+        {/* Round 1 only, and nothing else.
+            No Round 2 link: the two rounds are different groups of students, so
+            offering Round 2 here invites the wrong people into it — competitors
+            are sent straight to /round2/q/1 and /round2/q/2.
+            No leaderboard link either: standings are the quiz master's to put on
+            the projector, not something a student browses on their own phone. */}
       </motion.div>
 
       {/* Bottom footer */}

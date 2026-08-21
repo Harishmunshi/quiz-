@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAppStore } from '@/lib/store';
-import { Trophy, CheckCircle2, XCircle, Timer, Home, BarChart3, Star } from 'lucide-react';
+import { Trophy, CheckCircle2, XCircle, Timer, Home, Star } from 'lucide-react';
 import { playCorrect, playFanfare } from '@/lib/sound/effects';
 import { fireConfetti, fireConfettiBig } from '@/lib/confetti';
 
@@ -55,10 +55,6 @@ export default function Round1Result() {
 
   const circumference = 2 * Math.PI * 80;
   const strokeDashoffset = circumference - (circumference * percentage) / 100;
-
-  const handleLeaderboard = () => {
-    navigate('round1-leaderboard');
-  };
 
   const handleBackHome = () => {
     resetQuiz();
@@ -277,18 +273,9 @@ export default function Round1Result() {
           transition={{ duration: 0.5, delay: 1.3 }}
           className="flex flex-col gap-3 mt-5"
         >
-          <Button
-            onClick={handleLeaderboard}
-            className="w-full h-12 text-sm font-semibold rounded-xl"
-            style={{
-              backgroundColor: '#FFB000',
-              color: '#0A0D14',
-            }}
-          >
-            <BarChart3 className="w-4 h-4" />
-            View Leaderboard
-          </Button>
-
+          {/* No "View Leaderboard" here. A student sees their own score and
+              nothing more; the standings belong on the projector, shown when
+              the quiz master chooses to show them. */}
           <Button
             onClick={handleBackHome}
             variant="outline"
