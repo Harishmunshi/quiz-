@@ -558,6 +558,19 @@ function SignIn({ onSignedIn }: { onSignedIn: (p: StoredParticipant) => void }) 
       {err && <Msg tone="error">{err}</Msg>}
 
       <span className="mb-1.5 mt-3 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5B6472]/80">
+        Student ID
+      </span>
+      <input
+        required
+        value={studentId}
+        onChange={(e) => setStudentId(e.target.value)}
+        placeholder="e.g. M.E.S.B S-1"
+        autoCapitalize="characters"
+        autoComplete="off"
+        className="mb-4 w-full rounded-xl border border-[#D7DAE1] bg-white/80 px-3.5 py-3 text-center font-mono text-xl tracking-[0.2em] text-[#0A0D14] outline-none focus:border-[#FFB000]"
+      />
+
+      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5B6472]/80">
         School
       </span>
       {/* Picked, not typed. Free text produced one school under six different
@@ -588,25 +601,12 @@ function SignIn({ onSignedIn }: { onSignedIn: (p: StoredParticipant) => void }) 
         />
       )}
 
-      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5B6472]/80">
-        Student ID
-      </span>
-      <input
-        required
-        value={studentId}
-        onChange={(e) => setStudentId(e.target.value)}
-        placeholder="e.g. M.E.S.B S-1"
-        autoCapitalize="characters"
-        autoComplete="off"
-        className="mb-4 w-full rounded-xl border border-[#D7DAE1] bg-white/80 px-3.5 py-3 text-center font-mono text-xl tracking-[0.2em] text-[#0A0D14] outline-none focus:border-[#FFB000]"
-      />
-
       <button
         type="submit"
         disabled={busy}
         className="flex w-full items-center justify-center rounded-xl bg-[#0A0D14] py-4 text-base font-bold text-[#F4F5F7] hover:bg-[#1C2230] disabled:opacity-60"
       >
-        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Enter Round 2'}
+        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Submit'}
       </button>
 
       <p className="mt-3 text-center text-[11px] leading-relaxed text-[#5B6472]/80">
