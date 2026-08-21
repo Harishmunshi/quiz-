@@ -53,8 +53,21 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [setCompetitionSettings]);
 
-  // Seed database on first visit
+  // Seed the database — once per browser, not once per page load.
+  //
+  // This fired on EVERY visit to the landing page. /api/seed returns early when
+  // questions already exist, but not before running two COUNT(*) queries, so
+  // five hundred students arriving at the start of the round meant a thousand
+  // pointless queries at the exact moment the database is busiest. The data has
+  // been seeded since the first day; this is now a safety net that costs
+  // nothing after the first visit.
   useEffect(() => {
+    try {
+      if (window.localStorage.getItem('mes-seeded') === '1') return;
+      window.localStorage.setItem('mes-seeded', '1');
+    } catch {
+      /* private mode — fall through and seed as before */
+    }
     fetch('/api/seed', { method: 'POST' }).catch(() => {});
   }, []);
 
