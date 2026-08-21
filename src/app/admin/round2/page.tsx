@@ -308,148 +308,26 @@ export default function AdminRound2Page() {
                 </p>
               )}
 
-              {/* Primary action row — the four buttons used during the round */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <ActionButton
-                  onClick={() => control('open')}
-                  disabled={busy !== null || totalQuestions === 0 || state === 'open'}
-                  busy={busy === 'open'}
-                  icon={<Play className="h-5 w-5" />}
-                  label={currentQ === 0 ? 'Start Q1' : 'Re-open'}
-                  tone="gold"
-                />
-                <ActionButton
-                  onClick={() => control('lock')}
-                  disabled={busy !== null || state !== 'open'}
-                  busy={busy === 'lock'}
-                  icon={<Lock className="h-5 w-5" />}
-                  label="Lock"
-                  tone="neutral"
-                />
-                <ActionButton
-                  onClick={() => control('reveal')}
-                  disabled={busy !== null || (state !== 'open' && state !== 'locked')}
-                  busy={busy === 'reveal'}
-                  icon={<Eye className="h-5 w-5" />}
-                  label="Reveal"
-                  tone="neutral"
-                />
-                <ActionButton
-                  onClick={() => control('next')}
-                  disabled={busy !== null || totalQuestions === 0}
-                  busy={busy === 'next'}
-                  icon={<ChevronRight className="h-5 w-5" />}
-                  label="Next Q"
-                  tone="gold"
-                />
-              </div>
+              {/* The quiz-master controls that used to live here — Open, Lock,
+                  Reveal, Next Q, Previous — and the Entry gate below them are
+                  gone. Round 2 is self-paced: every question is open for the
+                  whole event, students start their own clock, and there is no
+                  qualification cut and no join PIN. Those buttons drove state
+                  nothing reads any more.
 
-              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[#D7DAE1] pt-4">
-                <button
-                  onClick={() => control('previous')}
-                  disabled={busy !== null || currentQ <= 1}
-                  className="flex items-center gap-1.5 rounded-lg bg-white/60 px-3 py-2 text-sm text-[#5B6472] hover:bg-white/70 disabled:opacity-40"
-                >
-                  <ChevronLeft className="h-4 w-4" /> Previous
-                </button>
+                  "Reset Round" went with them. It deleted every answer in the
+                  round behind a single confirm dialog — the most destructive
+                  thing on any screen, sitting next to controls nobody needs.
+                  If a genuine reset is ever required it should be a deliberate
+                  database operation, not a button beside the live standings.
 
-                <div className="flex items-center gap-2">
-                  <Settings2 className="h-4 w-4 text-[#5B6472]/80" />
-                  <input
-                    type="number"
-                    min={0}
-                    max={600}
-                    value={seconds}
-                    onChange={(e) => {
-                      secondsDirty.current = true;
-                      setSeconds(Number(e.target.value));
-                    }}
-                    className="w-20 rounded-lg border border-[#D7DAE1] bg-white/70 px-2 py-1.5 text-sm text-[#0A0D14] outline-none focus:border-[#FFB000]"
-                  />
-                  <span className="text-sm text-[#5B6472]/80">sec/question</span>
-                  <button
-                    onClick={() => control('settings', { questionSeconds: seconds })}
-                    disabled={busy !== null}
-                    className="rounded-lg bg-[#FFB000]/20 px-3 py-1.5 text-sm font-semibold text-[#966700] hover:bg-[#FFB000]/30"
-                  >
-                    Save
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        'Reset Round 2? This deletes every answer recorded in this round and returns to the idle screen. This cannot be undone.'
-                      )
-                    ) {
-                      control('reset');
-                    }
-                  }}
-                  disabled={busy !== null}
-                  className="ml-auto flex items-center gap-1.5 rounded-lg bg-[#B3261E]/10 px-3 py-2 text-sm font-semibold text-[#B3261E] hover:bg-[#B3261E]/15"
-                >
-                  <RotateCcw className="h-4 w-4" /> Reset Round
-                </button>
-              </div>
-            </Panel>
-
-            {/* ── Entry gate: who may play, and the code that lets them in ── */}
-            <Panel>
-              <div className="mb-4 flex items-center gap-2">
-                <Lock className="h-5 w-5 text-[#966700]" />
-                <h2 className="text-lg font-bold text-[#0A0D14]">Entry gate</h2>
-                <span className="ml-auto font-mono text-sm tabular-nums text-[#5B6472]">
-                  {stats?.qualifiedCount ?? 0} qualified
-                </span>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <button
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        'Apply the Round 1 cut? This marks the top scorers as qualified for Round 2 and clears any previous cut.'
-                      )
-                    ) {
-                      control('qualify');
-                    }
-                  }}
-                  disabled={busy !== null}
-                  className="flex flex-col items-start rounded-xl border border-[#D7DAE1] bg-white/70 px-4 py-3 text-left transition-colors hover:border-[#FFB000] disabled:opacity-50"
-                >
-                  <span className="text-sm font-bold text-[#0A0D14]">
-                    1 · Qualify from Round 1
-                  </span>
-                  <span className="mt-0.5 text-xs text-[#5B6472]">
-                    Top scorers by score, then fastest
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => control('generate-pin')}
-                  disabled={busy !== null}
-                  className="flex flex-col items-start rounded-xl border border-[#D7DAE1] bg-white/70 px-4 py-3 text-left transition-colors hover:border-[#FFB000] disabled:opacity-50"
-                >
-                  <span className="text-sm font-bold text-[#0A0D14]">
-                    2 · {stats?.joinPin ? 'New join code' : 'Show join code'}
-                  </span>
-                  <span className="mt-0.5 text-xs text-[#5B6472]">
-                    Students type this to enter
-                  </span>
-                </button>
-              </div>
-
-              {stats?.joinPin && (
-                <div className="mt-4 rounded-xl border-2 border-[#FFB000] bg-[#FFB000]/15 px-4 py-5 text-center">
-                  <p className="font-mono text-[10px] tracking-[0.3em] text-[#7C5A00]">
-                    JOIN CODE — READ THIS OUT
-                  </p>
-                  <p className="mt-1 font-mono text-5xl font-bold tracking-[0.25em] text-[#0A0D14]">
-                    {stats.joinPin}
-                  </p>
-                </div>
-              )}
+                  Open and close the round from /admin/control instead. */}
+              <a
+                href="/admin/control"
+                className="mb-2 flex items-center justify-center rounded-xl bg-[#0A0D14] py-3 text-sm font-bold text-[#F4F5F7] transition-colors hover:bg-[#1C2230]"
+              >
+                Open / close rounds & leaderboards →
+              </a>
             </Panel>
 
             {/* Live response monitor */}
