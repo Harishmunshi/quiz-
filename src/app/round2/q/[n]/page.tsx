@@ -8,6 +8,7 @@ import QuestionStage from '@/components/round2/QuestionStage';
 import { formatSeconds, type OrderItem } from '@/lib/round2/live';
 import type { StoredParticipant } from '@/lib/round2/session';
 import { SCHOOLS } from '@/lib/schools';
+import { SECTIONS, type SectionId } from '@/lib/sections';
 import { SCHOOL_LOGO_URL } from '@/lib/theme';
 
 /**
@@ -462,6 +463,7 @@ function Msg({ children, tone = 'info' }: { children: React.ReactNode; tone?: 'i
  */
 function SignIn({ onSignedIn }: { onSignedIn: (p: StoredParticipant) => void }) {
   const [studentId, setStudentId] = useState('');
+  const [section, setSection] = useState<SectionId | ''>('');
   // Only the SCHOOL is remembered, never the student. Everyone queueing on a
   // shared phone is from the same school, so this saves retyping it twenty
   // times, and it is visible and editable if the next person is not.
@@ -479,8 +481,8 @@ function SignIn({ onSignedIn }: { onSignedIn: (p: StoredParticipant) => void }) 
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (studentId.trim().length < 3 || school.trim().length < 2) {
-      setErr('Enter your school name and your student ID.');
+    if (studentId.trim().length < 2 || school.trim().length < 2 || !section) {
+      setErr('Enter your student ID, choose your class group and your school.');
       return;
     }
     setBusy(true);
@@ -492,6 +494,7 @@ function SignIn({ onSignedIn }: { onSignedIn: (p: StoredParticipant) => void }) 
         body: JSON.stringify({
           participantCode: studentId.trim(),
           schoolName: school.trim(),
+          section,
           language: 'english',
         }),
       });
@@ -537,6 +540,25 @@ function SignIn({ onSignedIn }: { onSignedIn: (p: StoredParticipant) => void }) 
         autoComplete="off"
         className="mb-4 w-full rounded-xl border border-[#D7DAE1] bg-white/80 px-3.5 py-3 text-center font-mono text-xl tracking-[0.2em] text-[#0A0D14] outline-none focus:border-[#FFB000]"
       />
+
+      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5B6472]/80">
+        Class
+      </span>
+      {/* Juniors and seniors are ranked against their own age group, so this is
+          what decides which leaderboard the result lands on. Asked as one of two
+          choices rather than a typed standard — far harder to get wrong. */}
+      <select
+        value={section}
+        onChange={(e) => setSection(e.target.value as SectionId | '')}
+        className="mb-4 w-full rounded-xl border border-[#D7DAE1] bg-white/80 px-3.5 py-3 text-base text-[#0A0D14] outline-none focus:border-[#FFB000]"
+      >
+        <option value="">Choose your class…</option>
+        {SECTIONS.map((sec) => (
+          <option key={sec.id} value={sec.id}>
+            {sec.label}
+          </option>
+        ))}
+      </select>
 
       <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5B6472]/80">
         School

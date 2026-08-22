@@ -25,6 +25,8 @@ export const registerParticipantSchema = z.object({
     .max(64, 'That ID is too long'),
   schoolName: z.string().min(2, 'School name is required').max(150, 'School name is too long'),
   name: z.string().max(100, 'Name is too long').optional(),
+  /** Age group: "junior" = std 6-8, "senior" = std 9-12. */
+  section: z.enum(['junior', 'senior']).optional(),
   language: z.enum(['english', 'gujarati']),
 });
 

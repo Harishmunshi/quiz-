@@ -95,6 +95,7 @@ export async function POST(request: Request) {
       // downstream screen that still prints a name has something to print.
       name: parsed.data.name?.trim() || typedCode || 'Student',
       schoolName,
+      section: parsed.data.section ?? null,
       language: parsed.data.language,
       isTest: settings.isTestMode,
     };
@@ -116,13 +117,19 @@ export async function POST(request: Request) {
           );
         }
         // Let them correct a school typed wrong the first time.
-        const refreshed =
-          existing.schoolName === schoolName
-            ? existing
-            : await db.participant.update({
-                where: { id: existing.id },
-                data: { schoolName },
-              });
+        // Let a returning student fix a school or age group entered wrongly the
+        // first time. Their answers are keyed to the participant, not to these,
+        // so correcting them moves the existing result onto the right board
+        // rather than creating a second entry.
+        const wantsSection = parsed.data.section ?? existing.section;
+        const needsUpdate =
+          existing.schoolName !== schoolName || existing.section !== wantsSection;
+        const refreshed = needsUpdate
+          ? await db.participant.update({
+              where: { id: existing.id },
+              data: { schoolName, section: wantsSection },
+            })
+          : existing;
 
         return NextResponse.json({
           success: true,
@@ -132,6 +139,7 @@ export async function POST(request: Request) {
             participantCode: refreshed.participantCode,
             name: refreshed.name,
             schoolName: refreshed.schoolName,
+            section: refreshed.section,
             language: refreshed.language,
           },
         });
@@ -149,6 +157,7 @@ export async function POST(request: Request) {
             participantCode: created.participantCode,
             name: created.name,
             schoolName: created.schoolName,
+            section: created.section,
             language: created.language,
           },
         });
@@ -167,6 +176,7 @@ export async function POST(request: Request) {
                 participantCode: now.participantCode,
                 name: now.name,
                 schoolName: now.schoolName,
+                section: now.section,
                 language: now.language,
               },
             });

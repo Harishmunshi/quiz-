@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { toSection } from '@/lib/sections';
 import { getSettings } from '@/lib/round2/settingsCache';
 import {
   rankLiveEntries,
@@ -104,8 +105,16 @@ export async function GET(request: Request) {
       // position now, so ranking on isCorrect alone would flatten everyone who
       // was not flawless into a single undifferentiated block — an 11/12 and a
       // 0/12 would be separated only by who answered quicker.
+      // Same ?section= filter as Round 1, so Q1 and Q2 each have a junior and
+      // a senior board rather than one mixed one.
+      const boardSection = toSection(searchParams.get('section'));
+
       const answers = await db.round2LiveAnswer.findMany({
-        where: { questionId: question.id, isTest },
+        where: {
+          questionId: question.id,
+          isTest,
+          ...(boardSection ? { participant: { section: boardSection } } : {}),
+        },
         orderBy: [{ marks: 'desc' }, { responseTimeMs: 'asc' }, { id: 'asc' }],
         include: {
           participant: {
@@ -116,6 +125,7 @@ export async function GET(request: Request) {
               schoolName: true,
               disqualified: true,
               round2Eligible: true,
+              section: true,
             },
           },
         },
@@ -144,6 +154,7 @@ export async function GET(request: Request) {
           participantCode: a.participant.participantCode,
           participantName: a.participant.name,
           schoolName: a.participant.schoolName,
+          section: a.participant.section,
           isCorrect: a.isCorrect,
           correctPositions: a.correctPositions,
           responseTimeMs: a.responseTimeMs,
@@ -159,6 +170,7 @@ export async function GET(request: Request) {
           mode: 'per-question',
           questionNumber: question.questionNumber,
           questionTitle: question.titleEnglish,
+          section: boardSection,
           timeLimitSec: question.timeLimitSec,
           answered: data.length,
           correct: data.filter((d) => d.isCorrect).length,

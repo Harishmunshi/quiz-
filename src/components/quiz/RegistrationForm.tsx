@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/lib/store';
+import { SECTIONS, type SectionId } from '@/lib/sections';
 import { saveParticipant } from '@/lib/round2/session';
 import { registerParticipantSchema } from '@/lib/validation/schemas';
 
@@ -49,6 +50,7 @@ const fieldVariants = {
 interface FieldError {
   participantCode?: string;
   schoolName?: string;
+  section?: string;
   name?: string;
 }
 
@@ -63,6 +65,7 @@ export default function RegistrationForm() {
   // Form state
   const [participantCode, setParticipantCode] = useState('');
   const [schoolName, setSchoolName] = useState('');
+  const [section, setSection] = useState<SectionId | ''>('');
   const [fieldErrors, setFieldErrors] = useState<FieldError>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -79,8 +82,13 @@ export default function RegistrationForm() {
     const result = registerParticipantSchema.safeParse({
       participantCode,
       schoolName,
+      section: section || undefined,
       language: selectedLanguage,
     });
+    if (!section) {
+      setFieldErrors((prev) => ({ ...prev, section: 'Choose your class group' }));
+      return false;
+    }
 
     if (result.success) {
       setFieldErrors({});
@@ -117,6 +125,7 @@ export default function RegistrationForm() {
           body: JSON.stringify({
             participantCode,
             schoolName,
+            section,
             language: selectedLanguage,
           }),
         });
@@ -149,7 +158,7 @@ export default function RegistrationForm() {
         setSubmitting(false);
       }
     },
-    [participantCode, schoolName, selectedLanguage, isRound1Available, setParticipant, navigate]
+    [participantCode, schoolName, section, selectedLanguage, isRound1Available, setParticipant, navigate]
   );
 
   return (
@@ -279,6 +288,35 @@ export default function RegistrationForm() {
                 animate="visible"
                 className="space-y-2"
               >
+                <Label htmlFor="reg-section" className="text-navy-deep font-semibold text-sm">
+                  Class
+                </Label>
+                {/* Juniors (std 6-8) and seniors (std 9-12) are ranked against
+                    their own age group, so this decides which leaderboard the
+                    result lands on and who makes the cut into Round 2. */}
+                <select
+                  id="reg-section"
+                  value={section}
+                  onChange={(e) => {
+                    setSection(e.target.value as SectionId | '');
+                    if (fieldErrors.section) setFieldErrors((prev) => ({ ...prev, section: undefined }));
+                  }}
+                  disabled={submitting || !isRound1Available}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-base"
+                >
+                  <option value="">Choose your class…</option>
+                  {SECTIONS.map((sec) => (
+                    <option key={sec.id} value={sec.id}>
+                      {sec.label}
+                    </option>
+                  ))}
+                </select>
+                {fieldErrors.section && (
+                  <p className="text-sm text-red-600">{fieldErrors.section}</p>
+                )}
+              </motion.div>
+
+              <motion.div variants={fieldVariants} className="space-y-2">
                 <Label htmlFor="reg-school" className="text-navy-deep font-semibold text-sm">
                   School Name
                 </Label>

@@ -89,6 +89,14 @@ model Participant {
   schoolName      String   @default("M.E.S. English Medium School")
   className       String?
   division        String?
+  // Which age group this student competes in. "junior" = std 6-8,
+  // "senior" = std 9-12. Null only for rows created before the field existed.
+  //
+  // Juniors and seniors are ranked against their own age group, so this decides
+  // which leaderboard a result lands on. Stored as the band rather than the
+  // exact standard because that is all the ranking needs, and asking for one of
+  // two choices is far harder to fat-finger than typing "7".
+  section         String?
   // "gujarati" is the historic key for the second language; the content and the
   // UI label are now Hindi (Devanagari).
   language        String   @default("english")
@@ -107,6 +115,7 @@ model Participant {
 
   @@index([round2Eligible])
   @@index([disqualified])
+  @@index([section])
 }
 
 // ============================================================
