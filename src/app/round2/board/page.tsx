@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Loader2, Trophy } from 'lucide-react';
 import { formatSeconds } from '@/lib/round2/live';
 import { SCHOOL_LOGO_URL } from '@/lib/theme';
+import { SECTIONS, type SectionId } from '@/lib/sections';
 
 /**
  * Per-question Round 2 standings: /round2/board
@@ -42,6 +43,7 @@ const POLL_MS = 3000;
 
 export default function Round2BoardPage() {
   const [q, setQ] = useState(1);
+  const [section, setSection] = useState<SectionId | 'all'>('all');
   const [rows, setRows] = useState<Row[]>([]);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [available, setAvailable] = useState<number[]>([]);
@@ -74,7 +76,8 @@ export default function Round2BoardPage() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/round2/live/leaderboard?question=${q}`, { cache: 'no-store' });
+      const qs = `question=${q}${section === 'all' ? '' : `&section=${section}`}`;
+      const res = await fetch(`/api/round2/live/leaderboard?${qs}`, { cache: 'no-store' });
       const json = await res.json();
       if (!json.success) {
         setError(json.error ?? 'Could not load the standings');
@@ -90,7 +93,7 @@ export default function Round2BoardPage() {
     } finally {
       setLoading(false);
     }
-  }, [q]);
+  }, [q, section]);
 
   useEffect(() => {
     setLoading(true);
@@ -125,6 +128,27 @@ export default function Round2BoardPage() {
               {meta.answered} answered
             </span>
           )}
+        </div>
+
+        {/* Age group. Juniors and seniors are separate competitions, so the
+            board shows one at a time rather than a mixed ranking. */}
+        <div className="mx-auto flex max-w-3xl gap-1.5 overflow-x-auto px-4 pb-2">
+          {([{ id: 'all', label: 'All' }, ...SECTIONS] as const).map((sec) => (
+            <button
+              key={sec.id}
+              type="button"
+              onClick={() => setSection(sec.id as SectionId | 'all')}
+              aria-current={sec.id === section}
+              className={[
+                'shrink-0 rounded-full border px-4 py-1.5 text-xs font-bold transition-all',
+                sec.id === section
+                  ? 'border-[#966700] bg-[#FFB000]/20 text-[#7C5A00]'
+                  : 'border-[#D7DAE1] bg-white/60 text-[#5B6472] hover:bg-white',
+              ].join(' ')}
+            >
+              {'boardTitle' in sec ? sec.boardTitle.replace(' Leaderboard', '') : sec.label}
+            </button>
+          ))}
         </div>
 
         {/* One tab per question in play. Each is its own contest. */}
